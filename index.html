@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0c12">
+  <meta name="description" content="转运军团 — 融合 3×3 机械老虎机、概率调校、吞噬转职与实时自走棋防守的暗黑奇幻 Roguelike 策略游戏。">
+  <title>转运军团 · SLOTBOUND</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="sfx.js"></script>
+  <script defer src="art.js"></script>
+  <script defer src="engine.js"></script>
+  <script defer src="battle.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="crest" id="brand-crest" aria-hidden="true"></div>
+      <div class="brand-text">
+        <h1>转运军团</h1>
+        <span class="brand-sub">SLOTBOUND</span>
+      </div>
+    </div>
+
+    <div class="wave-bar" aria-label="波次进度">
+      <div class="wave-label">
+        <span id="wave-badge">第 1 / 10 波</span>
+        <strong id="wave-name">斥候试探</strong>
+      </div>
+      <div class="wave-dots" id="wave-dots"></div>
+    </div>
+
+    <div class="top-stats">
+      <div class="stat-pill gold" title="金币：用于转动老虎机、锁格与调校概率">
+        <span class="stat-ico" id="ico-gold"></span>
+        <strong id="hud-gold">115</strong>
+      </div>
+      <div class="stat-pill hp" title="城防耐久：战败扣除 1 点，审判波次战败扣除 2 点">
+        <span class="stat-ico" id="ico-hp"></span>
+        <strong id="hud-hp">5 / 5</strong>
+      </div>
+      <div class="stat-pill power" title="当前出战军团综合战力">
+        <span class="stat-ico" id="ico-power"></span>
+        <strong id="hud-power">0</strong>
+      </div>
+      <div class="top-controls">
+        <button id="btn-speed" class="icon-btn" title="切换战斗倍速">1×倍速</button>
+        <button id="btn-mute" class="icon-btn square-btn" title="开关音效" aria-label="开关音效"></button>
+        <button id="btn-restart" class="icon-btn subtle" title="重新开始新一局">重开</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- LEFT: ORNATE 3x3 MECHANICAL SLOT MACHINE & CORES -->
+    <section class="slot-column" aria-label="命运老虎机">
+      <div class="cabinet-wrap">
+        <div class="cabinet">
+          <div class="rivet tl"></div><div class="rivet tr"></div>
+          <div class="rivet bl"></div><div class="rivet br"></div>
+
+          <div class="cabinet-head">
+            <div>
+              <h2>命运轮盘</h2>
+              <p class="cabinet-sub">8 线连奖 · 点击格面可锁定符号</p>
+            </div>
+            <button id="btn-rig" class="rig-btn" type="button"><span id="ico-rig"></span>概率调校</button>
+          </div>
+
+          <div class="cabinet-lights" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <div class="reel-frame" id="reel-frame">
+            <div class="reel-grid" id="reel-grid"></div>
+            <svg class="payline-svg" id="payline-svg" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div class="jackpot-toast" id="jackpot-toast" hidden></div>
+          </div>
+
+          <div class="spin-ticker" id="spin-ticker">
+            <strong id="ticker-title">拉动拉杆召唤军团</strong>
+            <span id="ticker-sub">每波赠送免费转动，连出百搭可赋予单位【幸运强化】！</span>
+          </div>
+
+          <div class="spin-actions">
+            <button id="btn-spin" class="spin-btn" type="button">
+              <span class="spin-btn-main">拉动轮盘</span>
+              <span class="spin-btn-cost" id="spin-cost-label">免费 ×2</span>
+            </button>
+            <div class="spin-meta">
+              <span id="lock-status">锁格 0 / 2（10 金币/格）</span>
+              <span class="kbd-hint">Space</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Physical Mechanical Lever on Cabinet Side -->
+        <button type="button" class="mech-lever" id="mech-lever" title="拉动机械拉杆转动轮盘" aria-label="拉动拉杆">
+          <span class="lever-mount"></span>
+          <span class="lever-arm">
+            <span class="lever-knob"></span>
+          </span>
+        </button>
+      </div>
+
+      <div class="cores-panel">
+        <div class="panel-head">
+          <h3>转运核心</h3>
+          <span class="badge-count" id="core-count">0 / 6</span>
+        </div>
+        <div class="cores-grid" id="cores-grid"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: LIVE BATTLEFIELD & ARMY FORMATION -->
+    <section class="tactics-column" aria-label="实时战场与军团布阵">
+      <div class="arena-card">
+        <div class="arena-head">
+          <div class="arena-info">
+            <span class="boss-pill" id="boss-pill" hidden></span>
+            <span id="enemy-intel" class="enemy-intel">来袭：3 名敌军</span>
+          </div>
+          <button id="btn-fight" class="fight-btn" type="button"><span id="ico-fight"></span><span>开战迎敌</span></button>
+        </div>
+        <div class="arena-stage">
+          <canvas id="battle-canvas"></canvas>
+        </div>
+        <div class="synergy-bar" id="synergy-bar" aria-label="职业羁绊"></div>
+      </div>
+
+      <div class="army-card">
+        <div class="army-head">
+          <div class="army-title-group">
+            <h3>军团布阵与吞噬进化</h3>
+            <span class="army-tip" id="army-tip">点击单位选中，再点另一单位可【吞噬进化】或【交换站位】</span>
+          </div>
+          <div class="army-mode-btns">
+            <button id="btn-mode-swap" class="mode-pill active" type="button"><span id="ico-swap"></span>换位</button>
+            <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬模式</button>
+          </div>
+        </div>
+
+        <div class="roster-layout">
+          <div class="formation-box">
+            <div class="sub-label"><span>后排（远程 / 支援）</span><span>前排（坦克 / 突袭）</span></div>
+            <div class="formation-grid" id="formation-grid"></div>
+          </div>
+          <div class="bench-box">
+            <div class="sub-label"><span>备战席（暂存 / 素材）</span><span id="bench-count">0 / 4</span></div>
+            <div class="bench-grid" id="bench-grid"></div>
+          </div>
+        </div>
+
+        <div class="inspector" id="inspector">
+          <div class="inspector-empty">点选任意军团单位查看详细属性、技能与吞噬强化选项。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: CORE DRAFT -->
+  <dialog id="core-dialog" class="game-dialog">
+    <div class="dialog-inner">
+      <div class="dialog-tag">战后转运奖励</div>
+      <h2>选择一枚转运核心</h2>
+      <p class="dialog-desc">核心将永久改变老虎机规则或军团战斗机制，构筑你的专属流派！</p>
+      <div class="core-choices" id="core-choices"></div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: BRANCHING EVOLUTION -->
+  <dialog id="evo-dialog" class="game-dialog">
+    <div class="dialog-inner">
+      <div class="dialog-tag evo">兵种转职进化</div>
+      <div class="evo-header">
+        <div class="evo-hero-preview" id="evo-hero-preview"></div>
+        <div>
+          <h2 id="evo-title">选择转职方向</h2>
+          <p class="dialog-desc" id="evo-desc">单位通过吞噬达到 2 级，解锁专属进阶职业与强力技能！</p>
+        </div>
+      </div>
+      <div class="evo-choices" id="evo-choices"></div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: REEL RIGGING -->
+  <dialog id="rig-dialog" class="game-dialog">
+    <div class="dialog-inner">
+      <div class="dialog-head-row">
+        <div>
+          <div class="dialog-tag">改命工坊</div>
+          <h2>轮盘概率调校台</h2>
+        </div>
+        <button class="close-btn" data-close="rig-dialog" aria-label="关闭">×</button>
+      </div>
+      <p class="dialog-desc">消耗金币提高核心兵种的出现权重，或压低不需要的符号概率，把运气变成可控流派！</p>
+      <div class="rig-list" id="rig-list"></div>
+      <div class="dialog-footer">
+        <span class="rig-gold">当前金币：<strong id="rig-gold-val">0</strong></span>
+        <button class="secondary-btn" data-close="rig-dialog" type="button">完成调校</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: RUN SUMMARY -->
+  <dialog id="end-dialog" class="game-dialog">
+    <div class="dialog-inner center">
+      <div class="dialog-tag" id="end-tag">战局结算</div>
+      <h2 id="end-title">防线大捷！</h2>
+      <p class="dialog-desc" id="end-desc"></p>
+      <div class="end-stats" id="end-stats"></div>
+      <button id="btn-end-restart" class="spin-btn compact-btn" type="button">再来一局</button>
+    </div>
+  </dialog>
+</body>
+</html>
