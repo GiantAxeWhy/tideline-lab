@@ -270,8 +270,8 @@
     // Top incoming symbol preview + bottom Nudge buttons (with glowing "可连线！" highlight!)
     const preview = run.nudgePreview || ["knight", "archer", "mage"];
     const nudgeCost = G.getNudgeCost ? G.getNudgeCost(run) : ((run.nudgesLeft || 0) > 0 ? 0 : 10);
-    const canNudge = !busy && !run.outcome && (nudgeCost === 0 || run.gold >= nudgeCost);
-    const winCols = (!busy && !run.outcome && G.getWinningNudgeCols) ? G.getWinningNudgeCols(run) : [];
+    const canNudge = !busy && !run.outcome && nudgeCost !== null && (nudgeCost === 0 || run.gold >= nudgeCost);
+    const winCols = (canNudge && G.getWinningNudgeCols) ? G.getWinningNudgeCols(run) : [];
 
     $("nudge-preview-row").innerHTML = [0, 1, 2].map(col => {
       const inc = preview[col] || "knight";
@@ -287,8 +287,8 @@
     $("nudge-row").innerHTML = [0, 1, 2].map(col => {
       const inc = preview[col] || "knight";
       const isHot = winCols.includes(col);
-      const costTag = nudgeCost === 0 ? "免费" : `${nudgeCost}G`;
-      return `<button type="button" class="nudge-btn${isHot ? " hot" : ""}" data-nudge="${col}" title="将第 ${col + 1} 列往下调 1 格，顶入【${G.SYMBOLS[inc].name}】（${nudgeCost === 0 ? `免费剩余 ${run.nudgesLeft} 次` : `花费 ${nudgeCost} 金币`}）"${canNudge ? "" : " disabled"}>
+      const costTag = nudgeCost === null ? "本转已满" : nudgeCost === 0 ? "免费" : `${nudgeCost}G`;
+      return `<button type="button" class="nudge-btn${isHot ? " hot" : ""}" data-nudge="${col}" title="将第 ${col + 1} 列往下调 1 格，顶入【${G.SYMBOLS[inc].name}】（${nudgeCost === null ? "本转付费微调已达上限，请重新转动轮盘" : nudgeCost === 0 ? `免费剩余 ${run.nudgesLeft} 次` : `花费 ${nudgeCost} 金币`}）"${canNudge ? "" : " disabled"}>
         <span>${isHot ? "↓ 可连线!" : `↓ 下调(${costTag})`}</span>
       </button>`;
     }).join("");
@@ -358,9 +358,10 @@
       </div>`;
     }).join("");
     $("faction-bar").innerHTML = G.getFactionSynergies(run).map(flow => {
-      const title = `${flow.types.map(type => G.SYMBOLS[type].short).join(" / ")}${flow.cores ? " + 经济核心" : ""} · ${flow.tier === 4 ? flow.enhanced : flow.desc}`;
+      const members = flow.types.map(type => G.SYMBOLS[type].short).join(" / ");
+      const title = `【2★及以上英雄觉醒阵营】成员：${members}\n2人：${flow.desc}\n3人：${flow.enhanced}`;
       return `<div class="syn-pill${flow.tier ? " active" : ""}" style="--syn-color:${flow.color}" title="${title}">
-        <span>${flow.name}</span><span class="syn-cnt">${flow.tier ? `${flow.tier} 阶` : `${flow.count} 人`}</span>
+        <span>${flow.name}</span><span class="syn-cnt">${flow.count}/3${flow.tier ? ` (${flow.tier}★效)` : " (需2★)"}</span>
       </div>`;
     }).join("");
   }
@@ -394,11 +395,20 @@
       unit.evolution ? "evolved" : ""
     ].filter(Boolean).join(" ");
 
-    const curFloor = G.STAR_THRESHOLDS ? G.STAR_THRESHOLDS[st.level - 1] : 0;
-    const nextReq = G.nextStarXp ? G.nextStarXp(st.level) : null;
-    const xpPct = nextReq !== null
-      ? Math.min(100, Math.max(0, ((unit.xp - curFloor) / Math.max(1, nextReq - curFloor)) * 100))
-      : 100;
+    const sameStarCopies = [...run.field, ...run.bench].filter(u => u && u.type === unit.type && G.unitLevel(u) === st.level).length;
+    const xpPct = st.level >= 5 ? 100 : Math.min(100, (sameStarCopies / 3) * 100);
+
+    const factions = G.getUnitFactions ? G.getUnitFactions(unit.type) : [];
+    const factionTags = factions.map(f =>
+      st.level >= 2
+        ? `<span class="u-tag" style="border:1px solid ${f.color};color:${f.color};background:rgba(255,255,255,0.06)">${f.short}</span>`
+        : `<span class="u-tag" style="opacity:.52" title="升至 2★ 觉醒【${f.name}】阵营">${f.short}·2★</span>`
+    ).join("");
+
+    const trait = unit.trait && G.UNIT_TRAITS ? G.UNIT_TRAITS[unit.trait] : null;
+    const traitBadge = trait
+      ? `<span class="u-tag" style="border:1px solid ${trait.color};color:${trait.color};background:rgba(12,16,28,0.85)" title="${trait.name}：${trait.desc}">${trait.badge}</span>`
+      : "";
 
     return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" style="--u-color:${sym.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
@@ -408,6 +418,8 @@
       <div class="u-body">
         <div class="u-top">
           <span class="u-name">${displayName}</span>
+          ${factionTags}
+          ${traitBadge}
           ${unit.lucky ? '<span class="u-tag">幸运</span>' : ""}
           ${unit.evolution ? `<span class="u-tag evo-t">${sym.evolutions[unit.evolution].tag}</span>` : ""}
         </div>
@@ -458,9 +470,9 @@
     const st = G.getUnitStats(unit, run);
     const evo = unit.evolution ? sym.evolutions[unit.evolution] : null;
     const sellVal = 15 + unit.xp * 10;
-    const nextReq = G.nextStarXp ? G.nextStarXp(st.level) : null;
-    const nextNeed = nextReq !== null
-      ? `距 ${st.level + 1} 星${st.level === 1 ? "（转职）" : ""}还差 ${Math.max(0, nextReq - unit.xp)} 经验`
+    const sameStarCopies = [...run.field, ...run.bench].filter(u => u && u.type === unit.type && G.unitLevel(u) === st.level).length;
+    const nextNeed = st.level < 5
+      ? `三合一升 ${st.level + 1} 星进度：${sameStarCopies} / 3 个同星同职业`
       : "已达 5 星神话满星";
 
     el.innerHTML = `<div class="ins-left">

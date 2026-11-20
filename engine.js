@@ -236,17 +236,6 @@
           "穿透暴击为全军叠加圣盾。", 1.35, 1.33)
       }
     },
-    gold: {
-      id: "gold",
-      kind: "resource",
-      name: "命运金币",
-      short: "金币",
-      role: "经济 · 爆发",
-      color: "#ffd86b",
-      bg: "#3d2f12",
-      baseWeight: 11,
-      skillDesc: "三连立即获得 +55 金币与 +1 次免费转动！"
-    },
     joker: {
       id: "joker",
       kind: "wild",
@@ -256,29 +245,7 @@
       color: "#ff99e5",
       bg: "#3c1a38",
       baseWeight: 2,
-      skillDesc: "可替代任意符号连线！参与召唤的单位获得【幸运强化】+20%全属性。"
-    },
-    iron: {
-      id: "iron",
-      kind: "resource",
-      name: "锻造精铁",
-      short: "精铁",
-      role: "锻造 · 强化",
-      color: "#9aa8bf",
-      bg: "#1f2430",
-      baseWeight: 14,
-      skillDesc: "三连锻造装备：全军永久 +14 生命、+3 攻击，并获得 +15 金币！"
-    },
-    ember: {
-      id: "ember",
-      kind: "resource",
-      name: "星火源晶",
-      short: "星火",
-      role: "充能 · 经验",
-      color: "#ff8c38",
-      bg: "#361c14",
-      baseWeight: 12,
-      skillDesc: "三连充能：狂热槽 +40%，并使随机 1 名出战主力获得 +1 经验！"
+      skillDesc: "可替代任意兵种连线！参与召唤的单位获得【幸运强化】+12%全属性。"
     }
   };
 
@@ -310,26 +277,57 @@
   };
 
   const FACTION_SYNERGIES = {
-    summons: { name: "召唤军团", types: ["engineer", "necromancer"], color: "#8ce5aa",
-      desc: "召唤物生命 +50%、攻击 +40%", enhanced: "召唤物生命 +80%、攻击 +65%" },
-    blood: { name: "狂暴嗜血", types: ["berserker", "assassin"], color: "#ff806a",
-      desc: "全军暴击吸血 15%", enhanced: "全军暴击吸血 25%" },
-    gold: { name: "黄金商队", types: ["bard"], cores: ["coin_sack", "midas_reel", "interest_ledger", "blast_cart"],
-      color: "#ffd86b", desc: "击杀敌人 +4 金币", enhanced: "击杀敌人 +7 金币" },
-    holy: { name: "圣光铁壁", types: ["knight", "priest", "valkyrie"], color: "#f8e296",
-      desc: "护盾 +35%，破盾时反弹圣伤", enhanced: "护盾 +55%，破盾反伤加强" },
-    elements: { name: "元素过载", types: ["mage", "archer"], color: "#b78bfa",
-      desc: "全军每 4 次攻击触发连锁爆裂", enhanced: "每 3 次攻击触发连锁爆裂" }
+    alliance: {
+      name: "圣辉联盟", short: "联盟",
+      types: ["knight", "priest", "engineer", "valkyrie"],
+      color: "#f8e296",
+      desc: "2名 2★+：护盾 +35% 且破盾反弹圣伤",
+      enhanced: "3名 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
+    },
+    elves: {
+      name: "银月精灵", short: "精灵",
+      types: ["archer", "mage", "bard"],
+      color: "#7be7ff",
+      desc: "2名 2★+：全军攻速 +18%，每 4 击触发星落爆裂",
+      enhanced: "3名 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币（需升 3 级轮盘解锁吟游者）"
+    },
+    horde: {
+      name: "赤血部落", short: "部落",
+      types: ["assassin", "berserker", "engineer"],
+      color: "#ff7a6b",
+      desc: "2名 2★+：全军暴击吸血 22%，暴击率 +12%",
+      enhanced: "3名 2★+：全军暴击吸血 38%，全军攻击 +25%（需升 2 级轮盘解锁狂战与炮手）"
+    },
+    undead: {
+      name: "幽冥议会", short: "幽冥",
+      types: ["mage", "assassin", "necromancer"],
+      color: "#a8ffcf",
+      desc: "2名 2★+：召唤物生命/攻击 +55%，全军技能伤害 +20%",
+      enhanced: "3名 2★+：召唤物属性 +90%，每击杀敌军全军回血 8%（需升 3 级轮盘解锁亡灵唤师）"
+    }
   };
 
+  const UNIT_UNLOCK_TIER = {
+    knight: 1, archer: 1, mage: 1, priest: 1, assassin: 1,
+    berserker: 2, engineer: 2,
+    necromancer: 3, bard: 3,
+    valkyrie: 4
+  };
+
+  function getUnitFactions(type) {
+    return Object.entries(FACTION_SYNERGIES)
+      .filter(([, info]) => info.types.includes(type))
+      .map(([id, info]) => ({ id, short: info.short, name: info.name, color: info.color }));
+  }
+
   function getFactionSynergies(run) {
-    const types = run.field.filter(Boolean).map(unit => unit.type);
+    // ONLY 2-star+ heroes awaken their Faction Crest and count toward Faction Synergies!
+    const awakened = run.field.filter(u => u && unitLevel(u) >= 2).map(u => u.type);
+    const uniqueAwakened = new Set(awakened);
     return Object.entries(FACTION_SYNERGIES).map(([id, info]) => {
-      const members = types.filter(type => info.types.includes(type));
-      const hasGoldCore = !!info.cores?.some(core => run.cores.includes(core));
-      const count = members.length + Number(hasGoldCore);
-      const qualifies = info.cores ? members.length > 0 && hasGoldCore : new Set(members).size >= 2;
-      return { id, ...info, count, tier: qualifies ? (count >= 4 ? 4 : 2) : 0 };
+      const count = info.types.filter(t => uniqueAwakened.has(t)).length;
+      const tier = count >= 3 ? 3 : count >= 2 ? 2 : 0;
+      return { id, ...info, count, tier };
     });
   }
 
@@ -423,7 +421,7 @@
       name: "点金滚轮",
       rarity: "legendary",
       icon: "👑",
-      desc: "金币符号权重 +10；每次触发金币连线时，全军永久 +16 生命、+3 攻击。"
+      desc: "每次兵种连线额外爆出 +18 金币，且全军永久 +10 生命、+2 攻击。"
     },
     {
       id: "free_spin_gear",
@@ -511,7 +509,7 @@
       crit_dice: `升至 Lv.${nextLv}：全军暴击率提升至 +${20 + (nextLv - 1) * 12}%，暴击伤害提升！`,
       interest_ledger: `升至 Lv.${nextLv}：每波利息上限提升至 +${45 + (nextLv - 1) * 25}G。`,
       berserk_banner: `升至 Lv.${nextLv}：低血量狂暴加成飙升至 +${45 + (nextLv - 1) * 22}% 攻速与攻击！`,
-      midas_reel: `升至 Lv.${nextLv}：每次金币连线全军永久 +${16 * nextLv} 生命、+${3 * nextLv} 攻击！`,
+      midas_reel: `升至 Lv.${nextLv}：每次兵种连线额外 +${18 * nextLv} 金币，全军永久 +${10 * nextLv} 生命、+${2 * nextLv} 攻击！`,
       free_spin_gear: `升至 Lv.${nextLv}：每波免费转动提升至 +${1 + nextLv} 次！`,
       royal_decree: `升至 Lv.${nextLv}：双倍召唤概率提升至 ${Math.min(85, 40 + (nextLv - 1) * 20)}%，全军攻击 +${12 * nextLv}%！`,
       iron_forge: `升至 Lv.${nextLv}：全军生命 +${18 * nextLv}%、攻击 +${10 * nextLv}%。`,
@@ -552,32 +550,47 @@
       cd: Math.max(0.65, Number((u.cd * 0.88).toFixed(2)))
     });
 
-    const makeSquad = (size, hpM, atkM) =>
-      Array.from({ length: size }, (_, i) => scaleUnit(regular[i % regular.length], hpM, atkM));
+    const makeSquad = (size, hpM, atkM, offset = 0) =>
+      Array.from({ length: size }, (_, i) => scaleUnit(regular[(i + offset) % regular.length], hpM, atkM));
 
     if (boss.length > 0) {
-      // Boss wave: 3 full squads! Vanguard (3) -> Elite Guard (4) -> Boss + Royal Escorts (3)
       const boostedBoss = boss.map(b => ({ ...b, cd: Math.max(0.75, Number((b.cd * 0.88).toFixed(2))) }));
+      const bossPatterns = [
+        [3, 4, 2],
+        [2, 5, 3],
+        [4, 3, 3],
+        [3, 5, 3],
+        [4, 4, 4]
+      ];
+      const [p1, p2, p3] = bossPatterns[(wave.chapter - 1) % bossPatterns.length];
       return {
         ...wave,
         phases: [
-          { delay: 0, enemies: makeSquad(3, 1.0, 1.0) },
-          { delay: 5.0, enemies: makeSquad(4, 1.25, 1.15) },
-          { delay: 10.0, enemies: [...boostedBoss, ...makeSquad(3, 1.35, 1.2)] }
+          { delay: 0, enemies: makeSquad(p1, 1.0, 1.0, 0) },
+          { delay: 5.0, enemies: makeSquad(p2, 1.22, 1.14, 1) },
+          { delay: 10.0, enemies: [...boostedBoss, ...makeSquad(p3, 1.32, 1.18, 2)] }
         ]
       };
     }
 
-    // Normal wave: ALWAYS 3 tactical squads that stack if not cleared in time!
-    // Gentle 2-2-3 opener on Wave 1-2, full 3-3-4 / 4-4-5 squads from Wave 3 onward
-    const early = !wave.endless && wave.wave <= 2;
-    const baseSize = early ? 2 : Math.max(3, Math.min(4, regular.length));
+    // Distinct asymmetric squad counts per wave so every wave feels different!
+    const idxInCh = ((wave.wave - 1) % 6);
+    const wavePatterns = [
+      [2, 3, 2], // W1: light probe -> push -> tail
+      [3, 2, 4], // W2: front clash -> brief breather -> heavy wave
+      [3, 4, 2], // W3 Mini-Boss: vanguard -> main horde -> elite lead
+      [2, 4, 5], // W4: escalating swarm
+      [4, 3, 5]  // W5: intense assault
+    ];
+    const pat = wavePatterns[idxInCh] || [3, 3, 4];
+    const chExtra = wave.chapter >= 4 ? 1 : 0;
+    const w1Scale = (!wave.endless && wave.wave === 1) ? 0.78 : 1;
     return {
       ...wave,
       phases: [
-        { delay: 0, enemies: makeSquad(baseSize, 1.0, 1.0) },
-        { delay: 6.0, enemies: makeSquad(baseSize, 1.15, 1.1) },
-        { delay: 12.0, enemies: makeSquad(Math.min(5, baseSize + 1), 1.3, 1.2) }
+        { delay: 0, enemies: makeSquad(pat[0], 1.0 * w1Scale, 1.0 * w1Scale, 0) },
+        { delay: 5.8, enemies: makeSquad(pat[1] + chExtra, 1.15 * w1Scale, 1.1 * w1Scale, 1) },
+        { delay: 11.6, enemies: makeSquad(pat[2] + chExtra, 1.32 * w1Scale, 1.2 * w1Scale, 2) }
       ]
     };
   }
@@ -591,20 +604,26 @@
     const hpMult = CHAPTER_HP_MULT[chapter.id - 1] || 1;
     const atkMult = CHAPTER_ATK_MULT[chapter.id - 1] || 1;
     const normalWaves = encounters.map(([name, roster], index) => {
-      const growth = 1 + index * 0.14;
+      const isMiniBoss = index === 2; // Wave 3 of each chapter = Mini-Boss spike!
+      const growth = isMiniBoss ? 1.55 : (1 + index * 0.12);
+      const atkGrowth = isMiniBoss ? 1.38 : (1 + index * 0.10);
       return {
         chapter: chapter.id,
         wave: firstWave + index,
-        name,
+        name: isMiniBoss ? `精英小首领 · ${name}` : name,
         boss: false,
-        reward: reward + index * 4,
-        enemies: roster.map(key => {
+        miniBoss: isMiniBoss,
+        reward: reward + index * 4 + (isMiniBoss ? 14 : 0),
+        enemies: roster.map((key, eIdx) => {
           const enemy = enemies[key];
+          const isLead = isMiniBoss && eIdx === 0;
           return {
             ...enemy,
+            name: isLead ? `精锐首领·${enemy.name}` : enemy.name,
             lv: chapter.id,
-            hp: Math.round(enemy.hp * hpMult * growth),
-            atk: Math.round(enemy.atk * atkMult * growth)
+            hp: Math.round(enemy.hp * hpMult * growth * (isLead ? 1.45 : 1)),
+            atk: Math.round(enemy.atk * atkMult * atkGrowth * (isLead ? 1.22 : 1)),
+            shieldPierce: isMiniBoss ? 0.25 : 0
           };
         })
       };
@@ -622,8 +641,9 @@
         {
           ...bossEnemy,
           lv: chapter.id,
-          hp: Math.round(bossEnemy.hp * hpMult * 2.6),
-          atk: Math.round(bossEnemy.atk * atkMult * 1.6),
+          hp: Math.round(bossEnemy.hp * hpMult * 2.85),
+          atk: Math.round(bossEnemy.atk * atkMult * 1.7),
+          shieldPierce: 0.4,
           skillInterval: Math.max(2.6, (bossEnemy.skillInterval || 4.2) * 0.85),
           bossId: chapter.bossId
         },
@@ -648,7 +668,7 @@
       enemies: {
         raider: campaignEnemy("哥布林掠袭者", "melee", "ch1_goblin_raider", 105, 10, 1.15),
         brute: campaignEnemy("兽人重斧", "tank", "ch1_orc_brute", 165, 12, 1.25),
-        scout: campaignEnemy("哥布林斥候", "ranged", "ch1_goblin_raider", 70, 11, 1.10)
+        scout: campaignEnemy("哥布林弓手", "ranged", "enemy_ranged", 70, 11, 1.10)
       },
       encounters: [
         ["斥候试探", ["raider", "raider", "scout"]],
@@ -660,7 +680,7 @@
       boss: {
         ...campaignEnemy("赤甲战神", "boss", "ch1_boss_warlord", 620, 26, 1.35),
         skillInterval: 4.5, escorts: ["brute", "scout"],
-        skill: "每 4.5 秒释放【裂地重击】，伤害全军并为自己叠盾"
+        skill: "【考题：基础承伤】裂地重击震荡全军并为自身叠 14% 护盾"
       }
     },
     {
@@ -683,7 +703,7 @@
       boss: {
         ...campaignEnemy("深渊巫妖", "boss", "ch2_boss_lich", 1120, 35, 1.25),
         skillInterval: 4.2, escorts: ["ghoul", "archer", "acolyte"],
-        skill: "每 4.2 秒释放【幽冥连锁】，攻击至多 3 名敌人并汲取生命"
+        skill: "【考题：清杂 AOE】召唤亡灵海，每存活 1 只小怪令巫妖获得 14% 减伤！"
       }
     },
     {
@@ -705,7 +725,7 @@
       boss: {
         ...campaignEnemy("霜狱女皇", "boss", "ch3_boss_icequeen", 1620, 42, 1.25),
         skillInterval: 4.8, escorts: ["guard", "yeti", "assassin"],
-        skill: "每 4.8 秒释放【霜狱新星】，伤害全军并降低攻速 2 秒"
+        skill: "【考题：保后排】冰刺狙杀并冻结后排输出 1.2 秒，同时全军减速！"
       }
     },
     {
@@ -727,7 +747,7 @@
       boss: {
         ...campaignEnemy("炎魔领主", "boss", "ch4_boss_balrog", 2130, 49, 1.24),
         skillInterval: 4.3, escorts: ["golem", "hound", "imp"],
-        skill: "每 4.3 秒释放【熔岩断层】，重击存活前排，前排全灭时席卷后排"
+        skill: "【考题：前排坦度】破盾重击存活前排；前排全灭则熔岩火浪席卷后排！"
       }
     },
     {
@@ -749,7 +769,7 @@
       boss: {
         ...campaignEnemy("厄运魔龙", "boss", "ch5_boss_dragon", 2240, 60, 1.2),
         skillInterval: 4, escorts: ["sentinel", "stalker", "mage"],
-        skill: "每 4 秒喷吐【毁灭龙息】，伤害全军并强化自身攻速与攻击"
+        skill: "【终极考题：爆发斩杀】龙息永久叠狂暴，半血召唤虚空刺客切后排！"
       }
     }
   ].map(({ enemies, encounters, boss, ...chapter }) => ({
@@ -817,59 +837,15 @@
     return run;
   }
 
-  const THREAT_TIERS = ["", "", "精锐", "统领", "霸主", "梦魇"];
-
-  function getEnemyThreatScale(run, chapter = run?.chapter ?? 1) {
-    let maxStar = 1;
-    let promoted = 0;
-    for (const unit of run?.field ?? []) {
-      if (!unit) continue;
-      const stars = unitLevel(unit);
-      maxStar = Math.max(maxStar, stars);
-      if (stars >= 2) promoted += 1;
-    }
-    if (!promoted) {
-      return { maxStar, hpMult: 1, atkMult: 1, shieldPierce: 0, label: "" };
-    }
-
-    // The first promotion modestly raises enemy stats. Stacked promotions
-    // mainly increase damage against shields, with bounded gains for large teams.
-    const additionalUnits = Math.min(3, promoted - 1);
-    const additionalStars = maxStar - 2;
-    const weight = chapter === 1 && run.mode !== "endless" ? 1 : 0.5;
-    return {
-      maxStar,
-      hpMult: 1 + weight * (0.30 + additionalUnits * 0.18 + additionalStars * 0.04),
-      atkMult: 1 + weight * (0.14 + additionalUnits * 0.10 + additionalStars * 0.05),
-      shieldPierce: weight * (0.55 + additionalUnits * 0.38 + additionalStars * 0.12),
-      label: THREAT_TIERS[maxStar]
-    };
-  }
-
-  function applyThreatToWave(wave, run) {
-    const threat = getEnemyThreatScale(run, wave.chapter);
-    if (threat.maxStar < 2) return { ...wave, threat };
-    const scaleE = e => ({
-      ...e,
-      name: e.kind === "boss" ? e.name : `${threat.label}·${e.name}`,
-      lv: (e.lv || 1) + (threat.maxStar - 1),
-      hp: Math.round(e.hp * threat.hpMult),
-      atk: Math.round(e.atk * threat.atkMult),
-      shieldPierce: threat.shieldPierce
-    });
-    return {
-      ...wave,
-      threat,
-      enemies: wave.enemies.map(scaleE),
-      phases: wave.phases.map(p => ({ ...p, enemies: p.enemies.map(scaleE) }))
-    };
+  function getEnemyThreatScale() {
+    // No auto rubber-banding on star-up so players enjoy crushing 2 normal waves;
+    // real difficulty jumps happen on Wave 3 (Mini-Boss) & Wave 6 (Chapter Boss)!
+    return { maxStar: 1, hpMult: 1, atkMult: 1, shieldPierce: 0, label: "" };
   }
 
   function getWave(run) {
-    const base = run?.mode === "endless"
-      ? getEndlessWave(run)
-      : (WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0]);
-    return run ? applyThreatToWave(base, run) : base;
+    if (run?.mode === "endless") return getEndlessWave(run);
+    return WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0];
   }
 
   function getChapter(run) {
@@ -907,6 +883,13 @@
     run.pendingEncounter ??= null;
     run.mode ??= "campaign";
     run.maxLines ??= Math.min(8, run.lastLines?.length ?? 0);
+    // Sanitize legacy saves that had removed resource symbols (gold/iron/ember) on the reel
+    if (Array.isArray(run.board)) {
+      run.board = run.board.map(s => SYMBOLS[s] ? s : "knight");
+    }
+    if (Array.isArray(run.nudgePreview)) {
+      run.nudgePreview = run.nudgePreview.map(s => SYMBOLS[s] ? s : "archer");
+    }
     return run;
   }
 
@@ -1036,8 +1019,8 @@
       statBonus: 0,
       bonusSpins: 0,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "gold", "joker", "iron", "ember"],
-      desc: "基础兵种池，1 锁格位"
+      unlocked: ["knight", "archer", "mage", "priest", "assassin", "joker"],
+      desc: "5 大基础兵种 + 万能百搭，1 锁格位"
     },
     {
       level: 2,
@@ -1048,8 +1031,8 @@
       statBonus: 0.08,
       bonusSpins: 0,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "gold", "joker", "iron", "ember"],
-      desc: "解锁 4 新职业 + 全军基础属性 +8% + 锁格 +1"
+      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "joker"],
+      desc: "解锁狂战/矮人炮手 + 全军属性 +8% + 锁格 +1"
     },
     {
       level: 3,
@@ -1060,9 +1043,9 @@
       statBonus: 0.16,
       bonusSpins: 1,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "necromancer", "bard", "gold", "joker", "iron", "ember"],
+      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "necromancer", "bard", "joker"],
       enchantCells: { 4: "double" },
-      desc: "解锁唤师/吟游者 + 中心【×2 双倍格】+ 每波免费转 +1 + 属性 +16%"
+      desc: "解锁唤师/吟游者 + 中心【×2 双倍格】+ 免费转 +1 + 属性 +16%"
     },
     {
       level: 4,
@@ -1073,9 +1056,9 @@
       statBonus: 0.26,
       bonusSpins: 1,
       bonusXp: 1,
-      unlocked: [...UNIT_IDS, "gold", "joker", "iron", "ember"],
+      unlocked: [...UNIT_IDS, "joker"],
       enchantCells: { 4: "double", 0: "gold", 8: "gold" },
-      desc: "解锁女武神 + 对角【+25G 鎏金】+ 新召自带 +1 经验 + 属性 +26%"
+      desc: "解锁女武神 + 对角【+25G 鎏金】+ 新召 +1 经验 + 属性 +26%"
     },
     {
       level: 5,
@@ -1086,9 +1069,9 @@
       statBonus: 0.38,
       bonusSpins: 2,
       bonusXp: 2,
-      unlocked: [...UNIT_IDS, "gold", "joker", "iron", "ember"],
+      unlocked: [...UNIT_IDS, "joker"],
       enchantCells: { 4: "double", 0: "gold", 8: "gold", 2: "lucky", 6: "lucky" },
-      desc: "副对角【★2 赐福】+ 新召直出 2 级 + 每波免费转 +2 + 属性 +38%！"
+      desc: "副对角【★2 赐福】+ 新召直出 2 星 + 免费转 +2 + 属性 +38%！"
     }
   ];
 
@@ -1099,11 +1082,49 @@
     lock: { badge: "锁定", name: "自动锁定格", desc: "每次转动免费保留当前符号，不占手动锁格额度。" }
   };
 
+  const UNIT_TRAITS = {
+    gem_donor: { id: "gem_donor", name: "源晶矿脉", badge: "💎吞噬+1~5晶", color: "#7be7ff", desc: "被吞噬或合星消耗时，随机爆出 1~5 颗命运水晶！" },
+    gold_donor: { id: "gold_donor", name: "黄金血脉", badge: "🪙吞噬+30G", color: "#ffd86b", desc: "被吞噬、合星消耗或出售时，额外爆出 +30 金币！" },
+    swift_soul: { id: "swift_soul", name: "疾风之魂", badge: "⚡攻速+16%", color: "#5ce1ff", desc: "天生迅捷，自身攻击速度永久 +16%。" },
+    iron_skin: { id: "iron_skin", name: "秘银之躯", badge: "🛡️血+22%", color: "#4fd1a5", desc: "天生铁骨，最大生命 +22% 且开局自带 +25 护盾。" },
+    fierce_blade: { id: "fierce_blade", name: "嗜血锋芒", badge: "⚔️攻+18%", color: "#ff7a6b", desc: "天生战狂，自身攻击力永久 +18%。" },
+    lucky_eye: { id: "lucky_eye", name: "鹰眼致命", badge: "🎯暴击+14%", color: "#f7cf6d", desc: "精准致命，自身暴击率永久 +14%。" },
+    vampiric: { id: "vampiric", name: "血族契约", badge: "🩸吸血15%", color: "#ff5c8a", desc: "普攻自带 15% 生命偷取，续航极强。" },
+    xp_seed: { id: "xp_seed", name: "传承火种", badge: "🔥吞噬强育", color: "#b78bfa", desc: "被吞噬时，为主体额外提供 +2 经验、+20 生命、+5 攻击！" }
+  };
+  const UNIT_TRAIT_IDS = Object.keys(UNIT_TRAITS);
+
+  function rollUnitTrait() {
+    return UNIT_TRAIT_IDS[Math.floor(Math.random() * UNIT_TRAIT_IDS.length)];
+  }
+
+  function triggerConsumedTrait(run, unit, target) {
+    if (!unit?.trait) return "";
+    if (unit.trait === "gem_donor") {
+      const gems = 1 + Math.floor(Math.random() * 5);
+      run.crystals = (run.crystals || 0) + gems;
+      return `源晶矿脉爆出 +${gems} 颗水晶！`;
+    }
+    if (unit.trait === "gold_donor") {
+      run.gold += 30;
+      return "黄金血脉爆出 +30 金币！";
+    }
+    if (unit.trait === "xp_seed" && target) {
+      target.xp = (target.xp || 0) + 2;
+      target.bonusHp = (target.bonusHp || 0) + 20;
+      target.bonusAtk = (target.bonusAtk || 0) + 5;
+      return "传承火种：+2 经验/+20 血/+5 攻！";
+    }
+    return "";
+  }
+
   function createUnit(id, type, opts = {}) {
     return {
       id,
       type,
+      stars: Math.min(5, Math.max(1, opts.stars || (opts.xp >= 2 ? 2 : 1))),
       xp: opts.xp || 0,
+      trait: opts.trait === undefined ? rollUnitTrait() : opts.trait,
       evolution: opts.evolution || null,
       lucky: !!opts.lucky,
       bonusHp: opts.bonusHp || 0,
@@ -1112,19 +1133,69 @@
     };
   }
 
-  const STAR_THRESHOLDS = [0, 2, 5, 9, 14]; // ★1, ★2(转职), ★3, ★4, ★5(神话)
+  const STAR_THRESHOLDS = [0, 3, 9, 27, 81]; // 3-of-a-kind merge pyramid: 3×★1=★2, 3×★2=★3, 3×★3=★4, 3×★4=★5
 
   function unitLevel(unit) {
-    const xp = unit.xp || 0;
-    if (xp >= 14) return 5;
-    if (xp >= 9) return 4;
-    if (xp >= 5) return 3;
-    if (xp >= 2) return 2;
-    return 1;
+    return Math.min(5, Math.max(1, unit?.stars || 1));
   }
 
   function nextStarXp(lvl) {
-    return STAR_THRESHOLDS[lvl] ?? null;
+    return lvl < 5 ? 3 : null; // Always needs 3 copies of current star to merge up
+  }
+
+  function tryAutoMerge(run) {
+    const merges = [];
+    let merged = true;
+    while (merged) {
+      merged = false;
+      const all = [];
+      run.field.forEach((u, idx) => { if (u) all.push({ area: "field", idx, u }); });
+      run.bench.forEach((u, idx) => { if (u) all.push({ area: "bench", idx, u }); });
+
+      const groups = new Map();
+      for (const entry of all) {
+        const s = unitLevel(entry.u);
+        if (s >= 5) continue;
+        const key = `${entry.u.type}:${s}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(entry);
+      }
+
+      for (const entries of groups.values()) {
+        if (entries.length < 3) continue;
+        // Prefer keeping a unit already on the field, evolved, or with highest bonus/xp
+        entries.sort((a, b) =>
+          (a.area === "field" ? 0 : 1) - (b.area === "field" ? 0 : 1)
+          || (b.u.evolution ? 1 : 0) - (a.u.evolution ? 1 : 0)
+          || (b.u.xp || 0) - (a.u.xp || 0)
+        );
+        const [keep, sac1, sac2] = entries;
+        keep.u.stars = unitLevel(keep.u) + 1;
+        keep.u.lucky = !!(keep.u.lucky || sac1.u.lucky || sac2.u.lucky);
+        keep.u.xp = (keep.u.xp || 0) + (sac1.u.xp || 0) + (sac2.u.xp || 0);
+        keep.u.bonusHp = (keep.u.bonusHp || 0) + (sac1.u.bonusHp || 0) + (sac2.u.bonusHp || 0);
+        keep.u.bonusAtk = (keep.u.bonusAtk || 0) + (sac1.u.bonusAtk || 0) + (sac2.u.bonusAtk || 0);
+        keep.u.bonusCrit = (keep.u.bonusCrit || 0) + (sac1.u.bonusCrit || 0) + (sac2.u.bonusCrit || 0);
+        if (!keep.u.evolution) keep.u.evolution = sac1.u.evolution || sac2.u.evolution || null;
+
+        const traitLogs = [];
+        for (const sac of [sac1, sac2]) {
+          const tMsg = triggerConsumedTrait(run, sac.u, keep.u);
+          if (tMsg) traitLogs.push(tMsg);
+          if (sac.area === "field") run.field[sac.idx] = null;
+          else run.bench[sac.idx] = null;
+          run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== sac.u.id);
+        }
+
+        if (keep.u.stars >= 2 && !keep.u.evolution && !run.pendingEvolutions.includes(keep.u.id)) {
+          run.pendingEvolutions.push(keep.u.id);
+        }
+        merges.push({ type: keep.u.type, stars: keep.u.stars, id: keep.u.id, traitLogs });
+        merged = true;
+        break;
+      }
+    }
+    return merges;
   }
 
   function hasCore(run, coreId) {
@@ -1135,10 +1206,27 @@
     const def = SYMBOLS[unit.type];
     const lvl = unitLevel(unit);
     const effXp = unit.xp <= 14 ? unit.xp : 14 + (unit.xp - 14) * 0.45;
-    let hp = def.hp * (1 + effXp * 0.11 + (lvl - 1) * 0.08) + unit.bonusHp + (run?.globalBonusHp || 0);
-    let atk = def.atk * (1 + effXp * 0.10 + (lvl - 1) * 0.07) + unit.bonusAtk + (run?.globalBonusAtk || 0);
+    // Higher-tier slot units have higher base quality (incentivizing upgrading the slot machine!)
+    const unitTierMult = [1, 1, 1.15, 1.28, 1.45][UNIT_UNLOCK_TIER[unit.type] || 1] || 1;
+    // Linear growth per XP (+8% HP / +7% ATK), unmistakable jump on Star-Up (+22% HP / +20% ATK per star)!
+    let hp = def.hp * unitTierMult * (1 + effXp * 0.08 + (lvl - 1) * 0.22) + unit.bonusHp + (run?.globalBonusHp || 0);
+    let atk = def.atk * unitTierMult * (1 + effXp * 0.07 + (lvl - 1) * 0.20) + unit.bonusAtk + (run?.globalBonusAtk || 0);
     let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.025;
     let atkCd = def.atkCd * (1 - (lvl - 1) * 0.035);
+
+    if (run) {
+      const fMap = Object.fromEntries(getFactionSynergies(run).map(f => [f.id, f.tier]));
+      if (fMap.alliance >= 3) atk *= 1.18;
+      if (fMap.horde >= 2) crit += 0.12;
+      if (fMap.horde >= 3) atk *= 1.25;
+      if (fMap.elves >= 3) atkCd *= 0.72;
+      else if (fMap.elves >= 2) atkCd *= 0.85;
+    }
+
+    if (unit.trait === "swift_soul") atkCd *= 0.84;
+    if (unit.trait === "iron_skin") hp *= 1.22;
+    if (unit.trait === "fierce_blade") atk *= 1.18;
+    if (unit.trait === "lucky_eye") crit += 0.14;
 
     if (unit.lucky) {
       hp *= 1.12;
@@ -1209,20 +1297,19 @@
     for (const id of SYMBOL_IDS) {
       weights[id] = SYMBOLS[id].baseWeight;
     }
+    // Zero-unit start: 0 starting heroes, 100 Gold, spins cost 20 -> 30 -> 40...
     const field = Array(FIELD_SLOTS).fill(null);
-    field[1] = createUnit(1, "knight");
-    field[4] = createUnit(2, "archer");
 
     return restoreRun({
       mode: "campaign",
       chapter: 1,
       wave: 1,
       startedAt: Date.now(),
-      gold: 75,
+      gold: 100,
       crystals: 2,
       hp: 5,
       maxHp: 5,
-      freeSpins: 2,
+      freeSpins: 0,
       paidSpinsThisWave: 0,
       spinsThisWave: 0,
       totalSpins: 0,
@@ -1237,7 +1324,7 @@
       nudgePreview: ["knight", "archer", "mage"],
       field,
       bench: Array(BENCH_SLOTS).fill(null),
-      board: ["knight", "archer", "mage", "gold", "knight", "archer", "mage", "knight", "gold"],
+      board: ["knight", "archer", "mage", "priest", "assassin", "knight", "archer", "mage", "priest"],
       locked: [],
       lastLines: [],
       cores: [],
@@ -1271,7 +1358,6 @@
         val += tier.jokerBonus;
         if (hasCore(run, "wild_surge")) val *= 2;
       }
-      if (id === "gold" && hasCore(run, "midas_reel")) val += 10;
       w[id] = Math.max(2, val);
     }
     return w;
@@ -1451,49 +1537,17 @@
           run.pendingEvolutions.push(unit.id);
         }
         summary.summoned.push(unit);
-        summary.notes.push(`三王大满贯！+${g} 金币 & 召唤 2 级幸运精锐！`);
-      } else if (hit.symbol === "iron") {
-        const g = 15 * mult;
-        const hpB = 14 * mult;
-        const atkB = 3 * mult;
-        run.gold += g;
-        run.globalBonusHp += hpB;
-        run.globalBonusAtk += atkB;
-        summary.goldGained += g;
-        summary.notes.push(`锻造精铁：全军永久 +${hpB} 生命、+${atkB} 攻击，+${g} 金币！`);
-      } else if (hit.symbol === "ember") {
-        const charge = 40 * mult;
-        run.fever = Math.min(100, (run.fever || 0) + charge);
-        if (run.fever >= 100 && !run.feverActive) {
-          run.feverActive = true;
-          summary.triggeredFever = true;
-        }
-        const deployed = run.field.filter(Boolean);
-        let xpNote = "";
-        if (deployed.length > 0) {
-          const pick = deployed[Math.floor(Math.random() * deployed.length)];
-          const before = unitLevel(pick);
-          pick.xp += mult;
-          if (before < 2 && unitLevel(pick) >= 2 && !pick.evolution && !run.pendingEvolutions.includes(pick.id)) {
-            run.pendingEvolutions.push(pick.id);
-          }
-          xpNote = `，${SYMBOLS[pick.type].short} +${mult} 经验`;
-        }
-        summary.notes.push(`星火充能：狂热 +${charge}%${xpNote}！`);
-      } else if (hit.symbol === "gold") {
-        const g = 38 * mult;
-        run.gold += g;
-        run.freeSpins += 1;
-        summary.goldGained += g;
-        summary.freeSpinsGained += 1;
-        if (hasDouble) summary.notes.push("双倍符文格：金币收益 ×2！");
+        summary.notes.push(`三王大满贯！+${g} 金币 & 召唤 2 星幸运精锐！`);
+      } else {
         const midasLv = coreLevel(run, "midas_reel");
         if (midasLv) {
-          run.globalBonusHp += 16 * midasLv;
-          run.globalBonusAtk += 3 * midasLv;
-          summary.notes.push(`点金滚轮 Lv.${midasLv}：全军永久 +${16 * midasLv} 生命、+${3 * midasLv} 攻击！`);
+          const mg = 18 * midasLv;
+          run.gold += mg;
+          run.globalBonusHp += 10 * midasLv;
+          run.globalBonusAtk += 2 * midasLv;
+          summary.goldGained += mg;
+          summary.notes.push(`点金滚轮 Lv.${midasLv}：+${mg}G，全军 +${10 * midasLv}血/+${2 * midasLv}攻`);
         }
-      } else {
         const tier = getReelTier(run);
         const wildLv = coreLevel(run, "wild_surge");
         const extraXp = (hits.length >= 2 ? 1 : 0)
@@ -1513,8 +1567,13 @@
             lucky: hit.hasWild || isFever || hasLuckyCell
           });
           const placement = addUnitToRoster(run, unit);
+          const merges = tryAutoMerge(run);
+          for (const m of merges) {
+            summary.notes.push(`三合一升星：${SYMBOLS[m.type].name} → ${"★".repeat(m.stars)}！`);
+            if (m.traitLogs?.length) summary.notes.push(...m.traitLogs);
+          }
           if (unitLevel(unit) >= 2 && !unit.evolution && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
-            if (!run.pendingEvolutions.includes(unit.id)) {
+            if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
               run.pendingEvolutions.push(unit.id);
             }
           }
@@ -1552,10 +1611,25 @@
 
     run.board = nextBoard;
     run.locked = [];
+    run.paidNudgesThisSpin = 0;
     run.nudgePreview = [rollSymbol(run), rollSymbol(run), rollSymbol(run)];
 
-    const hits = evaluateBoard(nextBoard);
+    let hits = evaluateBoard(nextBoard);
+    const totalOwnedUnits = [...run.field, ...run.bench].filter(Boolean).length;
+    let pityTriggered = false;
+    // Anti-brick pity ONLY when player has 0 units AND cannot afford another spin (won't fire if holding gold for interest!)
+    if (hits.length === 0 && totalOwnedUnits === 0 && run.freeSpins <= 0 && !run.feverActive && run.gold < getSpinCost(run)) {
+      const unitPool = getReelTier(run).unlocked.filter(id => UNIT_IDS.includes(id));
+      const rescueSym = unitPool[Math.floor(Math.random() * unitPool.length)] || "knight";
+      nextBoard[3] = rescueSym;
+      nextBoard[4] = rescueSym;
+      nextBoard[5] = rescueSym;
+      run.board = nextBoard;
+      hits = evaluateBoard(nextBoard);
+      pityTriggered = true;
+    }
     run.lastLines = hits;
+    run.claimedLines = hits.map(h => h.id);
 
     const summary = {
       board: [...nextBoard],
@@ -1565,7 +1639,7 @@
       goldGained: 0,
       freeSpinsGained: 0,
       summoned: [],
-      notes: [],
+      notes: pityTriggered ? ["零兵绝境保底触发！强制连线召唤首发英雄！"] : [],
       triggeredFever: false
     };
 
@@ -1604,11 +1678,13 @@
   }
 
   function getNudgeCost(run) {
-    return (run.nudgesLeft || 0) > 0 ? 0 : 10;
+    if ((run.nudgesLeft || 0) > 0) return 0;
+    return (run.paidNudgesThisSpin || 0) >= 2 ? null : 10;
   }
 
   function getWinningNudgeCols(run) {
     const preview = run.nudgePreview || [];
+    const claimed = new Set(run.claimedLines || []);
     const cols = [];
     for (let col = 0; col < 3; col += 1) {
       const inc = preview[col];
@@ -1617,7 +1693,10 @@
       b[col + 6] = b[col + 3];
       b[col + 3] = b[col];
       b[col] = inc;
-      if (evaluateBoard(b).length > 0) cols.push(col);
+      const newHits = evaluateBoard(b).filter(line =>
+        !claimed.has(line.id) && line.cells.some(c => c % 3 === col)
+      );
+      if (newHits.length > 0) cols.push(col);
     }
     return cols;
   }
@@ -1625,9 +1704,11 @@
   function nudgeColumn(run, col) {
     if (col < 0 || col > 2) return null;
     const cost = getNudgeCost(run);
+    if (cost === null) return null;
     if (cost > 0) {
       if (run.gold < cost) return null;
       run.gold -= cost;
+      run.paidNudgesThisSpin = (run.paidNudgesThisSpin || 0) + 1;
     } else {
       if (run.nudgesLeft <= run.nudgeReserve) run.nudgeReserve -= 1;
       run.nudgesLeft -= 1;
@@ -1640,11 +1721,19 @@
     run.board = b;
     run.nudgePreview[col] = rollSymbol(run);
 
-    const hits = evaluateBoard(b);
-    run.lastLines = hits;
+    const claimed = new Set(run.claimedLines || []);
+    const allHits = evaluateBoard(b);
+    // ONLY award NEW paylines that actually pass through the nudged column and haven't been claimed on this spin!
+    const newHits = allHits.filter(line =>
+      !claimed.has(line.id) && line.cells.some(c => c % 3 === col)
+    );
+    for (const h of newHits) claimed.add(h.id);
+    run.claimedLines = [...claimed];
+    run.lastLines = newHits;
+
     const summary = {
       board: [...b],
-      hits,
+      hits: newHits,
       cost,
       isFever: false,
       goldGained: 0,
@@ -1652,8 +1741,8 @@
       summoned: [],
       notes: []
     };
-    if (hits.length > 0) {
-      awardHits(run, hits, false, summary);
+    if (newHits.length > 0) {
+      awardHits(run, newHits, false, summary);
     }
     return summary;
   }
@@ -1721,6 +1810,11 @@
       inherited = "同职融合 +20 生命 +5 攻击（完整继承经验）";
     }
 
+    const traitBonus = triggerConsumedTrait(run, donor, target);
+    if (traitBonus) {
+      inherited = inherited ? `${inherited} · ${traitBonus}` : traitBonus;
+    }
+
     if (dLoc.area === "field") run.field[dLoc.index] = null;
     else run.bench[dLoc.index] = null;
 
@@ -1745,7 +1839,7 @@
     if (loc.area === "field" && deployedCount <= 1 && run.bench.every(u => !u)) {
       return 0; // Keep at least 1 unit alive
     }
-    const value = 15 + loc.unit.xp * 10;
+    const value = 15 + loc.unit.xp * 10 + (loc.unit.trait === "gold_donor" ? 30 : 0);
     run.gold += value;
     if (loc.area === "field") run.field[loc.index] = null;
     else run.bench[loc.index] = null;
@@ -2065,6 +2159,7 @@
     retainedCells,
     createRun,
     STAR_THRESHOLDS,
+    UNIT_TRAITS,
     createUnit,
     unitLevel,
     nextStarXp,
@@ -2078,6 +2173,8 @@
     getUnitStats,
     getActiveSynergies,
     getFactionSynergies,
+    getUnitFactions,
+    UNIT_UNLOCK_TIER,
     getEffectiveWeights,
     getSymbolOdds,
     getMaxLocks,
