@@ -151,6 +151,7 @@
       this.canvas.width = Math.floor(this.w * dpr);
       this.canvas.height = Math.floor(this.h * dpr);
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.ctx.imageSmoothingEnabled = false;
       if (this.run && this.mode === "preview") {
         this.syncPreview(this.run);
       }
@@ -210,9 +211,11 @@
         const inFrontZone = pos.x >= this.w * 0.28;
         const aegisLv = (u.skills || []).find(s => s.id === "aegis_wall")?.level || 0;
         const frostLv = (u.skills || []).find(s => s.id === "frost_armor")?.level || 0;
+        const titanLv = (u.skills || []).find(s => s.id === "earth_cataclysm")?.level || 0;
         const masteries = u.masteryBuffs || [];
-        let shield = aegisLv > 0 ? Math.round(st.hp * ([0.15, 0.25, 0.36, 0.48, 0.65][aegisLv - 1] || 0.15)) : 0;
+        let shield = aegisLv > 0 ? Math.round(st.hp * ([0.15, 0.25, 36 / 100, 0.48, 0.65][aegisLv - 1] || 0.15)) : 0;
         if (frostLv > 0) shield += Math.round(st.hp * ([0.20, 0.30, 0.42, 0.55, 0.72][frostLv - 1] || 0.20));
+        if (titanLv > 0) shield += Math.round(st.hp * ([0.35, 0.50, 0.68, 0.88, 1.15][titanLv - 1] || 0.35));
         if (masteries.includes("thorn_armor")) shield += Math.round(st.hp * 0.35);
         if (masteries.includes("shadow_shield")) shield += Math.round(st.hp * 0.40);
         if (masteries.includes("iron_will")) shield += Math.round(st.hp * 0.50);
@@ -257,7 +260,7 @@
           range: (st.range || 55) * scale,
           rawMoveSpd: st.moveSpd || 100,
           rawRange: st.range || 55,
-          mass: (u.type === "knight" || u.type === "berserker" || u.type === "frost_warden" || u.type === "sun_templar" ? 2.4 : 1.0) * (masteries.includes("titan_body") ? 2.0 : 1),
+          mass: (["knight", "berserker", "frost_warden", "royal_halberd", "iron_inquisitor", "sun_templar", "dread_knight_lord", "titan_warlord"].includes(u.type) ? 2.4 : 1.0) * (masteries.includes("titan_body") ? 2.0 : 1),
           cdTimer: st.atkCd * (0.25 + Math.random() * 0.35),
           atkCount: 0,
           fortressTimer: 4.0,
@@ -424,7 +427,7 @@
       const y = Math.max(35, Math.min(this.h - 55, owner.y + (existing.length - 1) * 28));
       this.allies.push({
         uid: "ally-summon-" + this.nextSummonId++, ownerId: owner.uid, side: "ally", summonKind,
-        type: summonKind, artKey: turret ? "turret" : "enemy_tank", slotIdx: turret ? 3 : 0,
+        type: summonKind, artKey: turret ? "turret" : "skeleton", slotIdx: turret ? 3 : 0,
         name: turret ? "蒸汽炮台" : armored ? "持盾骸骨" : "骸骨战士",
         evolution: turret ? owner.evolution : null, taunt: !turret && armored,
         x, y, homeX: x, homeY: y, hp, maxHp: hp, atk, shield: 0,
@@ -788,7 +791,9 @@
       const critMult = (hasCritDice ? 2.1 : 1.65) + (this.goldPoet ? .25 : 0) + shadowCritBonus;
       let critChance = u.crit + (this.synergies.assassin ? 0.18 : 0) + (u.evolution === "bladedancer" ? 0.15 : 0);
       let isCrit = Math.random() < critChance;
-      let dmg = u.atk * u.atkBuff;
+      const maxTotemLv = this.allies.reduce((best, a) => a.alive ? Math.max(best, this._skillLv(a, "storm_totem")) : best, 0);
+      const totemMult = maxTotemLv > 0 ? (1 + ([0.08, 0.13, 0.19, 0.26, 0.35][maxTotemLv - 1] || 0.08)) : 1;
+      let dmg = u.atk * u.atkBuff * totemMult;
 
       if (u.pactFirstCrit) {
         u.pactFirstCrit = false;
@@ -1008,8 +1013,18 @@
           });
           if (u.evolution3 === "venom_stalker" && dealt > 0) this._heal(u, dealt * 0.25);
         }
+      } else if (["moon_druid", "plague_alchemist", "thunder_shaman", "star_ranger", "dragon_cannoneer", "chrono_mage", "void_emperor", "celestial_seraph", "celestial_artemis"].includes(u.type)) {
+        this.projectiles.push({
+          x: u.x + 12,
+          y: u.y,
+          tx: target.x,
+          ty: target.y,
+          color: u.color,
+          speed: 520,
+          onHit: () => this._applyDamage(u, target, dmg, { isCrit })
+        });
       } else {
-        // Knight melee
+        // Frontline melee heroes
         this._applyDamage(u, target, dmg, { isCrit });
         if (u.evolution3 === "war_colossus" && u.atkCount % 3 === 0) {
           this.rings.push({ x: u.x, y: u.y, r: 10, maxR: 105, color: "#4fd1a5", life: 0.35 });
@@ -1114,6 +1129,168 @@
         this.rings.push({ x: target.x, y: target.y, r: 12, maxR: 112, color: "#ff75b5", life: 0.36 });
         this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 115)
           .forEach(e => this._applyDamage(u, e, u.atk * mult, { color: "#ff75b5", isCrit }));
+      }
+
+      // Expanded 13 New Green / Blue / Purple / Gold Hero Skills (Lv.1~Lv.5)
+      const bloomLv = this._skillLv(u, "nature_bloom");
+      if (bloomLv > 0) {
+        const mult = [0.28, 0.44, 0.62, 0.82, 1.08][bloomLv - 1] || 0.28;
+        const count = u.evolution3 === "world_tree" ? 9 : u.evolution === "emerald_sage" ? 3 : 2;
+        this.allies.filter(a => a.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, count).forEach(ally => {
+          this._heal(ally, Math.round(u.atk * mult + 8));
+          if (u.evolution === "emerald_sage") this._grantShield(ally, u.atk * 0.35);
+          this.beams.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, color: "#4fd1a5", life: 0.22, jagged: false });
+        });
+        if (target.alive) target.slowTimer = Math.max(target.slowTimer || 0, 1.8);
+      }
+
+      const acidLv = this._skillLv(u, "acid_flask");
+      if (acidLv > 0) {
+        const mult = [0.45, 0.65, 0.88, 1.15, 1.48][acidLv - 1] || 0.45;
+        const rad = u.evolution === "venom_master" ? 105 : 80;
+        const shM = u.evolution3 === "caustic_melt" ? 3.5 : u.evolution === "venom_master" ? 2.8 : 2.0;
+        this.rings.push({ x: target.x, y: target.y, r: 8, maxR: rad, color: "#42ff9e", life: 0.32 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= rad).forEach(e => {
+          this._applyDamage(u, e, u.atk * mult, { color: "#42ff9e", shieldMultiplier: shM });
+          if (u.evolution3 === "caustic_melt") e.slowTimer = Math.max(e.slowTimer || 0, 2.0);
+        });
+      }
+
+      const halberdLv = this._skillLv(u, "halberd_sweep");
+      if (halberdLv > 0 && u.atkCount % 2 === 0) {
+        const mult = [0.65, 0.88, 1.15, 1.45, 1.85][halberdLv - 1] || 0.65;
+        const rad = u.evolution === "imperial_guard" ? 108 : 86;
+        this.rings.push({ x: u.x + 18, y: u.y, r: 10, maxR: rad, color: "#7be7ff", life: 0.28 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - u.x, e.y - u.y) <= rad + 12).forEach(e => {
+          this._applyDamage(u, e, u.atk * mult, { color: "#9ee8ff", isCrit: u.evolution3 === "wyrm_slayer" || isCrit });
+        });
+        this._grantShield(u, u.maxHp * (u.evolution === "imperial_guard" ? 0.14 : 0.08));
+      }
+
+      const totemLv = this._skillLv(u, "storm_totem");
+      if (totemLv > 0 && u.atkCount % 2 === 0) {
+        const mult = [0.55, 0.78, 1.05, 1.35, 1.75][totemLv - 1] || 0.55;
+        const cnt = u.evolution === "tempest_caller" ? 4 : 2;
+        this.enemies.filter(e => e.alive).slice(0, cnt).forEach(e => {
+          this.beams.push({ x1: u.x, y1: u.y - 12, x2: e.x, y2: e.y, color: "#5cc8ff", life: 0.24, jagged: true });
+          this._applyDamage(u, e, u.atk * mult, { color: "#7af0ff", shieldMultiplier: u.evolution3 === "earth_shaker" ? 2.5 : 1 });
+          if (u.evolution === "tempest_caller") e.slowTimer = Math.max(e.slowTimer || 0, 1.6);
+        });
+        if (u.evolution3 === "totem_overlord") {
+          this.allies.filter(a => a.alive).forEach(a => this._grantShield(a, u.atk * 0.4));
+        }
+      }
+
+      const starArrowLv = this._skillLv(u, "starlight_arrow");
+      if (starArrowLv > 0) {
+        const mult = [0.50, 0.72, 0.95, 1.25, 1.60][starArrowLv - 1] || 0.50;
+        const cnt = u.evolution3 === "eclipse_hunter" ? 2 : 1;
+        this.enemies.filter(e => e.alive && e !== target).slice(0, cnt).forEach(rear => {
+          this.beams.push({ x1: u.x, y1: u.y, x2: rear.x, y2: rear.y, color: "#9ee8ff", life: 0.2, jagged: false });
+          this._applyDamage(u, rear, dmg * mult, { color: "#9ee8ff", isCrit });
+        });
+      }
+
+      const hammerLv = this._skillLv(u, "judgement_hammer");
+      if (hammerLv > 0 && u.atkCount % 3 === 0) {
+        const mult = [0.80, 1.10, 1.45, 1.85, 2.35][hammerLv - 1] || 0.80;
+        this.rings.push({ x: target.x, y: target.y, r: 8, maxR: 88, color: "#ffd86b", life: 0.34 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 92).forEach(e => {
+          e.stunTimer = Math.max(e.stunTimer || 0, u.evolution === "grand_arbiter" ? 1.0 : 0.65);
+          this._applyDamage(u, e, u.atk * mult, { color: "#ffe894", shieldMultiplier: u.evolution === "witch_hunter" ? 2.5 : 1.4 });
+        });
+        this._grantShield(u, u.maxHp * (u.evolution === "grand_arbiter" ? 0.16 : 0.09));
+      }
+
+      const coilLv = this._skillLv(u, "death_coil");
+      if (coilLv > 0 && u.atkCount % 2 === 0) {
+        const mult = [0.65, 0.92, 1.25, 1.65, 2.15][coilLv - 1] || 0.65;
+        const rad = u.evolution === "abyss_monarch" ? 116 : 92;
+        this.rings.push({ x: u.x, y: u.y, r: 10, maxR: rad, color: "#6effc8", life: 0.34 });
+        let drained = 0;
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - u.x, e.y - u.y) <= rad).forEach(e => {
+          drained += this._applyDamage(u, e, u.atk * mult, { color: "#6effc8" });
+        });
+        const drainPct = u.evolution === "abyss_monarch" ? 0.55 : 0.35;
+        if (drained > 0) {
+          this._heal(u, drained * drainPct);
+          this._grantShield(u, drained * drainPct * 0.6);
+        }
+      }
+
+      const dragonGunLv = this._skillLv(u, "dragon_barrage");
+      if (dragonGunLv > 0) {
+        const mult = [0.80, 1.10, 1.45, 1.90, 2.45][dragonGunLv - 1] || 0.80;
+        const rad = u.evolution === "hellfire_artillery" ? 115 : 86;
+        this.rings.push({ x: target.x, y: target.y, r: 10, maxR: rad, color: "#ff6d24", life: 0.34 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= rad).forEach(e => {
+          this._applyDamage(u, e, u.atk * mult, { color: "#ff8c38", shieldMultiplier: 2.5, isCrit });
+        });
+      }
+
+      const waltzLv = this._skillLv(u, "crimson_waltz");
+      if (waltzLv > 0 && isCrit) {
+        const vampPct = [0.22, 0.30, 0.40, 0.52, 0.68][waltzLv - 1] || 0.22;
+        const rad = u.evolution === "scarlet_queen" ? 110 : 84;
+        this.rings.push({ x: target.x, y: target.y, r: 8, maxR: rad, color: "#ff3b6b", life: 0.3 });
+        let total = 0;
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= rad).forEach(e => {
+          total += this._applyDamage(u, e, u.atk * 0.85, { color: "#ff7597" });
+        });
+        if (total > 0) this._heal(u, total * vampPct);
+      }
+
+      const tempestLv = this._skillLv(u, "blade_tempest");
+      if (tempestLv > 0) {
+        const mult = [0.70, 0.96, 1.28, 1.65, 2.10][tempestLv - 1] || 0.70;
+        const cnt = u.evolution === "emerald_sovereign" ? 3 : 2;
+        this.enemies.filter(e => e.alive && e !== target).slice(0, cnt).forEach(e => {
+          this.beams.push({ x1: u.x, y1: u.y, x2: e.x, y2: e.y, color: "#34ebae", life: 0.2, jagged: false });
+          this._applyDamage(u, e, u.atk * mult, { color: "#7affdb" });
+        });
+        if (u.atkCount % 3 === 0) {
+          this.allies.filter(a => a.alive).forEach(a => this._grantShield(a, u.atk * 0.32));
+        }
+      }
+
+      const cataLv = this._skillLv(u, "earth_cataclysm");
+      if (cataLv > 0 && u.atkCount % 2 === 0) {
+        const mult = [0.95, 1.30, 1.75, 2.25, 2.90][cataLv - 1] || 0.95;
+        const rad = u.evolution3 === "planet_breaker" ? 150 : 118;
+        this.rings.push({ x: u.x, y: u.y, r: 12, maxR: rad, color: "#ff7a24", life: 0.38 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - u.x, e.y - u.y) <= rad).forEach(e => {
+          e.stunTimer = Math.max(e.stunTimer || 0, 0.75);
+          this._applyDamage(u, e, u.atk * mult, { color: "#ffb838", shieldMultiplier: 2.5, isCrit });
+        });
+      }
+
+      const graceLv = this._skillLv(u, "divine_grace");
+      if (graceLv > 0) {
+        const mult = [0.40, 0.58, 0.80, 1.08, 1.45][graceLv - 1] || 0.40;
+        const healAmt = Math.round(u.atk * mult);
+        this.allies.filter(a => a.alive).forEach(a => {
+          this._heal(a, healAmt);
+          this._grantShield(a, healAmt * 0.55);
+        });
+        if (target.alive) {
+          this.beams.push({ x1: target.x, y1: 12, x2: target.x, y2: target.y, color: "#fff3b0", life: 0.28, jagged: false });
+          this._applyDamage(u, target, u.atk * 1.15, { color: "#ffe894", isCrit });
+        }
+      }
+
+      const galaxyLv = this._skillLv(u, "galaxy_barrage");
+      if (galaxyLv > 0) {
+        const arrows = ([3, 4, 4, 5, 6][galaxyLv - 1] || 3) + (u.evolution3 === "cosmos_empress" ? 2 : 0);
+        const mult = [0.75, 1.00, 1.30, 1.68, 2.15][galaxyLv - 1] || 0.75;
+        const living = this.enemies.filter(e => e.alive);
+        for (let i = 0; i < arrows && living.length > 0; i += 1) {
+          const t = living[i % living.length];
+          this.projectiles.push({
+            x: u.x + 12, y: u.y + (i - arrows / 2) * 5, tx: t.x, ty: t.y,
+            color: "#9ee8ff", speed: 600,
+            onHit: () => this._applyDamage(u, t, u.atk * mult, { color: "#ffe894", isCrit, shieldMultiplier: 2 })
+          });
+        }
       }
 
       // Level 30 Mastery procs
@@ -1685,6 +1862,7 @@
       }
 
       ctx.save();
+      ctx.imageSmoothingEnabled = false;
       ctx.translate(x, footY);
       ctx.scale(1 / breath, breath);
       if (u.hitFlash > 0) {
@@ -1704,7 +1882,7 @@
       // Melee crescent slash arc ONLY for melee units; ranged/caster/turret get an energy muzzle flare!
       if (Math.abs(u.lunge) > 0.35) {
         const isRangedUnit = isAlly
-          ? ["archer", "mage", "priest", "engineer", "necromancer", "bard", "turret"].includes(u.type)
+          ? ["archer", "mage", "priest", "engineer", "moon_druid", "plague_alchemist", "necromancer", "bard", "thunder_shaman", "star_ranger", "chrono_mage", "dragon_cannoneer", "void_emperor", "celestial_seraph", "celestial_artemis", "turret"].includes(u.type)
           : (u.kind === "ranged" || u.kind === "caster");
         ctx.save();
         const dir = isAlly ? 1 : -1;
@@ -1891,15 +2069,15 @@
           ctx.stroke();
         }
 
-        ctx.fillStyle = "rgba(235, 240, 255, 0.72)";
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.82)";
-        ctx.lineWidth = 2.8;
-        ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.fillStyle = "rgba(235, 240, 255, 0.52)";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.78)";
+        ctx.lineWidth = 2.5;
+        ctx.font = '700 10.5px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = "center";
-        ctx.strokeText("自由布阵区（拖拽英雄任意摆位）", splitX * 0.5, 17);
-        ctx.fillText("自由布阵区（拖拽英雄任意摆位）", splitX * 0.5, 17);
-        ctx.strokeText("敌军来袭区", splitX + (this.w - splitX) * 0.5, 17);
-        ctx.fillText("敌军来袭区", splitX + (this.w - splitX) * 0.5, 17);
+        ctx.strokeText("⚔ 拖拽布阵", splitX * 0.5, 16);
+        ctx.fillText("⚔ 拖拽布阵", splitX * 0.5, 16);
+        ctx.strokeText("☠ 来袭敌阵", splitX + (this.w - splitX) * 0.5, 16);
+        ctx.fillText("☠ 来袭敌阵", splitX + (this.w - splitX) * 0.5, 16);
         ctx.restore();
       }
 

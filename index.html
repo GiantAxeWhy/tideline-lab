@@ -37,7 +37,7 @@
           <div>
             <div class="hub-kicker">SLOTBOUND · PIXEL LEGION</div>
             <h1>星陨像素 · 命运军团</h1>
-            <p class="hub-lore">星陨降世，像素城塞危在旦夕！在战备大厅永久强化军团科技，挑战四阶难度与五章像素魔潮。</p>
+            <p class="hub-lore">永久强化军团科技，挑战四阶难度与五章像素魔潮。</p>
           </div>
         </div>
         <div class="hub-treasury">
@@ -70,392 +70,403 @@
   </section>
 
   <div id="game-view">
-  <header class="topbar">
-    <div class="brand">
-      <div class="crest" id="brand-crest" aria-hidden="true"></div>
-      <div class="brand-text">
-        <h1>转运军团</h1>
-        <span class="brand-sub">SLOTBOUND</span>
-      </div>
-    </div>
+    <!-- SLIM SINGLE-ROW HUD TOPBAR (SLOTBOUND CLEAN PARTITION) -->
+    <header class="topbar">
+      <div class="top-left">
+        <div class="brand">
+          <div class="crest" id="brand-crest" aria-hidden="true"></div>
+          <div class="brand-text">
+            <h1>转运军团</h1>
+            <span class="brand-sub">SLOTBOUND</span>
+          </div>
+        </div>
 
-    <div class="wave-bar" aria-label="章节与波次进度">
-      <div class="wave-label">
-        <span id="wave-badge">第 1 章 · 暮色古堡（1/6 波）</span>
-        <strong id="wave-name">斥候试探</strong>
+        <div class="wave-bar" aria-label="章节与波次进度">
+          <div class="wave-label">
+            <span id="wave-badge">第1章·暮色古堡 1/6</span>
+            <strong id="wave-name">初阵试炼</strong>
+          </div>
+          <div class="wave-dots" id="wave-dots"></div>
+        </div>
       </div>
-      <div class="wave-dots" id="wave-dots"></div>
-    </div>
 
-    <div class="top-stats">
-      <div class="stat-pill gold" title="金币用于转动轮盘、锁格、轮盘升阶与刷新商店">
-        <span class="stat-ico" id="ico-gold"></span>
-        <strong id="hud-gold">120</strong>
-      </div>
-      <div class="stat-pill crystal" title="命运水晶">
-        <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="命运水晶">
-        <strong id="hud-crystals">0</strong>
-      </div>
-      <div class="stat-pill hp" title="城防耐久：战败扣除 1 点，审判波次战败扣除 2 点">
-        <span class="stat-ico" id="ico-hp"></span>
-        <strong id="hud-hp">5 / 5</strong>
-      </div>
-      <div class="stat-pill power" title="当前出战军团综合战力">
-        <span class="stat-ico" id="ico-power"></span>
-        <strong id="hud-power">0</strong>
-      </div>
-      <div class="top-controls">
-        <button id="btn-open-hub" class="icon-btn hall-btn" type="button" title="返回战备大厅：选关卡、选难度、升级永久科技">▲大厅</button>
-        <button id="btn-open-codex" class="icon-btn codex-btn" type="button" title="查看已解锁的英雄与怪物图鉴、进化路线与属性技能">▣图鉴</button>
-        <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="随时打开命运秘宝商店消耗水晶">
-          <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
-        </button>
-        <button id="btn-open-logs" class="icon-btn" type="button" title="查看本局操作与战斗日志">日志</button>
-        <button id="btn-speed" class="icon-btn" title="切换战斗倍速">1×倍速</button>
-        <button id="btn-mute" class="icon-btn square-btn" title="开关音效" aria-label="开关音效"></button>
-        <button id="btn-endless" class="icon-btn" title="通关五章后解锁" disabled>
-          <img class="ui-ico" src="assets/items/endless-crown.svg" alt="">无尽
-        </button>
-        <button id="btn-records" class="icon-btn" type="button">战绩</button>
-        <button id="btn-restart" class="icon-btn subtle" title="重新开始新一局">重开</button>
-      </div>
-    </div>
-  </header>
+      <div class="top-stats">
+        <div class="stat-pill gold" title="金币：用于转动轮盘、锁格、升阶与刷新商店">
+          <span class="stat-ico" id="ico-gold"></span>
+          <strong id="hud-gold">120</strong>
+        </div>
+        <div class="stat-pill crystal" title="命运水晶：用于秘宝商店、扩充编制与改命调校">
+          <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="命运水晶">
+          <strong id="hud-crystals">0</strong>
+        </div>
+        <div class="stat-pill hp" title="城防耐久：战败扣除 1 点，Boss 战败扣除 2 点">
+          <span class="stat-ico" id="ico-hp"></span>
+          <strong id="hud-hp">5/5</strong>
+        </div>
 
-  <main class="workspace">
-    <!-- LEFT: ORNATE 3x3 MECHANICAL SLOT MACHINE & CORES -->
-    <section class="slot-column" aria-label="命运老虎机">
-      <div class="cabinet-wrap">
-        <div class="cabinet">
-          <div class="rivet tl"></div><div class="rivet tr"></div>
-          <div class="rivet bl"></div><div class="rivet br"></div>
+        <div class="top-controls">
+          <button id="btn-open-hub" class="icon-btn hall-btn" type="button" title="返回战备大厅：选关、选难度、升级永久科技">▲大厅</button>
+          <button id="btn-open-codex" class="icon-btn codex-btn" type="button" title="英雄与怪物像素图鉴">▣图鉴</button>
+          <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="打开命运秘宝商店">
+            <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
+          </button>
+          <button id="btn-speed" class="icon-btn" type="button" title="切换战斗倍速">1×</button>
+          <button id="btn-mute" class="icon-btn square-btn" type="button" title="开关音效" aria-label="开关音效"></button>
 
-          <div class="cabinet-head">
-            <div>
+          <details class="top-more-menu" id="top-more-menu">
+            <summary class="icon-btn square-btn" title="更多系统功能">⋯</summary>
+            <div class="more-dropdown">
+              <button id="btn-endless" class="more-item" type="button" title="通关五章后解锁" disabled>
+                <img class="ui-ico" src="assets/items/endless-crown.svg" alt=""><span>无尽轮回</span>
+              </button>
+              <button id="btn-open-logs" class="more-item" type="button"><span>📜 行动日志</span></button>
+              <button id="btn-records" class="more-item" type="button"><span>🏆 历史战绩</span></button>
+              <button id="btn-restart" class="more-item danger" type="button"><span>↺ 重新开始</span></button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <!-- LEFT GOLD ZONE: 3x3 MECHANICAL SLOT MACHINE + COMPACT 6-SOCKET RELIC BAR -->
+      <section class="slot-column" aria-label="命运轮盘与转运核心">
+        <div class="cabinet-wrap">
+          <div class="cabinet">
+            <div class="rivet tl"></div><div class="rivet tr"></div>
+            <div class="rivet bl"></div><div class="rivet br"></div>
+
+            <div class="cabinet-head">
               <div class="cabinet-title-row">
                 <h2>命运轮盘</h2>
                 <span class="tier-badge" id="tier-badge">Lv.1 铁制初机</span>
+                <p class="cabinet-sub" id="tier-sub" hidden></p>
               </div>
-              <p class="cabinet-sub" id="tier-sub">8 线连奖 · 点击格面锁定</p>
+              <div class="cabinet-head-btns">
+                <button id="btn-tier-up" class="tier-btn" type="button">↑ 升阶 55G</button>
+                <button id="btn-rig" class="rig-btn" type="button" title="消耗水晶调校各符号权重"><span id="ico-rig"></span>改命</button>
+              </div>
             </div>
-            <div class="cabinet-head-btns">
-              <button id="btn-tier-up" class="tier-btn" type="button">↑ 升阶 45G</button>
-              <button id="btn-rig" class="rig-btn" type="button"><span id="ico-rig"></span>概率</button>
+
+            <div class="machine-gauges">
+              <div class="fever-bar" id="fever-bar" title="未连线+25%、连线+12%；满100%触发免费双倍百搭狂热！">
+                <div class="fever-track"><div class="fever-fill" id="fever-fill"></div></div>
+                <span class="fever-text" id="fever-text">狂热充能 0%</span>
+              </div>
+              <div class="rarity-odds-strip" id="rarity-odds-strip"></div>
+            </div>
+
+            <div class="nudge-preview-row" id="nudge-preview-row" aria-label="即将顶入符号预览" hidden></div>
+
+            <div class="reel-frame" id="reel-frame">
+              <div class="reel-grid" id="reel-grid"></div>
+              <svg class="payline-svg" id="payline-svg" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <div class="jackpot-toast" id="jackpot-toast" hidden></div>
+            </div>
+
+            <div class="nudge-row" id="nudge-row" aria-label="单列微调"></div>
+
+            <div class="spin-ticker" id="spin-ticker">
+              <strong id="ticker-title">拉动轮盘召唤军团</strong>
+              <span id="ticker-sub">点击盘面锁格 · 连出百搭赋予【幸运强化】</span>
+            </div>
+
+            <div class="spin-actions">
+              <button id="btn-spin" class="spin-btn" type="button">
+                <span class="spin-btn-main">拉动轮盘</span>
+                <span class="spin-btn-cost" id="spin-cost-label">免费 ×1</span>
+              </button>
+              <div class="spin-meta">
+                <span id="lock-status">摇杆 0/5 · 锁 0/1(10G) · 微调 2</span>
+                <span class="kbd-hint">Space</span>
+              </div>
             </div>
           </div>
 
-          <div class="fever-bar" id="fever-bar" title="每次未连线+25%、连线+12%；满100%触发【狂热转盘】：免费+中心必出百搭+2倍收益！">
-            <div class="fever-track"><div class="fever-fill" id="fever-fill"></div></div>
-            <span class="fever-text" id="fever-text">狂热充能 0%</span>
-          </div>
-          <div class="rarity-odds-strip" id="rarity-odds-strip"></div>
+          <button type="button" class="mech-lever" id="mech-lever" title="拉动机械拉杆转动轮盘" aria-label="拉动拉杆">
+            <span class="lever-mount"></span>
+            <span class="lever-arm">
+              <span class="lever-knob"></span>
+            </span>
+          </button>
+        </div>
 
-          <div class="cabinet-lights" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-
-          <div class="nudge-preview-row" id="nudge-preview-row" aria-label="即将顶入符号预览"></div>
-
-          <div class="reel-frame" id="reel-frame">
-            <div class="reel-grid" id="reel-grid"></div>
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
-            <div class="jackpot-toast" id="jackpot-toast" hidden></div>
-          </div>
-
-          <div class="nudge-row" id="nudge-row" aria-label="单列微调"></div>
-
-          <div class="spin-ticker" id="spin-ticker">
-            <strong id="ticker-title">拉动拉杆召唤军团</strong>
-            <span id="ticker-sub">每波赠送免费转动，连出百搭可赋予单位【幸运强化】！</span>
-          </div>
-
-          <div class="spin-actions">
-            <button id="btn-spin" class="spin-btn" type="button">
-              <span class="spin-btn-main">拉动轮盘</span>
-              <span class="spin-btn-cost" id="spin-cost-label">免费 ×2</span>
-            </button>
-            <div class="spin-meta">
-              <span id="lock-status">锁格 0 / 2（10 金币/格）</span>
-              <span class="kbd-hint">Space</span>
+        <div class="cores-panel">
+          <div class="panel-head">
+            <h3>转运核心</h3>
+            <div class="panel-badges">
+              <span class="badge-count milestone" id="core-milestone-pill">下枚核心 5 转</span>
+              <span class="badge-count" id="core-count">0/4</span>
             </div>
+          </div>
+          <div class="cores-grid" id="cores-grid"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT GOLD ZONE: PANORAMIC PIXEL BATTLEFIELD (TOP) + STREAMLINED LEGION DOCK (BOTTOM) -->
+      <section class="tactics-column" aria-label="实时战场与军团编成">
+        <div class="arena-card">
+          <div class="arena-head">
+            <div class="arena-info">
+              <span class="boss-pill" id="boss-pill" hidden></span>
+              <span id="enemy-intel" class="enemy-intel">敌军 3 名 · 赏金 +22G</span>
+              <span id="enemy-threat" class="enemy-threat" role="status" hidden></span>
+              <span id="endless-affixes" class="endless-affixes" hidden></span>
+              <span id="enemy-warning" class="enemy-warning" title="本波含切后刺客，建议前排护卫后排" hidden>⚠ 切后突袭</span>
+              <div id="reinforcement" class="reinforcement" title="敌军分批支援进度">
+                <span id="reinforcement-count"></span>
+                <progress id="reinforcement-progress" max="9" value="0" aria-label="援军进度"></progress>
+                <span id="reinforcement-next"></span>
+              </div>
+            </div>
+
+            <div class="arena-cta-group">
+              <div class="side-quest-bar" id="side-quest-bar">
+                <span id="quest-text">🎯 支线加载中</span>
+                <button id="btn-elite-wheel" class="elite-wheel-btn" type="button" hidden>🎰 高级轮盘 ×0</button>
+              </div>
+              <button id="btn-fight" class="fight-btn" type="button"><span id="ico-fight"></span><span>开战迎敌</span></button>
+            </div>
+          </div>
+
+          <div class="arena-stage">
+            <canvas id="battle-canvas"></canvas>
+          </div>
+
+          <div class="bonds-strip">
+            <div class="synergy-bar" id="synergy-bar" aria-label="职业羁绊"></div>
+            <div class="bonds-divider" aria-hidden="true"></div>
+            <div class="synergy-bar faction-bar" id="faction-bar" aria-label="阵营羁绊"></div>
           </div>
         </div>
 
-        <!-- Physical Mechanical Lever on Cabinet Side -->
-        <button type="button" class="mech-lever" id="mech-lever" title="拉动机械拉杆转动轮盘" aria-label="拉动拉杆">
-          <span class="lever-mount"></span>
-          <span class="lever-arm">
-            <span class="lever-knob"></span>
+        <div class="army-card">
+          <div class="army-head">
+            <div class="army-title-group">
+              <h3>军团编成</h3>
+              <span class="power-badge" title="当前出战军团综合战力">
+                <span class="stat-ico" id="ico-power"></span>
+                <strong id="hud-power">0</strong>
+              </span>
+              <span class="army-tip" id="army-tip">拖拽换位 · 点击查看技能</span>
+            </div>
+            <div class="army-mode-btns">
+              <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬模式</button>
+            </div>
+          </div>
+
+          <div class="roster-layout">
+            <div class="formation-box">
+              <div class="sub-label"><span>出战阵容</span><span id="field-count">0/6</span></div>
+              <div class="formation-grid" id="formation-grid"></div>
+            </div>
+            <div class="bench-box">
+              <div class="sub-label"><span>备战席</span><span id="bench-count">0/2</span></div>
+              <div class="bench-grid" id="bench-grid"></div>
+            </div>
+          </div>
+
+          <div class="overflow-box" id="overflow-box" hidden>
+            <div class="sub-label"><span style="color:#ffd86b">⚠️ 超编暂存（请先吞噬或出售后再摇杆/开战）</span><span id="overflow-count">0</span></div>
+            <div class="overflow-grid" id="overflow-grid"></div>
+          </div>
+
+          <div class="inspector" id="inspector" hidden></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- MODAL: CORE DRAFT -->
+    <dialog id="core-dialog" class="game-dialog">
+      <div class="dialog-inner">
+        <div class="dialog-tag">转运里程碑奖励</div>
+        <h2>选择一枚转运核心</h2>
+        <p class="dialog-desc">核心将永久强化老虎机爆率或军团战斗机制。</p>
+        <div class="core-choices" id="core-choices"></div>
+        <div class="dialog-footer" style="margin-top:0.75rem">
+          <span class="rig-gold" id="core-reroll-info"></span>
+          <button id="btn-core-reroll" class="secondary-btn" type="button">🔄 刷新核心（免费）</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- MODAL: ABSORB CHOICE (INHERIT SKILL vs PURE FEED LEVELS) -->
+    <dialog id="absorb-dialog" class="game-dialog" aria-labelledby="absorb-title">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <div>
+            <div class="dialog-tag evo">吞噬融合抉择</div>
+            <h2 id="absorb-title">选择吞噬方式</h2>
+          </div>
+          <button class="close-btn" data-close="absorb-dialog" aria-label="取消">×</button>
+        </div>
+        <p class="dialog-desc" id="absorb-summary"></p>
+        <div class="absorb-options" id="absorb-options"></div>
+      </div>
+    </dialog>
+
+    <!-- MODAL: BRANCHING EVOLUTION -->
+    <dialog id="evo-dialog" class="game-dialog">
+      <div class="dialog-inner">
+        <div class="dialog-tag evo">兵种转职进化</div>
+        <div class="evo-header">
+          <div class="evo-hero-preview" id="evo-hero-preview"></div>
+          <div>
+            <h2 id="evo-title">选择转职方向</h2>
+            <p class="dialog-desc" id="evo-desc">解锁专属进阶职业与强力技能！</p>
+          </div>
+        </div>
+        <div class="evo-choices" id="evo-choices"></div>
+      </div>
+    </dialog>
+
+    <!-- MODAL: REEL RIGGING -->
+    <dialog id="rig-dialog" class="game-dialog">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <div>
+            <div class="dialog-tag">改命工坊</div>
+            <h2>轮盘概率调校台</h2>
+          </div>
+          <button class="close-btn" data-close="rig-dialog" aria-label="关闭">×</button>
+        </div>
+        <p class="dialog-desc">消耗命运水晶调整基础符号的出现权重。</p>
+        <div class="rig-list" id="rig-list"></div>
+        <div class="dialog-footer">
+          <span class="rig-gold">余额 <strong id="rig-gold-val">0 命运水晶</strong></span>
+          <button class="secondary-btn" data-close="rig-dialog" type="button">完成调校</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="chapter-dialog" class="game-dialog chapter-dialog" aria-labelledby="chapter-title">
+      <div class="chapter-banner">
+        <img id="chapter-banner-map" class="chapter-banner-map" alt="">
+        <div class="chapter-banner-body">
+          <div class="dialog-tag">章节征服</div>
+          <h2 id="chapter-title"></h2>
+          <p id="chapter-boss"></p>
+        </div>
+      </div>
+      <div class="dialog-inner center">
+        <div class="chapter-rewards">
+          <span id="chapter-restored"></span>
+          <span class="chapter-crystal-reward">
+            <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="">
+            <strong id="chapter-reward"></strong>
           </span>
-        </button>
+        </div>
+        <p class="dialog-desc" id="chapter-next"></p>
+        <button id="btn-chapter-continue" class="spin-btn compact-btn" type="button"></button>
       </div>
+    </dialog>
 
-      <div class="cores-panel">
-        <div class="panel-head">
-          <h3>转运核心</h3>
-          <div class="panel-badges">
-            <span class="badge-count milestone" id="core-milestone-pill">距下枚核心 5 转</span>
-            <span class="badge-count" id="core-count">0 / 6</span>
+    <dialog id="shop-dialog" class="game-dialog" aria-labelledby="shop-title">
+      <div class="dialog-inner">
+        <h2 id="shop-title">命运秘宝商店</h2>
+        <p class="dialog-desc" id="shop-balance"></p>
+        <div class="shop-grid" id="shop-items"></div>
+        <p class="shop-notice" id="shop-notice" role="status"></p>
+        <div class="dialog-footer shop-footer">
+          <button id="btn-shop-refresh" type="button" class="secondary-btn">刷新商品 · 15 金币</button>
+          <button id="btn-shop-continue" type="button" class="spin-btn compact-btn">离开商店</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="encounter-dialog" class="game-dialog" aria-labelledby="encounter-title">
+      <div class="dialog-inner">
+        <h2 id="encounter-title">命运奇遇</h2>
+        <p class="dialog-desc">选择一项带入接下来的战斗。</p>
+        <div class="core-choices" id="encounter-choices"></div>
+      </div>
+    </dialog>
+
+    <dialog id="records-dialog" class="game-dialog" aria-labelledby="records-title">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <h2 id="records-title">历史战绩</h2>
+          <button class="close-btn" data-close="records-dialog" aria-label="关闭">×</button>
+        </div>
+        <div class="end-stats records-stats" id="records-stats"></div>
+        <p class="dialog-desc" id="records-lineup"></p>
+      </div>
+    </dialog>
+
+    <dialog id="log-dialog" class="game-dialog" aria-labelledby="log-title">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <div>
+            <div class="dialog-tag">行动记录</div>
+            <h2 id="log-title">本局行为日志</h2>
           </div>
+          <button class="close-btn" data-close="log-dialog" aria-label="关闭">×</button>
         </div>
-        <div class="cores-grid" id="cores-grid"></div>
+        <div class="action-log-list" id="action-log-list"></div>
+        <div class="dialog-footer">
+          <span class="rig-gold" id="log-summary">共 0 条记录</span>
+          <button id="btn-export-logs" class="secondary-btn" type="button">导出战报 JSON</button>
+        </div>
       </div>
-    </section>
+    </dialog>
 
-    <!-- RIGHT: LIVE BATTLEFIELD & ARMY FORMATION -->
-    <section class="tactics-column" aria-label="实时战场与军团布阵">
-      <div class="arena-card">
-        <div class="arena-head">
-          <div class="arena-info">
-            <span class="boss-pill" id="boss-pill" hidden></span>
-            <span id="enemy-intel" class="enemy-intel">来袭：3 名敌军</span>
-            <span id="enemy-threat" class="enemy-threat" role="status" hidden></span>
-            <span id="endless-affixes" class="endless-affixes" hidden></span>
-            <span id="enemy-warning" class="enemy-warning" hidden>⚠ 敌军会偷袭后排，建议安排坦克保护。</span>
+    <!-- MODAL: LEVEL 30 MASTER AWAKENING (3-CHOICE) -->
+    <dialog id="mastery-dialog" class="game-dialog" aria-labelledby="mastery-title">
+      <div class="dialog-inner">
+        <div class="dialog-tag evo">满 30 级宗师觉醒</div>
+        <h2 id="mastery-title">选择一项宗师职业强化</h2>
+        <p class="dialog-desc" id="mastery-desc"></p>
+        <div class="core-choices" id="mastery-choices"></div>
+      </div>
+    </dialog>
+
+    <!-- MODAL: INDEPENDENT HIGH-TIER ELITE WHEEL -->
+    <dialog id="elite-wheel-dialog" class="game-dialog" aria-labelledby="elite-title">
+      <div class="dialog-inner center">
+        <div class="dialog-tag evo">支线奖励 · 独立高级轮盘</div>
+        <h2 id="elite-title">星陨高级命运轮盘</h2>
+        <p class="dialog-desc">独立高阶奖池：<strong>40% 蓝色 3 费 · 45% 紫色 4 费 · 15% 金色 5 费</strong>！免费转动 1 次！</p>
+        <div class="elite-wheel-stage" id="elite-wheel-stage">
+          <div class="elite-result-box" id="elite-result-box">点击下方按钮启动高级轮盘！</div>
+        </div>
+        <div class="end-actions">
+          <button id="btn-elite-spin" class="spin-btn compact-btn" type="button">🎰 免费转动高级轮盘</button>
+          <button class="secondary-btn" data-close="elite-wheel-dialog" type="button">关闭</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- MODAL: HERO & MONSTER CODEX (图鉴) -->
+    <dialog id="codex-dialog" class="game-dialog codex-dialog" aria-labelledby="codex-title">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <div>
+            <div class="dialog-tag">星陨档案室 · 每解锁 1 条奖励 +1 局外水晶</div>
+            <h2 id="codex-title">英雄与怪物图鉴</h2>
           </div>
-          <button id="btn-fight" class="fight-btn" type="button"><span id="ico-fight"></span><span>开战迎敌</span></button>
+          <button class="close-btn" data-close="codex-dialog" aria-label="关闭">×</button>
         </div>
-        <div id="reinforcement" class="reinforcement">
-          <span id="reinforcement-count"></span>
-          <progress id="reinforcement-progress" max="9" value="0" aria-label="援军进度"></progress>
-          <span id="reinforcement-next"></span>
+        <div class="codex-tabs">
+          <button id="tab-codex-heroes" class="mode-pill active" type="button">⚔ 兵种图鉴 (<span id="codex-hero-cnt">0/29</span>)</button>
+          <button id="tab-codex-enemies" class="mode-pill" type="button">☠ 怪物图鉴 (<span id="codex-enemy-cnt">0/21</span>)</button>
         </div>
-        <div class="side-quest-bar" id="side-quest-bar">
-          <span id="quest-text">🎯 支线挑战加载中…</span>
-          <button id="btn-elite-wheel" class="elite-wheel-btn" type="button" hidden>🎰 开启高级轮盘 (×0)</button>
-        </div>
-        <div class="arena-stage">
-          <canvas id="battle-canvas"></canvas>
-        </div>
-        <div class="synergy-bar" id="synergy-bar" aria-label="职业羁绊"></div>
-        <div class="synergy-bar faction-bar" id="faction-bar" aria-label="流派羁绊"></div>
+        <div class="codex-body" id="codex-body"></div>
       </div>
+    </dialog>
 
-      <div class="army-card">
-        <div class="army-head">
-          <div class="army-title-group">
-            <h3>军团布阵与吞噬进化</h3>
-            <span class="army-tip" id="army-tip">点击单位选中，再点另一单位可【吞噬进化】或【交换站位】</span>
-          </div>
-          <div class="army-mode-btns">
-            <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬模式</button>
-          </div>
-        </div>
-
-        <div class="roster-layout">
-          <div class="formation-box">
-            <div class="sub-label"><span>出战军团（上方战场左半区任意拖拽摆位）</span><span id="field-count">0 / 6</span></div>
-            <div class="formation-grid" id="formation-grid"></div>
-          </div>
-          <div class="bench-box">
-            <div class="sub-label"><span>备战席（暂存 / 素材）</span><span id="bench-count">0 / 4</span></div>
-            <div class="bench-grid" id="bench-grid"></div>
-          </div>
-        </div>
-
-        <div class="overflow-box" id="overflow-box" hidden>
-          <div class="sub-label"><span style="color:#ffd86b">⚠️ 军团超编暂存区（请先吞噬或出售后再摇杆/开战！）</span><span id="overflow-count">0</span></div>
-          <div class="overflow-grid" id="overflow-grid"></div>
-        </div>
-
-        <div class="inspector" id="inspector">
-          <div class="inspector-empty">点选任意军团单位查看详细属性、技能与吞噬强化选项。</div>
+    <!-- MODAL: RUN SUMMARY -->
+    <dialog id="end-dialog" class="game-dialog">
+      <div class="dialog-inner center">
+        <div class="dialog-tag" id="end-tag">战局结算</div>
+        <h2 id="end-title">防线大捷！</h2>
+        <p class="dialog-desc" id="end-desc"></p>
+        <div class="end-stats" id="end-stats"></div>
+        <div class="end-actions">
+          <button id="btn-end-restart" class="secondary-btn" type="button">返回战备大厅</button>
+          <button id="btn-endless-continue" class="spin-btn compact-btn" type="button" hidden>开启无尽轮回</button>
         </div>
       </div>
-    </section>
-  </main>
-
-  <!-- MODAL: CORE DRAFT -->
-  <dialog id="core-dialog" class="game-dialog">
-    <div class="dialog-inner">
-      <div class="dialog-tag">战后转运奖励</div>
-      <h2>选择一枚转运核心</h2>
-      <p class="dialog-desc">核心将永久改变老虎机规则或军团战斗机制，构筑你的专属流派！</p>
-      <div class="core-choices" id="core-choices"></div>
-      <div class="dialog-footer" style="margin-top:0.75rem">
-        <span class="rig-gold" id="core-reroll-info"></span>
-        <button id="btn-core-reroll" class="secondary-btn" type="button">🔄 刷新核心（免费）</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: ABSORB CHOICE (INHERIT SKILL vs PURE FEED LEVELS) -->
-  <dialog id="absorb-dialog" class="game-dialog" aria-labelledby="absorb-title">
-    <div class="dialog-inner">
-      <div class="dialog-head-row">
-        <div>
-          <div class="dialog-tag evo">吞噬融合抉择</div>
-          <h2 id="absorb-title">选择吞噬方式</h2>
-        </div>
-        <button class="close-btn" data-close="absorb-dialog" aria-label="取消">×</button>
-      </div>
-      <p class="dialog-desc" id="absorb-summary"></p>
-      <div class="absorb-options" id="absorb-options"></div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: BRANCHING EVOLUTION -->
-  <dialog id="evo-dialog" class="game-dialog">
-    <div class="dialog-inner">
-      <div class="dialog-tag evo">兵种转职进化</div>
-      <div class="evo-header">
-        <div class="evo-hero-preview" id="evo-hero-preview"></div>
-        <div>
-          <h2 id="evo-title">选择转职方向</h2>
-          <p class="dialog-desc" id="evo-desc">单位通过吞噬达到 2 级，解锁专属进阶职业与强力技能！</p>
-        </div>
-      </div>
-      <div class="evo-choices" id="evo-choices"></div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: REEL RIGGING -->
-  <dialog id="rig-dialog" class="game-dialog">
-    <div class="dialog-inner">
-      <div class="dialog-head-row">
-        <div>
-          <div class="dialog-tag">改命工坊</div>
-          <h2>轮盘概率调校台</h2>
-        </div>
-        <button class="close-btn" data-close="rig-dialog" aria-label="关闭">×</button>
-      </div>
-      <p class="dialog-desc">消耗命运水晶调整已解锁符号的出现权重。</p>
-      <div class="rig-list" id="rig-list"></div>
-      <div class="dialog-footer">
-        <span class="rig-gold">余额 <strong id="rig-gold-val">0 命运水晶</strong></span>
-        <button class="secondary-btn" data-close="rig-dialog" type="button">完成调校</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog id="chapter-dialog" class="game-dialog chapter-dialog" aria-labelledby="chapter-title">
-    <div class="chapter-banner">
-      <img id="chapter-banner-map" class="chapter-banner-map" alt="">
-      <div class="chapter-banner-body">
-        <div class="dialog-tag">章节征服</div>
-        <h2 id="chapter-title"></h2>
-        <p id="chapter-boss"></p>
-      </div>
-    </div>
-    <div class="dialog-inner center">
-      <div class="chapter-rewards">
-        <span id="chapter-restored"></span>
-        <span class="chapter-crystal-reward">
-          <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="">
-          <strong id="chapter-reward"></strong>
-        </span>
-      </div>
-      <p class="dialog-desc" id="chapter-next"></p>
-      <button id="btn-chapter-continue" class="spin-btn compact-btn" type="button"></button>
-    </div>
-  </dialog>
-
-  <dialog id="shop-dialog" class="game-dialog" aria-labelledby="shop-title">
-    <div class="dialog-inner">
-      <h2 id="shop-title">命运秘宝商店</h2>
-      <p class="dialog-desc" id="shop-balance"></p>
-      <div class="shop-grid" id="shop-items"></div>
-      <p class="shop-notice" id="shop-notice" role="status"></p>
-      <div class="dialog-footer shop-footer">
-        <button id="btn-shop-refresh" type="button" class="secondary-btn">刷新商品 · 15 金币</button>
-        <button id="btn-shop-continue" type="button" class="spin-btn compact-btn">离开商店</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog id="encounter-dialog" class="game-dialog" aria-labelledby="encounter-title">
-    <div class="dialog-inner">
-      <h2 id="encounter-title">命运奇遇</h2>
-      <p class="dialog-desc">选择一项带入接下来的战斗。</p>
-      <div class="core-choices" id="encounter-choices"></div>
-    </div>
-  </dialog>
-
-  <dialog id="records-dialog" class="game-dialog" aria-labelledby="records-title">
-    <div class="dialog-inner">
-      <div class="dialog-head-row">
-        <h2 id="records-title">战绩</h2>
-        <button class="close-btn" data-close="records-dialog" aria-label="关闭">×</button>
-      </div>
-      <div class="end-stats records-stats" id="records-stats"></div>
-      <p class="dialog-desc" id="records-lineup"></p>
-    </div>
-  </dialog>
-
-  <dialog id="log-dialog" class="game-dialog" aria-labelledby="log-title">
-    <div class="dialog-inner">
-      <div class="dialog-head-row">
-        <div>
-          <div class="dialog-tag">行动记录</div>
-          <h2 id="log-title">本局行为日志</h2>
-        </div>
-        <button class="close-btn" data-close="log-dialog" aria-label="关闭">×</button>
-      </div>
-      <div class="action-log-list" id="action-log-list"></div>
-      <div class="dialog-footer">
-        <span class="rig-gold" id="log-summary">共 0 条记录（保存在浏览器本地）</span>
-        <button id="btn-export-logs" class="secondary-btn" type="button">导出战报 JSON</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: LEVEL 30 MASTER AWAKENING (3-CHOICE) -->
-  <dialog id="mastery-dialog" class="game-dialog" aria-labelledby="mastery-title">
-    <div class="dialog-inner">
-      <div class="dialog-tag evo">满 30 级宗师觉醒</div>
-      <h2 id="mastery-title">选择一项宗师职业强化</h2>
-      <p class="dialog-desc" id="mastery-desc"></p>
-      <div class="core-choices" id="mastery-choices"></div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: INDEPENDENT HIGH-TIER ELITE WHEEL -->
-  <dialog id="elite-wheel-dialog" class="game-dialog" aria-labelledby="elite-title">
-    <div class="dialog-inner center">
-      <div class="dialog-tag evo">支线奖励 · 独立高级轮盘</div>
-      <h2 id="elite-title">星陨高级命运轮盘</h2>
-      <p class="dialog-desc">独立高阶奖池：<strong>40% 蓝色 3 费 · 45% 紫色 4 费 · 15% 金色 5 费</strong>！免费转动 1 次！</p>
-      <div class="elite-wheel-stage" id="elite-wheel-stage">
-        <div class="elite-result-box" id="elite-result-box">点击下方按钮启动高级轮盘！</div>
-      </div>
-      <div class="end-actions">
-        <button id="btn-elite-spin" class="spin-btn compact-btn" type="button">🎰 免费转动高级轮盘</button>
-        <button class="secondary-btn" data-close="elite-wheel-dialog" type="button">关闭</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: HERO & MONSTER CODEX (图鉴) -->
-  <dialog id="codex-dialog" class="game-dialog codex-dialog" aria-labelledby="codex-title">
-    <div class="dialog-inner">
-      <div class="dialog-head-row">
-        <div>
-          <div class="dialog-tag">星陨档案室 · 每解锁 1 条奖励 +1 局外水晶</div>
-          <h2 id="codex-title">英雄与怪物图鉴</h2>
-        </div>
-        <button class="close-btn" data-close="codex-dialog" aria-label="关闭">×</button>
-      </div>
-      <div class="codex-tabs">
-        <button id="tab-codex-heroes" class="mode-pill active" type="button">⚔ 兵种图鉴 (<span id="codex-hero-cnt">0/16</span>)</button>
-        <button id="tab-codex-enemies" class="mode-pill" type="button">☠ 怪物图鉴 (<span id="codex-enemy-cnt">0/21</span>)</button>
-      </div>
-      <div class="codex-body" id="codex-body"></div>
-    </div>
-  </dialog>
-
-  <!-- MODAL: RUN SUMMARY -->
-  <dialog id="end-dialog" class="game-dialog">
-    <div class="dialog-inner center">
-      <div class="dialog-tag" id="end-tag">战局结算</div>
-      <h2 id="end-title">防线大捷！</h2>
-      <p class="dialog-desc" id="end-desc"></p>
-      <div class="end-stats" id="end-stats"></div>
-      <div class="end-actions">
-        <button id="btn-end-restart" class="secondary-btn" type="button">返回战备大厅</button>
-        <button id="btn-endless-continue" class="spin-btn compact-btn" type="button" hidden>开启无尽轮回</button>
-      </div>
-    </div>
-  </dialog>
+    </dialog>
   </div>
 </body>
 </html>

@@ -223,6 +223,54 @@
         })
       }
     },
+    moon_druid: {
+      id: "moon_druid", kind: "pool", rarity: "green", artKey: "moon_druid", name: "银月德鲁伊", short: "德鲁伊",
+      role: "后排 · 2费绿", color: "#4fd1a5", bg: "#17362b", baseWeight: 0,
+      hp: 126, atk: 19, atkCd: 1.18, moveSpd: 102, range: 260, crit: 0.12,
+      skillDesc: "【2费绿卡】银月古林的自然守望者，翡翠春风双人治疗并缠绕减速敌军。",
+      evolutions: {
+        emerald_sage: evolution("emerald_sage", "翡翠贤者", "群体甘霖", "春风治疗扩至 3 名友军，并额外附加自然护盾。", 1.38, 1.34, {
+          world_tree: evolution("world_tree", "世界树化身", "全军复苏", "每次施法为全体友军回血叠盾，防线永动机！", 1.54, 1.48),
+          spring_oracle: evolution("spring_oracle", "春风神谕", "生机加速", "受治疗友军攻速 +22% 且暴击率提升！", 1.46, 1.52)
+        }),
+        thorn_warden: evolution("thorn_warden", "荆棘树妖", "藤蔓群控", "攻击召唤荆棘藤蔓造成范围毒伤与强力减速。", 1.35, 1.42, {
+          briar_queen: evolution("briar_queen", "荆棘女王", "缠绕定身", "藤蔓范围扩大并短暂定身敌军 0.6 秒！", 1.48, 1.56),
+          venom_bloom: evolution("venom_bloom", "剧毒花灵", "毒爆回生", "藤蔓引爆双倍破盾毒雾并治疗前排！", 1.45, 1.58)
+        })
+      }
+    },
+    plague_alchemist: {
+      id: "plague_alchemist", kind: "pool", rarity: "green", artKey: "plague_alchemist", name: "瘟疫炼金师", short: "炼金",
+      role: "后排 · 2费绿", color: "#4fd1a5", bg: "#21332c", baseWeight: 0,
+      hp: 118, atk: 24, atkCd: 1.14, moveSpd: 98, range: 255, crit: 0.14,
+      skillDesc: "【2费绿卡】幽冥地窟的疯狂药师，投掷腐蚀毒瓶引爆范围酸液并融化护盾。",
+      evolutions: {
+        venom_master: evolution("venom_master", "剧毒宗师", "瘟疫蔓延", "腐蚀毒瓶爆炸半径扩大，破盾倍率提升至 2.8 倍。", 1.32, 1.44, {
+          blight_lord: evolution("blight_lord", "天灾毒王", "连环毒爆", "毒瓶额外弹射第 2 枚剧毒烧瓶，人海克星！", 1.44, 1.6),
+          caustic_melt: evolution("caustic_melt", "融甲狂医", "绝对融盾", "毒液令敌军减速并对护盾造成 3.5 倍毁灭伤害！", 1.46, 1.56)
+        }),
+        mad_elixir: evolution("mad_elixir", "狂暴药师", "兴奋药剂", "每 3 击向友军投掷狂暴药剂，大幅提升攻击与攻速。", 1.38, 1.38, {
+          crimson_brewer: evolution("crimson_brewer", "猩红魔药师", "嗜血秘药", "药剂同时恢复友军生命并赋予 +25% 伤害加成！", 1.5, 1.52),
+          alchemic_gold: evolution("alchemic_gold", "点金炼成师", "炼金爆金", "每次毒瓶暴击额外炼成 +4 金币！", 1.45, 1.55)
+        })
+      }
+    },
+    royal_halberd: {
+      id: "royal_halberd", kind: "pool", rarity: "green", artKey: "royal_halberd", name: "皇室戟卫", short: "戟卫",
+      role: "前排 · 2费绿", color: "#4fd1a5", bg: "#1a2f42", baseWeight: 0,
+      hp: 185, atk: 25, atkCd: 1.08, moveSpd: 116, range: 82, crit: 0.15,
+      skillDesc: "【2费绿卡】暮色王庭的重装长戟禁卫，中距离横扫破甲并自叠护盾。",
+      evolutions: {
+        imperial_guard: evolution("imperial_guard", "帝王禁卫", "铁壁横扫", "戟舞横扫范围扩大，每次横扫获得更高圣盾。", 1.44, 1.34, {
+          golden_custodian: evolution("golden_custodian", "黄金神卫", "王庭圣佑", "横扫同时为周围前排友军分摊叠加黄金圣盾！", 1.6, 1.46),
+          fortress_pike: evolution("fortress_pike", "不动枪城", "反击枪阵", "受击反弹 40% 穿刺伤害并击退突进敌军！", 1.62, 1.44)
+        }),
+        dragon_halberd: evolution("dragon_halberd", "破龙戟尊", "破甲重刺", "长戟对 Boss 与坦克造成额外重伤，暴击率提升。", 1.36, 1.46, {
+          wyrm_slayer: evolution("wyrm_slayer", "屠龙战神", "贯龙必爆", "每第 2 次横扫必定暴击并双倍破盾！", 1.48, 1.64),
+          storm_halberd: evolution("storm_halberd", "风暴战戟", "旋风连斩", "攻速 +30%，横扫附带剑气震荡！", 1.46, 1.58)
+        })
+      }
+    },
     // ===== 3费 · 蓝色独立卡池（3 技能栏 · 独立职业与 2★/3★ 转职树） =====
     necromancer: {
       id: "necromancer", kind: "pool", rarity: "blue", artKey: "necromancer", name: "亡灵唤师", short: "唤师",
@@ -272,6 +320,54 @@
         })
       }
     },
+    thunder_shaman: {
+      id: "thunder_shaman", kind: "pool", rarity: "blue", artKey: "thunder_shaman", name: "雷霆萨满", short: "萨满",
+      role: "后排 · 3费蓝", color: "#5cc8ff", bg: "#1b2e44", baseWeight: 0,
+      hp: 148, atk: 28, atkCd: 1.16, moveSpd: 100, range: 265, crit: 0.16,
+      skillDesc: "【3费蓝卡】赤血荒原的风暴先知，插下闪电图腾提升全军攻击并轰击敌群。",
+      evolutions: {
+        bloodlust_seer: evolution("bloodlust_seer", "嗜血先知", "狂怒图腾", "风暴图腾额外赋予全军攻速与吸血祝福。", 1.38, 1.38, {
+          warchief_oracle: evolution("warchief_oracle", "大酋长神谕", "全军嗜血", "全军攻击与攻速大幅飙升，图腾脉冲治疗前排！", 1.52, 1.54),
+          totem_overlord: evolution("totem_overlord", "万钧图腾王", "护盾图腾", "每次触发图腾同时为全体友军叠加雷电护盾！", 1.56, 1.48)
+        }),
+        tempest_caller: evolution("tempest_caller", "天罚唤雷者", "雷云风暴", "图腾闪电额外弹射 3 名敌军并附带麻痹减速。", 1.34, 1.48, {
+          lightning_god: evolution("lightning_god", "雷神化身", "九天狂雷", "每击降下双倍天雷轰炸并概率眩晕目标！", 1.46, 1.66),
+          earth_shaker: evolution("earth_shaker", "裂地图腾师", "震地破盾", "图腾轰击造成 2.5 倍破盾范围冲击！", 1.48, 1.6)
+        })
+      }
+    },
+    star_ranger: {
+      id: "star_ranger", kind: "pool", rarity: "blue", artKey: "star_ranger", name: "星陨游侠", short: "游侠",
+      role: "后排 · 3费蓝", color: "#5cc8ff", bg: "#172848", baseWeight: 0,
+      hp: 132, atk: 33, atkCd: 0.86, moveSpd: 118, range: 320, crit: 0.24,
+      skillDesc: "【3费蓝卡】银月神殿的高阶追星射手，射出穿透敌阵的高爆星辉光矢。",
+      evolutions: {
+        moon_sniper: evolution("moon_sniper", "月影神射", "远程狙杀", "射程大幅提升，星辉贯矢伤害与暴伤大幅增强。", 1.3, 1.5, {
+          eclipse_hunter: evolution("eclipse_hunter", "月蚀猎神", "贯日破甲", "每第 2 箭必定暴击并贯穿 3 名敌人！", 1.42, 1.68),
+          astral_longbow: evolution("astral_longbow", "天弓星圣", "星爆追击", "暴击箭矢在终点引爆星芒范围溅射！", 1.44, 1.62)
+        }),
+        wind_strider: evolution("wind_strider", "幻风行者", "极速弹幕", "攻速与移速提升 25%，齐射双倍星矢。", 1.34, 1.42, {
+          silver_tempest: evolution("silver_tempest", "银翼风暴", "疾风星雨", "攻速再 +30%，星辉箭雨压制全场！", 1.45, 1.58),
+          comet_volley: evolution("comet_volley", "彗星连珠", "猎星赏金", "击杀敌军立即重置冷却并额外 +4 金币！", 1.46, 1.6)
+        })
+      }
+    },
+    iron_inquisitor: {
+      id: "iron_inquisitor", kind: "pool", rarity: "blue", artKey: "iron_inquisitor", name: "铁血审判官", short: "审判官",
+      role: "前排 · 3费蓝", color: "#5cc8ff", bg: "#282238", baseWeight: 0,
+      hp: 235, atk: 27, atkCd: 1.12, moveSpd: 102, range: 62, crit: 0.14,
+      skillDesc: "【3费蓝卡】圣辉教廷的重锤裁决者，重锤砸地眩晕前排并回充圣盾。",
+      evolutions: {
+        grand_arbiter: evolution("grand_arbiter", "大裁决官", "震晕铁壁", "裁决圣锤眩晕时间延长，获得双倍神圣护盾。", 1.48, 1.34, {
+          divine_warden: evolution("divine_warden", "神圣典狱长", "禁锢圣域", "重锤震荡波眩晕周围集群并为全军叠盾！", 1.64, 1.48),
+          titan_hammer: evolution("titan_hammer", "泰坦圣锤", "反伤重甲", "护盾存在时减伤 25% 并反弹圣光重伤！", 1.66, 1.46)
+        }),
+        witch_hunter: evolution("witch_hunter", "猎魔元帅", "破魔反制", "圣锤对施法者与护盾造成 2.5 倍净世伤害。", 1.4, 1.46, {
+          purifier_lord: evolution("purifier_lord", "净世统帅", "天罚圣火", "每次重锤引爆净世圣火灼烧并治疗自身！", 1.52, 1.62),
+          crimson_judge: evolution("crimson_judge", "猩红审判长", "处决重锤", "对半血以下敌军必定暴击处决！", 1.5, 1.65)
+        })
+      }
+    },
     // ===== 4费 · 紫色独立卡池（4 技能栏 · 独立史诗职业与 2★/3★ 转职树） =====
     sun_templar: {
       id: "sun_templar", kind: "pool", rarity: "purple", artKey: "sun_templar", name: "烈阳圣殿骑", short: "烈阳骑",
@@ -302,6 +398,70 @@
         time_sage: evolution("time_sage", "逆时贤者", "时空加速", "全军攻速永久 +25%，敌军攻速 -20%。", 1.42, 1.45, {
           eternal_clock: evolution("eternal_clock", "永恒时计", "极速超频", "全军攻速 +45%，每 4 秒重置 1 名友军冷却！", 1.54, 1.6),
           fate_weaver: evolution("fate_weaver", "命运织者", "双倍回响", "每次施法有 45% 概率立即双重施法！", 1.5, 1.65)
+        })
+      }
+    },
+    dread_knight_lord: {
+      id: "dread_knight_lord", kind: "pool", rarity: "purple", artKey: "dread_knight_lord", name: "冥渊死骑", short: "死骑",
+      role: "前排 · 4费紫", color: "#c084fc", bg: "#22183a", baseWeight: 0,
+      hp: 278, atk: 36, atkCd: 1.06, moveSpd: 110, range: 68, crit: 0.16,
+      skillDesc: "【4费紫卡】幽冥议会的黑铠统帅，释放凋零新星汲取周围生命化为护盾。",
+      evolutions: {
+        abyss_monarch: evolution("abyss_monarch", "深渊冥王", "凋零领域", "冥渊汲魂范围扩大，吸血与转盾效率提升至 55%。", 1.52, 1.4, {
+          lich_emperor: evolution("lich_emperor", "巫妖战皇", "不死冥域", "凋零新星附带寒霜减速，致命伤锁血并回满冥盾！", 1.7, 1.54),
+          eternal_dread: evolution("eternal_dread", "不灭魔铠", "噬魂反甲", "受击反弹 45% 暗影伤害并偷取攻击者生命！", 1.72, 1.5)
+        }),
+        soul_cleaver: evolution("soul_cleaver", "斩魂魔骑", "破魂重斩", "霜魂魔剑每次攻击撕裂护盾并叠加斩魂暴伤。", 1.44, 1.54, {
+          apocalypse_rider: evolution("apocalypse_rider", "天启死骑", "亡灵铁蹄", "每击杀敌军召唤强化食尸鬼助战并全军回血！", 1.58, 1.68),
+          blood_dk: evolution("blood_dk", "鲜血领主", "血沸斩杀", "引爆全场鲜血新星造成巨额吸血爆发！", 1.62, 1.65)
+        })
+      }
+    },
+    dragon_cannoneer: {
+      id: "dragon_cannoneer", kind: "pool", rarity: "purple", artKey: "dragon_cannoneer", name: "龙炎重炮手", short: "龙炮",
+      role: "后排 · 4费紫", color: "#c084fc", bg: "#321a34", baseWeight: 0,
+      hp: 176, atk: 44, atkCd: 1.15, moveSpd: 96, range: 305, crit: 0.22,
+      skillDesc: "【4费紫卡】熔岩锻炉的巨龙重炮专家，发射毁灭龙息炮弹融化集群护盾。",
+      evolutions: {
+        hellfire_artillery: evolution("hellfire_artillery", "炼狱巨炮", "熔岩轰炸", "龙炎炮弹爆炸范围翻倍，对护盾造成 3 倍毁灭伤害。", 1.38, 1.56, {
+          vulcan_dreadnought: evolution("vulcan_dreadnought", "火神无畏舰", "灭世重炮", "每 2 炮额外倾泻全屏熔岩火雨并震晕敌军！", 1.52, 1.74),
+          meteor_howitzer: evolution("meteor_howitzer", "陨星榴弹皇", "破甲灼烧", "炮击粉碎敌方防御并造成高额范围溅射！", 1.5, 1.7)
+        }),
+        drake_gunner: evolution("drake_gunner", "驭龙枪神", "双管速射", "攻速提升 +28%，每次开火连射双发龙息弹。", 1.4, 1.48, {
+          crimson_barrage: evolution("crimson_barrage", "赤龙弹幕王", "三连龙息", "极速倾泻三连龙炎爆弹，瞬间蒸发Boss血条！", 1.5, 1.68),
+          bounty_admiral: evolution("bounty_admiral", "黄金舰队督军", "轰炸赏金", "每次炮击暴击额外爆出 +5 金币！", 1.52, 1.64)
+        })
+      }
+    },
+    blood_empress: {
+      id: "blood_empress", kind: "pool", rarity: "purple", artKey: "blood_empress", name: "绯月血皇", short: "血皇",
+      role: "刺客 · 4费紫", color: "#c084fc", bg: "#361530", baseWeight: 0,
+      hp: 188, atk: 46, atkCd: 0.82, moveSpd: 182, range: 60, crit: 0.36,
+      skillDesc: "【4费紫卡】统御暗夜血族的绯红女王，跃迁切后释放鲜血新星暴击满血续航。",
+      evolutions: {
+        scarlet_queen: evolution("scarlet_queen", "猩红女皇", "血蝠盛宴", "暴击释放超大范围血蝠新星，过量吸血转化为鲜血护盾。", 1.44, 1.5, {
+          immortal_progenitor: evolution("immortal_progenitor", "真祖血神", "不灭血海", "吸血提升至 65%，击杀永久吸收目标攻击力！", 1.6, 1.7),
+          nightmare_siren: evolution("nightmare_siren", "梦魇血姬", "魅惑减速", "血舞新星令周围敌军大幅减速并双倍破盾！", 1.56, 1.66)
+        }),
+        moon_executioner: evolution("moon_executioner", "绯月处决者", "瞬影斩首", "暴击伤害大幅飙升，对后排脆皮造成毁灭处决。", 1.38, 1.56, {
+          rose_reaper: evolution("rose_reaper", "血蔷薇死神", "必爆连斩", "切入后排刀刀烈火高爆，瞬间清空远程敌军！", 1.48, 1.76),
+          crimson_phantom: evolution("crimson_phantom", "幻月影皇", "无敌血影", "每击杀敌军获得短暂无敌并刷新突袭！", 1.52, 1.68)
+        })
+      }
+    },
+    sylvan_archon: {
+      id: "sylvan_archon", kind: "pool", rarity: "purple", artKey: "sylvan_archon", name: "森罗精灵王", short: "精灵王",
+      role: "前排 · 4费紫", color: "#c084fc", bg: "#1c3338", baseWeight: 0,
+      hp: 238, atk: 40, atkCd: 0.92, moveSpd: 154, range: 86, crit: 0.24,
+      skillDesc: "【4费紫卡】银月王庭的双刃战皇，化作翡翠剑岚贯穿敌阵并护佑全军。",
+      evolutions: {
+        emerald_sovereign: evolution("emerald_sovereign", "翡翠剑皇", "疾风乱舞", "攻速与移速飙升，双刃剑岚同时切割 4 名敌军。", 1.42, 1.54, {
+          tempest_deity: evolution("tempest_deity", "风神剑尊", "万刃风暴", "攻速 +35%，每次挥刃掀起全屏翡翠风暴！", 1.56, 1.72),
+          starleaf_dancer: evolution("starleaf_dancer", "星叶剑圣", "暴击回盾", "每次剑岚暴击立即刷新自身与前排风之护盾！", 1.58, 1.66)
+        }),
+        ancient_guardian: evolution("ancient_guardian", "古树战神", "森罗庇护", "剑岚每 3 击为全军赋予厚重自然护盾与回血。", 1.5, 1.44, {
+          gaia_champion: evolution("gaia_champion", "盖亚神卫", "森罗不朽", "全军护盾效果大幅提升，持续净化回复生命！", 1.68, 1.56),
+          moonblade_king: evolution("moonblade_king", "银月战王", "月刃破甲", "双刃附带 2.5 倍破盾与银月星落轰击！", 1.6, 1.64)
         })
       }
     },
@@ -338,6 +498,54 @@
         })
       }
     },
+    titan_warlord: {
+      id: "titan_warlord", kind: "pool", rarity: "gold", artKey: "titan_warlord", name: "熔火泰坦皇", short: "泰坦皇",
+      role: "前排 · 5费金", color: "#ffd86b", bg: "#3d2414", baseWeight: 0,
+      hp: 420, atk: 54, atkCd: 1.04, moveSpd: 118, range: 78, crit: 0.22,
+      skillDesc: "【5费金卡】锻造星陨核心的远古熔火巨神，5 技能栏！火山裂地震晕全场并自带巨盾。",
+      evolutions: {
+        molten_colossus: evolution("molten_colossus", "熔核巨神", "不灭神躯", "开局获得巨额熔岩神盾，受击向四周喷发熔火反伤。", 1.62, 1.48, {
+          world_forge: evolution("world_forge", "创世锻炉神", "全军神甲", "每 3 秒为全军锻造熔火圣盾并永久强化攻击！", 1.82, 1.65),
+          magma_behemoth: evolution("magma_behemoth", "灭世熔岩皇", "绝对铁壁", "生命与护盾翻倍，反伤震晕一切近身之敌！", 1.88, 1.6)
+        }),
+        wrath_titan: evolution("wrath_titan", "狂怒泰坦", "碎星神锤", "太阳神锤大范围裂地眩晕，对护盾造成 3.5 倍粉碎伤害。", 1.54, 1.62, {
+          planet_breaker: evolution("planet_breaker", "碎星战神", "天崩地裂", "每 2 锤引爆全屏火山喷发，毁灭敌方前排与中排！", 1.7, 1.84),
+          inferno_sovereign: evolution("inferno_sovereign", "炼狱霸主", "狂血神锤", "血越低攻速越快且自带高额熔火吸血！", 1.72, 1.78)
+        })
+      }
+    },
+    celestial_seraph: {
+      id: "celestial_seraph", kind: "pool", rarity: "gold", artKey: "celestial_seraph", name: "神恩炽天圣", short: "炽天圣",
+      role: "后排 · 5费金", color: "#ffd86b", bg: "#3b3116", baseWeight: 0,
+      hp: 275, atk: 48, atkCd: 1.0, moveSpd: 116, range: 315, crit: 0.24,
+      skillDesc: "【5费金卡】端坐天穹的六翼大天使，5 技能栏！普照全军圣疗叠盾并降下神罚天光。",
+      evolutions: {
+        archangel_mercy: evolution("archangel_mercy", "救世大天使", "永恒神恩", "每次施法治疗全军并叠加厚重神圣护盾，全军免控加速。", 1.56, 1.5, {
+          eden_savior: evolution("eden_savior", "伊甸圣主", "神迹普照", "全军每秒持续回血叠盾，打造不死神圣军团！", 1.78, 1.68),
+          immortal_halo: evolution("immortal_halo", "不朽神环", "全军赐福", "全军攻击与攻速大幅提升，施法额外产出金币！", 1.72, 1.72)
+        }),
+        archangel_wrath: evolution("archangel_wrath", "裁决大天使", "圣光净世", "降下多道天罚光柱轰击敌军集群，圣伤与治疗同步翻倍。", 1.5, 1.62, {
+          heaven_judgement: evolution("heaven_judgement", "天国神罚", "万丈天光", "全屏降下审判光雨，对 Boss 与精英造成巨额真伤！", 1.66, 1.84),
+          golden_dawn: evolution("golden_dawn", "黄金破晓神", "破晓暴击", "神圣天光必定暴击并将伤害转化为全军护盾！", 1.68, 1.8)
+        })
+      }
+    },
+    celestial_artemis: {
+      id: "celestial_artemis", kind: "pool", rarity: "gold", artKey: "celestial_artemis", name: "星穹月神", short: "月神",
+      role: "后排 · 5费金", color: "#ffd86b", bg: "#2e2846", baseWeight: 0,
+      hp: 255, atk: 60, atkCd: 0.80, moveSpd: 132, range: 345, crit: 0.34,
+      skillDesc: "【5费金卡】执掌银河星轨的银月女神，5 技能栏！倾泻全屏追踪星辉箭雨极速收割。",
+      evolutions: {
+        lunar_goddess: evolution("lunar_goddess", "太阴月神", "满月万箭", "每次普攻倾泻满屏追踪星箭，箭矢附带星爆溅射。", 1.48, 1.64, {
+          cosmos_empress: evolution("cosmos_empress", "寰宇星皇", "银河倾泻", "星雨数量 +2 且必定暴击撕裂全场护盾！", 1.64, 1.86),
+          silver_eternity: evolution("silver_eternity", "永恒银月", "极速月华", "攻速突破极限 +40%，化作不间断流星暴雨！", 1.62, 1.82)
+        }),
+        fortune_huntress: evolution("fortune_huntress", "天命猎神", "猎星爆金", "对低血目标斩杀翻倍，每次击杀额外掉落命运金币。", 1.5, 1.6, {
+          golden_constellation: evolution("golden_constellation", "黄金星宿神", "星财万贯", "每击杀敌军爆 +6 金币并永久提升自身攻击！", 1.66, 1.8),
+          meteor_slayer: evolution("meteor_slayer", "弑神流星", "巨兽克星", "对 Boss 造成双倍流星贯穿重伤！", 1.65, 1.85)
+        })
+      }
+    },
     joker: {
       id: "joker",
       kind: "wild",
@@ -353,15 +561,21 @@
 
   const UNIT_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit");
   const ALL_HERO_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit" || SYMBOLS[id].kind === "pool");
-  const FRONTLINE = new Set(["knight", "assassin", "valkyrie", "berserker", "frost_warden", "shadow_blade", "sun_templar", "astral_valkyrie"]);
-  const ASSASSIN_TYPES = new Set(["assassin", "shadow_blade"]);
+  const FRONTLINE = new Set([
+    "knight", "assassin", "valkyrie",
+    "berserker", "frost_warden", "royal_halberd",
+    "shadow_blade", "iron_inquisitor",
+    "sun_templar", "dread_knight_lord", "blood_empress", "sylvan_archon",
+    "astral_valkyrie", "titan_warlord"
+  ]);
+  const ASSASSIN_TYPES = new Set(["assassin", "shadow_blade", "blood_empress"]);
 
   const HERO_POOL_BY_RARITY = {
     white: ["knight", "assassin", "valkyrie", "archer", "mage", "priest"],
-    green: ["berserker", "engineer", "frost_warden"],
-    blue: ["necromancer", "bard", "shadow_blade"],
-    purple: ["sun_templar", "chrono_mage"],
-    gold: ["astral_valkyrie", "void_emperor"]
+    green: ["berserker", "engineer", "frost_warden", "moon_druid", "plague_alchemist", "royal_halberd"],
+    blue: ["necromancer", "bard", "shadow_blade", "thunder_shaman", "star_ranger", "iron_inquisitor"],
+    purple: ["sun_templar", "chrono_mage", "dread_knight_lord", "dragon_cannoneer", "blood_empress", "sylvan_archon"],
+    gold: ["astral_valkyrie", "void_emperor", "titan_warlord", "celestial_seraph", "celestial_artemis"]
   };
 
   function isUnitFrontline(type) {
@@ -381,39 +595,39 @@
   ];
 
   const SYNERGIES = {
-    knight: { name: "钢铁防线", req: 2, types: ["knight", "frost_warden", "sun_templar"], desc: "2+ 不同重装坦克：全军开局获得 +35 护盾（同兵种不叠加）" },
-    archer: { name: "箭雨齐发", req: 2, types: ["archer", "engineer"], desc: "2+ 不同远程射手：全军攻击速度 +18%（同兵种不叠加）" },
-    mage: { name: "奥术共鸣", req: 2, types: ["mage", "necromancer", "chrono_mage", "void_emperor"], desc: "2+ 不同法系单位：全军技能与法术伤害 +25%（同兵种不叠加）" },
-    priest: { name: "圣光庇护", req: 2, types: ["priest", "bard"], desc: "2+ 不同辅助支援：全军每 2 秒回复 4% 最大生命（同兵种不叠加）" },
-    assassin: { name: "致命突袭", req: 2, types: ["assassin", "shadow_blade"], desc: "2+ 不同刺客单位：全军暴击率 +18%（同兵种不叠加）" },
-    valkyrie: { name: "铁骑冲锋", req: 2, types: ["valkyrie", "berserker", "astral_valkyrie"], desc: "2+ 不同冲锋狂战：全军移速 +18%，破盾 +40%（同兵种不叠加）" }
+    knight: { name: "钢铁防线", req: 2, types: ["knight", "frost_warden", "iron_inquisitor", "sun_templar", "dread_knight_lord", "titan_warlord"], desc: "2+ 不同重装坦克：全军开局获得 +35 护盾（同兵种不叠加）" },
+    archer: { name: "箭雨齐发", req: 2, types: ["archer", "engineer", "star_ranger", "dragon_cannoneer", "celestial_artemis"], desc: "2+ 不同远程射手：全军攻击速度 +18%（同兵种不叠加）" },
+    mage: { name: "奥术共鸣", req: 2, types: ["mage", "plague_alchemist", "necromancer", "chrono_mage", "void_emperor"], desc: "2+ 不同法系单位：全军技能与法术伤害 +25%（同兵种不叠加）" },
+    priest: { name: "圣光庇护", req: 2, types: ["priest", "moon_druid", "bard", "thunder_shaman", "celestial_seraph"], desc: "2+ 不同辅助支援：全军每 2 秒回复 4% 最大生命（同兵种不叠加）" },
+    assassin: { name: "致命突袭", req: 2, types: ["assassin", "shadow_blade", "blood_empress"], desc: "2+ 不同刺客单位：全军暴击率 +18%（同兵种不叠加）" },
+    valkyrie: { name: "铁骑冲锋", req: 2, types: ["valkyrie", "berserker", "royal_halberd", "sylvan_archon", "astral_valkyrie"], desc: "2+ 不同冲锋狂战：全军移速 +18%，破盾 +40%（同兵种不叠加）" }
   };
 
   const FACTION_SYNERGIES = {
     alliance: {
       name: "圣辉联盟", short: "联盟",
-      types: ["knight", "priest", "valkyrie", "sun_templar", "astral_valkyrie"],
+      types: ["knight", "priest", "valkyrie", "royal_halberd", "iron_inquisitor", "sun_templar", "astral_valkyrie", "celestial_seraph"],
       color: "#f8e296",
       desc: "2名不同 2★+：护盾 +35% 且破盾反弹圣伤（同兵种不叠加）",
       enhanced: "3名不同 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
     },
     elves: {
       name: "银月精灵", short: "精灵",
-      types: ["archer", "mage", "bard", "chrono_mage"],
+      types: ["archer", "mage", "moon_druid", "bard", "star_ranger", "chrono_mage", "sylvan_archon", "celestial_artemis"],
       color: "#7be7ff",
       desc: "2名不同 2★+：全军攻速 +18%，每 4 击触发星落爆裂（同兵种不叠加）",
       enhanced: "3名不同 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币"
     },
     horde: {
       name: "赤血部落", short: "部落",
-      types: ["assassin", "berserker", "engineer", "frost_warden"],
+      types: ["assassin", "berserker", "engineer", "frost_warden", "thunder_shaman", "dragon_cannoneer", "titan_warlord"],
       color: "#ff7a6b",
       desc: "2名不同 2★+：全军暴击吸血 22%，暴击率 +12%（同兵种不叠加）",
       enhanced: "3名不同 2★+：全军暴击吸血 38%，全军攻击 +25%"
     },
     undead: {
       name: "幽冥议会", short: "幽冥",
-      types: ["necromancer", "shadow_blade", "void_emperor"],
+      types: ["plague_alchemist", "necromancer", "shadow_blade", "dread_knight_lord", "blood_empress", "void_emperor"],
       color: "#a8ffcf",
       desc: "2名不同 2★+：全军技能伤害 +20%，受击反伤 +15%（同兵种不叠加）",
       enhanced: "3名不同 2★+：技能伤害 +40%，每击杀敌军全军回血 8%"
@@ -443,13 +657,26 @@
     berserker: "green",
     engineer: "green",
     frost_warden: "green",
+    moon_druid: "green",
+    plague_alchemist: "green",
+    royal_halberd: "green",
     necromancer: "blue",
     bard: "blue",
     shadow_blade: "blue",
+    thunder_shaman: "blue",
+    star_ranger: "blue",
+    iron_inquisitor: "blue",
     sun_templar: "purple",
     chrono_mage: "purple",
+    dread_knight_lord: "purple",
+    dragon_cannoneer: "purple",
+    blood_empress: "purple",
+    sylvan_archon: "purple",
     astral_valkyrie: "gold",
-    void_emperor: "gold"
+    void_emperor: "gold",
+    titan_warlord: "gold",
+    celestial_seraph: "gold",
+    celestial_artemis: "gold"
   };
 
   const INNATE_SKILLS = {
@@ -489,6 +716,18 @@
       id: "frost_armor", owner: "frost_warden", name: "凛冬冰甲", icon: "❄️", color: "#6be5ff",
       desc: lv => `开局 +${[20, 30, 42, 55, 72][lv - 1]}% 冰霜护盾，普攻与受击令敌人减速 ${[25, 32, 40, 48, 55][lv - 1]}%。`
     },
+    nature_bloom: {
+      id: "nature_bloom", owner: "moon_druid", name: "自然生机", icon: "🌿", color: "#4fd1a5",
+      desc: lv => `每次攻击为 2 名受伤友军回复 ${[28, 44, 62, 82, 108][lv - 1]}% 攻击力生命，并缠绕减速目标。`
+    },
+    acid_flask: {
+      id: "acid_flask", owner: "plague_alchemist", name: "腐蚀毒瓶", icon: "🧪", color: "#42ff9e",
+      desc: lv => `普攻引爆酸液毒雾，对周围敌军造成 ${[45, 65, 88, 115, 148][lv - 1]}% 范围毒伤并双倍破盾！`
+    },
+    halberd_sweep: {
+      id: "halberd_sweep", owner: "royal_halberd", name: "王庭戟舞", icon: "🪓", color: "#7be7ff",
+      desc: lv => `每 2 次攻击横扫前方敌群造成 ${[65, 88, 115, 145, 185][lv - 1]}% 范围伤害并回复自身护盾。`
+    },
     raise_bone: {
       id: "raise_bone", owner: "necromancer", name: "亡灵复生", icon: "💀", color: "#8ce5aa",
       desc: lv => `敌军阵亡时召唤骸骨战士抗伤，属性 ${[35, 50, 68, 88, 115][lv - 1]}%，上限 ${[1, 2, 2, 3, 4][lv - 1]} 只。`
@@ -501,6 +740,18 @@
       id: "night_ambush", owner: "shadow_blade", name: "夜刃背刺", icon: "🌙", color: "#9d7bff",
       desc: lv => `对孤立或后排目标伤害 +${[22, 34, 48, 65, 88][lv - 1]}%，暴击回复 ${[10, 15, 22, 28, 36][lv - 1]}% 生命。`
     },
+    storm_totem: {
+      id: "storm_totem", owner: "thunder_shaman", name: "风暴图腾", icon: "🌩️", color: "#5cc8ff",
+      desc: lv => `全军攻击 +${[8, 13, 19, 26, 35][lv - 1]}%，每 2 击降下雷暴图腾轰击敌群造成 ${[55, 78, 105, 135, 175][lv - 1]}% 雷伤。`
+    },
+    starlight_arrow: {
+      id: "starlight_arrow", owner: "star_ranger", name: "星辉贯矢", icon: "🌠", color: "#7be7ff",
+      desc: lv => `暴击率 +${[8, 12, 16, 22, 30][lv - 1]}%，每次攻击射出穿透星矢额外造成 ${[50, 72, 95, 125, 160][lv - 1]}% 伤害。`
+    },
+    judgement_hammer: {
+      id: "judgement_hammer", owner: "iron_inquisitor", name: "裁决圣锤", icon: "🔨", color: "#ffd86b",
+      desc: lv => `每 3 击重锤震地眩晕敌军并造成 ${[80, 110, 145, 185, 235][lv - 1]}% 圣伤，同时叠加圣盾。`
+    },
     solar_burn: {
       id: "solar_burn", owner: "sun_templar", name: "烈阳圣域", icon: "☀️", color: "#ffb84d",
       desc: lv => `每 3 击引爆烈阳冲击波，对周围敌军造成 ${[65, 90, 120, 155, 200][lv - 1]}% 圣伤并为自身叠盾。`
@@ -509,6 +760,22 @@
       id: "chrono_warp", owner: "chrono_mage", name: "时空扭曲", icon: "⏳", color: "#c084fc",
       desc: lv => `全军攻速 +${[10, 16, 22, 30, 40][lv - 1]}%，普攻附带范围星爆减速敌军。`
     },
+    death_coil: {
+      id: "death_coil", owner: "dread_knight_lord", name: "冥渊汲魂", icon: "🖤", color: "#6effc8",
+      desc: lv => `每 2 击释放凋零新星造成 ${[65, 92, 125, 165, 215][lv - 1]}% 暗影群伤，并将 35% 转化为生命与护盾！`
+    },
+    dragon_barrage: {
+      id: "dragon_barrage", owner: "dragon_cannoneer", name: "龙炎重炮", icon: "🔥", color: "#ff7a38",
+      desc: lv => `普攻发射爆裂龙炎弹造成 ${[80, 110, 145, 190, 245][lv - 1]}% 范围爆炸，对护盾造成 2.5× 毁灭伤害！`
+    },
+    crimson_waltz: {
+      id: "crimson_waltz", owner: "blood_empress", name: "绯月血舞", icon: "🦇", color: "#ff4d79",
+      desc: lv => `暴击率 +${[12, 18, 25, 34, 45][lv - 1]}%，暴击引爆血蝠新星并吸取 ${[22, 30, 40, 52, 68][lv - 1]}% 伤害生命！`
+    },
+    blade_tempest: {
+      id: "blade_tempest", owner: "sylvan_archon", name: "森罗剑岚", icon: "🍃", color: "#34ebae",
+      desc: lv => `攻击剑岚贯穿 3 名敌人造成 ${[70, 96, 128, 165, 210][lv - 1]}% 斩伤，每 3 击为全军叠加风盾！`
+    },
     sky_spear: {
       id: "sky_spear", owner: "astral_valkyrie", name: "天穹神枪", icon: "🌟", color: "#ffd86b",
       desc: lv => `普攻穿透 ${[2, 3, 3, 4, 5][lv - 1]} 名敌人，破盾 ${[2, 2.4, 2.8, 3.2, 3.8][lv - 1]}× 并为全军叠盾！`
@@ -516,6 +783,18 @@
     void_singularity: {
       id: "void_singularity", owner: "void_emperor", name: "虚空奇点", icon: "🕳️", color: "#ff75b5",
       desc: lv => `每次攻击在目标处引爆虚空黑洞，造成 ${[75, 105, 140, 185, 240][lv - 1]}% 范围毁灭法伤！`
+    },
+    earth_cataclysm: {
+      id: "earth_cataclysm", owner: "titan_warlord", name: "泰坦裂世", icon: "🌋", color: "#ff8c38",
+      desc: lv => `开局 +${[35, 50, 68, 88, 115][lv - 1]}% 熔岩巨盾，每 2 击火山裂地震晕周围并造成 ${[95, 130, 175, 225, 290][lv - 1]}% 重伤！`
+    },
+    divine_grace: {
+      id: "divine_grace", owner: "celestial_seraph", name: "天界神恩", icon: "✨", color: "#fff3b0",
+      desc: lv => `每次攻击为全体友军回复 ${[40, 58, 80, 108, 145][lv - 1]}% 攻击力生命与护盾，并降下天罚圣光！`
+    },
+    galaxy_barrage: {
+      id: "galaxy_barrage", owner: "celestial_artemis", name: "银河星雨", icon: "🌌", color: "#9ee8ff",
+      desc: lv => `每次普攻倾泻 ${[3, 4, 4, 5, 6][lv - 1]} 支追踪星辉神箭，每支造成 ${[75, 100, 130, 168, 215][lv - 1]}% 穿透伤害！`
     }
   };
 
@@ -1065,7 +1344,7 @@
       enemies: {
         raider: campaignEnemy("哥布林掠袭者", "melee", "ch1_goblin_raider", 105, 10, 1.15),
         brute: campaignEnemy("兽人重斧", "tank", "ch1_orc_brute", 165, 12, 1.25),
-        scout: campaignEnemy("哥布林弓手", "ranged", "enemy_ranged", 70, 11, 1.10)
+        scout: campaignEnemy("哥布林弓手", "ranged", "ch1_goblin_scout", 70, 11, 1.10)
       },
       encounters: [
         ["斥候试探", ["raider", "raider", "scout"]],
@@ -1952,6 +2231,14 @@
     const shadowSkill = unit.skills?.find(s => s.id === "shadow_crit");
     if (shadowSkill) {
       crit += [0.10, 0.18, 0.26, 0.35, 0.45][Math.min(5, shadowSkill.level) - 1] || 0;
+    }
+    const starArrowSkill = unit.skills?.find(s => s.id === "starlight_arrow");
+    if (starArrowSkill) {
+      crit += [0.08, 0.12, 0.16, 0.22, 0.30][Math.min(5, starArrowSkill.level) - 1] || 0;
+    }
+    const waltzSkill = unit.skills?.find(s => s.id === "crimson_waltz");
+    if (waltzSkill) {
+      crit += [0.12, 0.18, 0.25, 0.34, 0.45][Math.min(5, waltzSkill.level) - 1] || 0;
     }
 
     // Apply Level 30/60/90 Master Awakening Buffs

@@ -1,39 +1,14 @@
 {
-  "version": "3.0",
-  "artStyle": "32x32 Crisp Pixel-Art Dark Fantasy (1px #0b0914 ink outlines, multi-tone pixel shading, 1-5 cost rarity progression)",
+  "version": "4.0",
+  "artStyle": "Unified Crisp Pixel-Art Dark Fantasy (Heroes & Regular Enemies 32x32, Chapter Bosses 48x48, 1px #0b0914 ink outlines, multi-tone pixel shading)",
   "maps": [
-    {
-      "chapter": 1,
-      "id": "citadel",
-      "name": "暮色古堡庭院",
-      "path": "assets/maps/map-01-citadel.webp"
-    },
-    {
-      "chapter": 2,
-      "id": "catacombs",
-      "name": "幽冥骸骨地窟",
-      "path": "assets/maps/map-02-catacombs.svg"
-    },
-    {
-      "chapter": 3,
-      "id": "frostpeak",
-      "name": "凛冬冰霜要塞",
-      "path": "assets/maps/map-03-frostpeak.svg"
-    },
-    {
-      "chapter": 4,
-      "id": "inferno",
-      "name": "黑曜熔岩祭坛",
-      "path": "assets/maps/map-04-inferno.svg"
-    },
-    {
-      "chapter": 5,
-      "id": "astral",
-      "name": "星界命运神殿",
-      "path": "assets/maps/map-05-astral.svg"
-    }
+    { "chapter": 1, "id": "citadel", "name": "暮色古堡庭院", "path": "assets/maps/map-01-citadel.webp" },
+    { "chapter": 2, "id": "catacombs", "name": "幽冥骸骨地窟", "path": "assets/maps/map-02-catacombs.svg" },
+    { "chapter": 3, "id": "frostpeak", "name": "凛冬冰霜要塞", "path": "assets/maps/map-03-frostpeak.svg" },
+    { "chapter": 4, "id": "inferno", "name": "黑曜熔岩祭坛", "path": "assets/maps/map-04-inferno.svg" },
+    { "chapter": 5, "id": "astral", "name": "星界命运神殿", "path": "assets/maps/map-05-astral.svg" }
   ],
-  "newHeroes": [
+  "heroes": [
     { "id": "knight", "name": "圣盾步兵", "role": "1费·白 前排坦克", "path": "assets/heroes/hero-knight.svg" },
     { "id": "assassin", "name": "暗影刺客", "role": "1费·白 前排切后", "path": "assets/heroes/hero-assassin.svg" },
     { "id": "valkyrie", "name": "圣枪骑兵", "role": "1费·白 前排冲锋", "path": "assets/heroes/hero-valkyrie.svg" },
@@ -43,24 +18,39 @@
     { "id": "berserker", "name": "狂战斧手", "role": "2费·绿 前排吸血", "path": "assets/heroes/hero-berserker.svg" },
     { "id": "engineer", "name": "蒸汽炮手", "role": "2费·绿 后排炮台", "path": "assets/heroes/hero-engineer.svg" },
     { "id": "frost_warden", "name": "霜刃守卫", "role": "2费·绿 前排冰甲", "path": "assets/heroes/hero-frost-warden.svg" },
+    { "id": "moon_druid", "name": "银月德鲁伊", "role": "2费·绿 后排自然", "path": "assets/heroes/hero-moon-druid.svg" },
+    { "id": "plague_alchemist", "name": "瘟疫炼金师", "role": "2费·绿 后排毒瓶", "path": "assets/heroes/hero-plague-alchemist.svg" },
+    { "id": "royal_halberd", "name": "皇室戟卫", "role": "2费·绿 前排横扫", "path": "assets/heroes/hero-royal-halberd.svg" },
     { "id": "necromancer", "name": "亡灵唤师", "role": "3费·蓝 后排亡灵", "path": "assets/heroes/hero-necromancer.svg" },
     { "id": "bard", "name": "命运吟游者", "role": "3费·蓝 后排战歌", "path": "assets/heroes/hero-bard.svg" },
     { "id": "shadow_blade", "name": "夜刃影舞", "role": "3费·蓝 刺客切后", "path": "assets/heroes/hero-shadow-blade.svg" },
+    { "id": "thunder_shaman", "name": "雷霆萨满", "role": "3费·蓝 后排图腾", "path": "assets/heroes/hero-thunder-shaman.svg" },
+    { "id": "star_ranger", "name": "星陨游侠", "role": "3费·蓝 后排星矢", "path": "assets/heroes/hero-star-ranger.svg" },
+    { "id": "iron_inquisitor", "name": "铁血审判官", "role": "3费·蓝 前排圣锤", "path": "assets/heroes/hero-iron-inquisitor.svg" },
     { "id": "sun_templar", "name": "烈阳圣殿骑", "role": "4费·紫 前排圣域", "path": "assets/heroes/hero-sun-templar.svg" },
     { "id": "chrono_mage", "name": "星界时法师", "role": "4费·紫 后排时空", "path": "assets/heroes/hero-chrono-mage.svg" },
+    { "id": "dread_knight_lord", "name": "冥渊死骑", "role": "4费·紫 前排凋零", "path": "assets/heroes/hero-dread-knight.svg" },
+    { "id": "dragon_cannoneer", "name": "龙炎重炮手", "role": "4费·紫 后排龙炮", "path": "assets/heroes/hero-dragon-cannoneer.svg" },
+    { "id": "blood_empress", "name": "绯月血皇", "role": "4费·紫 刺客血舞", "path": "assets/heroes/hero-blood-empress.svg" },
+    { "id": "sylvan_archon", "name": "森罗精灵王", "role": "4费·紫 前排剑岚", "path": "assets/heroes/hero-sylvan-archon.svg" },
     { "id": "astral_valkyrie", "name": "天穹女武神", "role": "5费·金 前排神枪", "path": "assets/heroes/hero-astral-valkyrie.svg" },
-    { "id": "void_emperor", "name": "虚空星主", "role": "5费·金 后排黑洞", "path": "assets/heroes/hero-void-emperor.svg" }
+    { "id": "void_emperor", "name": "虚空星主", "role": "5费·金 后排黑洞", "path": "assets/heroes/hero-void-emperor.svg" },
+    { "id": "titan_warlord", "name": "熔火泰坦皇", "role": "5费·金 前排裂世", "path": "assets/heroes/hero-titan-warlord.svg" },
+    { "id": "celestial_seraph", "name": "神恩炽天圣", "role": "5费·金 后排神恩", "path": "assets/heroes/hero-celestial-seraph.svg" },
+    { "id": "celestial_artemis", "name": "星穹月神", "role": "5费·金 后排星雨", "path": "assets/heroes/hero-celestial-artemis.svg" }
   ],
   "enemiesByChapter": {
     "ch1": [
       "assets/enemies/ch1/goblin-raider.svg",
       "assets/enemies/ch1/orc-brute.svg",
-      "assets/enemies/ch1/boss-warlord.png"
+      "assets/enemies/ch1/goblin-scout.svg",
+      "assets/enemies/ch1/boss-warlord.svg"
     ],
     "ch2": [
       "assets/enemies/ch2/crypt-ghoul.svg",
       "assets/enemies/ch2/bone-archer.svg",
       "assets/enemies/ch2/necro-acolyte.svg",
+      "assets/enemies/ch2/bone-priest.svg",
       "assets/enemies/ch2/boss-lich.svg"
     ],
     "ch3": [

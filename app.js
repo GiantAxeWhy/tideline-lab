@@ -167,13 +167,13 @@
     const wInCh = waveDef.waveInChapter || run.waveInChapter || 1;
     const totalW = waveDef.totalWavesInChapter || diff.wavesPerChapter || 6;
     $("wave-badge").textContent = endless
-      ? `无尽轮回 · 第 ${run.endlessWave} 波`
-      : `第 ${chapter.id} 章 · ${chapter.name} [${diff.name} ${wInCh}/${totalW} 波]`;
+      ? `无尽 W${run.endlessWave}`
+      : `第${chapter.id}章·${chapter.name} ${wInCh}/${totalW}`;
     $("wave-badge").style.color = chapter.themeColor;
-    $("wave-name").textContent = waveDef.name;
+    $("wave-name").textContent = waveDef.name.replace(/\s*\(\d+\/\d+\)$/, "");
     $("hud-gold").textContent = run.gold;
     $("hud-crystals").textContent = run.crystals;
-    $("hud-hp").textContent = `${run.hp} / ${run.maxHp}`;
+    $("hud-hp").textContent = `${run.hp}/${run.maxHp}`;
     $("hud-power").textContent = G.getTotalPower(run);
 
     $("wave-dots").innerHTML = Array.from({ length: totalW }, (_, index) => {
@@ -189,17 +189,23 @@
     // Side Quest bar & Elite Wheel button
     const q = run.sideQuest;
     if ($("quest-text")) {
+      const fullQuest = q
+        ? (q.completed
+          ? `✅ 支线【${q.name}】已完成！已发放高级轮盘券`
+          : `🎯 支线【${q.name}】：${q.desc}（${q.progress}/${q.target} · 剩${q.wavesLeft}波）`)
+        : "🎯 支线挑战：完成任务赢取高级轮盘免费转";
       $("quest-text").textContent = q
         ? (q.completed
-          ? `✅ 支线【${q.name}】已完成！已发放独立高级轮盘券！`
-          : `🎯 支线【${q.name}】：${q.desc}（进度 ${q.progress}/${q.target} · 剩余 ${q.wavesLeft} 波）`)
-        : "🎯 支线挑战：完成任务赢取独立高级轮盘免费 1 转！";
+          ? `✅ ${q.name} 已完成`
+          : `🎯 ${q.name} ${q.progress}/${q.target} (${q.wavesLeft}波)`)
+        : "🎯 支线挑战";
+      $("quest-text").title = fullQuest;
     }
     const eliteBtn = $("btn-elite-wheel");
     if (eliteBtn) {
       const tokens = run.eliteWheelTokens || 0;
       eliteBtn.hidden = tokens <= 0;
-      eliteBtn.textContent = `🎰 开启高级轮盘 (×${tokens})`;
+      eliteBtn.textContent = `🎰 高级轮盘 ×${tokens}`;
     }
 
     const bossPill = $("boss-pill");
@@ -207,7 +213,7 @@
     const threatBadge = $("enemy-threat");
     threatBadge.hidden = !env?.name;
     if (env?.name) {
-      threatBadge.textContent = `${env.name} · 治疗-${Math.round(env.healPenalty * 100)}%`;
+      threatBadge.textContent = `${env.name} -${Math.round(env.healPenalty * 100)}%疗`;
       threatBadge.title = `章节环境效果【${env.name}】：${env.desc}`;
     }
     if (waveDef.boss) {
@@ -216,8 +222,8 @@
       $("enemy-intel").textContent = waveDef.bossSkill;
     } else {
       bossPill.hidden = true;
-      const totalHp = waveDef.phases.flatMap(p => p.enemies).reduce((s, e) => s + e.hp, 0);
-      $("enemy-intel").textContent = `来袭 ${waveDef.phases.length} 批敌军 · 总生命 ${totalHp} · 赏金 ${waveDef.reward} 金币`;
+      const totalEnemies = waveDef.phases.reduce((s, p) => s + p.enemies.length, 0);
+      $("enemy-intel").textContent = `敌军 ${totalEnemies} 名 · 赏金 +${waveDef.reward}G`;
     }
 
     $("enemy-warning").hidden = !waveDef.enemies.some(enemy => enemy.tactic === "backline_diver");
@@ -276,8 +282,8 @@
     $("fever-bar").classList.toggle("ready", !!run.feverActive);
     document.querySelector(".cabinet").classList.toggle("fever-mode", !!run.feverActive);
     $("fever-text").textContent = run.feverActive
-      ? "狂热就绪！下一转免费 + 中心百搭 + 2× 收益"
-      : `命运狂热槽 ${feverPct}%（满额必爆双倍百搭）`;
+      ? "🔥 狂热就绪 · 免费双倍百搭！"
+      : `狂热充能 ${feverPct}%`;
 
     const matchedSet = new Set();
     if (!spinningCols.some(Boolean)) {
@@ -378,31 +384,32 @@
     } else {
       $("spin-cost-label").textContent = `${totalCost} 金币`;
     }
-    $("lock-status").textContent = `本波摇杆 ${spinsUsed}/${maxSpinsWave} · 锁格 ${run.locked.length}/${maxLocks}(${lockCost}G) · 微调 ${run.nudgesLeft || 0}`;
+    $("lock-status").textContent = `摇杆 ${spinsUsed}/${maxSpinsWave} · 锁 ${run.locked.length}/${maxLocks}(${lockCost}G) · 微调 ${run.nudgesLeft || 0}`;
     $("btn-rig").disabled = busy || !!run.outcome;
   }
 
   function renderCores() {
-    $("core-count").textContent = `${run.cores.length} / ${run.unlockedCoreSlots}`;
+    $("core-count").textContent = `${run.cores.length}/${run.unlockedCoreSlots}`;
     if ($("core-milestone-pill") && G.getNextCoreMilestone) {
       const nextM = G.getNextCoreMilestone(run);
       $("core-milestone-pill").textContent = nextM
-        ? `距下枚核心还差 ${Math.max(0, nextM - (run.totalSpins || 0))} 转`
-        : "核心里程碑已满";
+        ? `下枚核心 ${Math.max(0, nextM - (run.totalSpins || 0))} 转`
+        : "里程碑已满";
     }
     const levels = run.coreLevels || {};
     const slots = [];
     for (let i = 0; i < 6; i += 1) {
       const id = run.cores[i];
       if (!id) {
-        const label = i < run.unlockedCoreSlots ? "核心槽位" : "封印槽位";
-        slots.push(`<div class="core-slot empty">${label}</div>`);
+        const isOpen = i < run.unlockedCoreSlots;
+        slots.push(`<div class="core-slot empty${isOpen ? "" : " sealed"}" title="${isOpen ? "空核心槽位（累计转动达里程碑即可三选一装备）" : "封印核心槽（可在秘宝商店消耗水晶解锁）"}">${isOpen ? "◇" : "🔒"}</div>`);
       } else {
         const core = G.CORES.find(c => c.id === id);
         const lv = levels[id] || 1;
         slots.push(`<div class="core-slot ${core.rarity}" title="${core.name} Lv.${lv}（${RARITY_LABEL[core.rarity]}）：${core.desc}">
           <span class="c-medallion">${core.icon}</span>
-          <span class="c-name">${core.name}${lv > 1 ? ` Lv.${lv}` : ""}</span>
+          ${lv > 1 ? `<span class="c-lv">L${lv}</span>` : ""}
+          <span class="c-name">${core.name}</span>
         </div>`);
       }
     }
@@ -416,14 +423,14 @@
       return `<div class="syn-pill${s.active ? " active" : ""}" style="--syn-color:${sym.color}" title="${s.desc}">
         ${Art.renderPortraitImg(s.type, sym.short, "syn-thumb")}
         <span>${s.name}</span>
-        <span class="syn-cnt">${s.count}/${s.req}${s.active ? " ✓" : ""}</span>
+        <span class="syn-cnt">${s.count}/${s.req}</span>
       </div>`;
     }).join("");
     $("faction-bar").innerHTML = G.getFactionSynergies(run).map(flow => {
       const members = flow.types.map(type => G.SYMBOLS[type].short).join(" / ");
       const title = `【2★及以上英雄觉醒阵营】成员：${members}\n2人：${flow.desc}\n3人：${flow.enhanced}`;
-      return `<div class="syn-pill${flow.tier ? " active" : ""}" style="--syn-color:${flow.color}" title="${title}">
-        <span>${flow.name}</span><span class="syn-cnt">${flow.count}/3${flow.tier ? ` (${flow.tier}★效)` : " (需2★)"}</span>
+      return `<div class="syn-pill faction-pill${flow.tier ? " active" : ""}" style="--syn-color:${flow.color}" title="${title}">
+        <span>${flow.short}</span><span class="syn-cnt">${flow.count}/3${flow.tier ? `★` : ""}</span>
       </div>`;
     }).join("");
   }
@@ -431,15 +438,17 @@
   function renderUnitCard(unit, area, index, emptyLabel) {
     const isSelected = selectedSlot && selectedSlot.area === area && selectedSlot.index === index;
     const selectedUnit = selectedSlot
-      ? (selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index])
+      ? (selectedSlot.area === "field" ? run.field[selectedSlot.index]
+        : selectedSlot.area === "bench" ? run.bench[selectedSlot.index]
+        : (run.overflowUnits || [])[selectedSlot.index])
       : null;
     const isAbsorbCandidate = armyMode === "absorb" && selectedUnit && unit && unit.id !== selectedUnit.id;
 
     if (area !== "overflow" && !G.isSlotOpen(run, area, index)) {
       const cost = G.slotCost(run, area);
-      return `<button type="button" class="unit-slot sealed" data-unlock="${area}" data-index="${index}"
+      return `<button type="button" class="unit-slot sealed" data-unlock="${area}" data-index="${index}" title="消耗 ${cost} 命运水晶扩充席位"
         ${busy || run.outcome || run.crystals < cost ? "disabled" : ""}>
-        ${Art.UI_ICONS.lock}<span>封印${area === "field" ? "阵位" : "备战位"} · ${cost} 水晶</span>
+        ${Art.UI_ICONS.lock}<span>扩充 · ${cost}💎</span>
       </button>`;
     }
     if (!unit) {
@@ -464,22 +473,21 @@
     const xpPct = nextReq ? Math.min(100, Math.max(8, ((st.heroLv - prevReq) / Math.max(1, nextReq - prevReq)) * 100)) : 100;
 
     const factions = G.getUnitFactions ? G.getUnitFactions(unit.type) : [];
-    const factionTags = factions.map(f =>
-      st.level >= 2
-        ? `<span class="u-tag" style="border:1px solid ${f.color};color:${f.color};background:rgba(255,255,255,0.06)">${f.short}</span>`
-        : `<span class="u-tag" style="opacity:.52" title="升至 2★ 觉醒【${f.name}】阵营">${f.short}·2★</span>`
-    ).join("");
-
-    const trait = G.getUnitTraitDisplay ? G.getUnitTraitDisplay(unit) : null;
-    const traitBadge = trait
-      ? `<span class="u-tag" style="border:1px solid ${trait.color};color:${trait.color};background:rgba(12,16,28,0.85)" title="${trait.name}：${trait.desc}">${trait.badge}</span>`
+    const factionBadge = st.level >= 2
+      ? factions.map(f => `<span class="u-tag" style="border-color:${f.color};color:${f.color}">${f.short}</span>`).join("")
       : "";
 
-    const skills = unit.skills || [];
-    const rarityBadge = `<span class="u-tag" style="border:1px solid ${rarity.color};color:${rarity.color};background:rgba(10,14,24,0.85)" title="${rarity.label} · ${rarity.slots} 技能栏 · 纯吞噬+${rarity.feedLevels}级">${rarity.name}·Lv.${st.heroLv}</span>`;
+    const trait = G.getUnitTraitDisplay ? G.getUnitTraitDisplay(unit) : null;
+    const cardTooltip = [
+      `${displayName}（${rarity.label} · Lv.${st.heroLv} · ${st.level}★）`,
+      `生命 ${st.hp} · 攻击 ${st.atk} · 技能栏 ${(unit.skills || []).length}/${rarity.slots}`,
+      trait ? `天赋【${trait.name}】：${trait.desc}` : "",
+      factions.length ? `阵营：${factions.map(f => f.name).join("/")}${st.level < 2 ? "（2★觉醒）" : ""}` : ""
+    ].filter(Boolean).join("\n");
 
+    const skills = unit.skills || [];
     const artKey = sym.artKey || unit.type;
-    return `<button type="button" class="${cls}" draggable="true" data-area="${area}" data-index="${index}" data-uid="${unit.id}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
+    return `<button type="button" class="${cls}" draggable="true" data-area="${area}" data-index="${index}" data-uid="${unit.id}" title="${cardTooltip}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
         ${Art.renderPortraitImg(artKey, displayName, "unit-sprite")}
         <span class="u-lvl-badge">${"★".repeat(st.level)}</span>
@@ -487,15 +495,14 @@
       <div class="u-body">
         <div class="u-top">
           <span class="u-name">${displayName}</span>
-          ${rarityBadge}
-          ${factionTags}
-          ${traitBadge}
+          <span class="u-lv-pill" style="color:${rarity.color}">Lv.${st.heroLv}</span>
+          ${factionBadge}
         </div>
-        <div class="u-xp-bar" title="当前 Lv.${st.heroLv}${nextReq ? ` / Lv.${nextReq} 升 ${st.level + 1}★` : "（已满 5★）"}"><i style="width:${xpPct}%"></i></div>
+        <div class="u-xp-bar"><i style="width:${xpPct}%"></i></div>
         <div class="u-stats">
           <span class="u-hp">${Art.UI_ICONS.heart}${st.hp}</span>
           <span class="u-atk">${Art.UI_ICONS.sword}${st.atk}</span>
-          <span style="font-size:.68rem;color:${rarity.color}">技${skills.length}/${rarity.slots}</span>
+          <span class="u-sk" style="color:${rarity.color}">✦${skills.length}/${rarity.slots}</span>
         </div>
       </div>
     </button>`;
@@ -504,7 +511,7 @@
   function renderArmy() {
     const unlockedCap = run.unlockedFieldSlots.length;
     const fieldUsed = run.field.filter(Boolean).length;
-    if ($("field-count")) $("field-count").textContent = `${fieldUsed} / ${unlockedCap} 人（上限 9）`;
+    if ($("field-count")) $("field-count").textContent = `${fieldUsed}/${unlockedCap}`;
 
     // Show all unlocked field slots + the next 1 expandable pop-cap slot (up to 9) so the grid stays super clean!
     const visibleFieldSlots = FORMATION_ORDER.filter(idx =>
@@ -519,7 +526,7 @@
     ).join("");
 
     const benchUsed = run.bench.filter(Boolean).length;
-    $("bench-count").textContent = `${benchUsed} / ${run.unlockedBenchSlots}`;
+    $("bench-count").textContent = `${benchUsed}/${run.unlockedBenchSlots}`;
 
     // Render Overflow Queue (when roster is full, rolled units stay here until absorbed or sold!)
     const overflow = run.overflowUnits || [];
@@ -527,7 +534,7 @@
     if (ob) {
       ob.hidden = overflow.length === 0;
       if (overflow.length > 0) {
-        $("overflow-count").textContent = `${overflow.length} 名待处理`;
+        $("overflow-count").textContent = `${overflow.length} 待处理`;
         $("overflow-grid").innerHTML = overflow.map((u, idx) =>
           renderUnitCard(u, "overflow", idx, "")
         ).join("");
@@ -536,8 +543,8 @@
 
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
     $("army-tip").textContent = armyMode === "absorb"
-      ? "吞噬模式已开启：点选或将一个英雄拖动叠放到另一个英雄身上，立即弹出【吞噬融合抉择】！"
-      : "正常模式：上方战场左半区拖动摆位，下方卡片拖动可自由换位/上下阵；需吞噬请点右侧【吞噬模式】！";
+      ? "🔥 吞噬模式：点击或拖拽叠放融合"
+      : "拖拽换位 · 点击查看技能";
 
     const selUnit = selectedSlot
       ? (selectedSlot.area === "field" ? run.field[selectedSlot.index]
@@ -552,16 +559,19 @@
   function renderInspector() {
     const el = $("inspector");
     if (!selectedSlot) {
-      el.innerHTML = '<div class="inspector-empty">点选任意军团单位查看详细属性、技能与吞噬强化选项。</div>';
+      el.hidden = true;
+      el.innerHTML = "";
       return;
     }
     const unit = selectedSlot.area === "field" ? run.field[selectedSlot.index]
       : selectedSlot.area === "bench" ? run.bench[selectedSlot.index]
       : (run.overflowUnits || [])[selectedSlot.index];
     if (!unit) {
-      el.innerHTML = '<div class="inspector-empty">已选中空位，再点击任意单位即可将其调动到此位置。</div>';
+      el.hidden = true;
+      el.innerHTML = "";
       return;
     }
+    el.hidden = false;
 
     const sym = G.SYMBOLS[unit.type];
     const st = G.getUnitStats(unit, run);
@@ -1722,7 +1732,7 @@
   $("btn-speed").addEventListener("click", () => {
     speedMult = speedMult === 1 ? 2 : 1;
     arena.setSpeed(speedMult);
-    $("btn-speed").textContent = `${speedMult}×倍速`;
+    $("btn-speed").textContent = `${speedMult}×`;
     $("btn-speed").classList.toggle("active", speedMult === 2);
   });
 
@@ -1730,6 +1740,16 @@
     const m = SFX.toggleMute();
     $("btn-mute").innerHTML = m ? Art.UI_ICONS.soundOff : Art.UI_ICONS.soundOn;
   });
+
+  if ($("top-more-menu")) {
+    $("top-more-menu").addEventListener("click", e => {
+      if (e.target.closest("button")) $("top-more-menu").open = false;
+    });
+    document.addEventListener("click", e => {
+      const m = $("top-more-menu");
+      if (m && m.open && !m.contains(e.target)) m.open = false;
+    });
+  }
 
   $("reel-grid").addEventListener("click", e => {
     const btn = e.target.closest("[data-cell]");
