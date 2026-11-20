@@ -394,6 +394,7 @@
 
     const sym = G.SYMBOLS[unit.type];
     const st = G.getUnitStats(unit, run);
+    const rarity = G.getUnitRarity(unit.type);
     const displayName = unit.evolution ? sym.evolutions[unit.evolution].name : sym.name;
     const cls = [
       "unit-slot",
@@ -403,8 +404,9 @@
       unit.evolution ? "evolved" : ""
     ].filter(Boolean).join(" ");
 
-    const sameStarCopies = [...run.field, ...run.bench].filter(u => u && u.type === unit.type && G.unitLevel(u) === st.level).length;
-    const xpPct = st.level >= 5 ? 100 : Math.min(100, (sameStarCopies / 3) * 100);
+    const nextReq = G.nextStarLevel(unit.type, st.heroLv);
+    const prevReq = st.level <= 1 ? 1 : (rarity.starThresholds[st.level - 2] || 1);
+    const xpPct = nextReq ? Math.min(100, Math.max(8, ((st.heroLv - prevReq) / Math.max(1, nextReq - prevReq)) * 100)) : 100;
 
     const factions = G.getUnitFactions ? G.getUnitFactions(unit.type) : [];
     const factionTags = factions.map(f =>
@@ -418,7 +420,10 @@
       ? `<span class="u-tag" style="border:1px solid ${trait.color};color:${trait.color};background:rgba(12,16,28,0.85)" title="${trait.name}：${trait.desc}">${trait.badge}</span>`
       : "";
 
-    return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" style="--u-color:${sym.color}"${busy || run.outcome ? " disabled" : ""}>
+    const skills = unit.skills || [];
+    const rarityBadge = `<span class="u-tag" style="border:1px solid ${rarity.color};color:${rarity.color};background:rgba(10,14,24,0.85)" title="${rarity.label} · ${rarity.slots} 技能栏 · 纯吞噬+${rarity.feedLevels}级">${rarity.name}·Lv.${st.heroLv}</span>`;
+
+    return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
         ${Art.renderPortraitImg(unit.type, displayName, "unit-sprite")}
         <span class="u-lvl-badge">${"★".repeat(st.level)}</span>
@@ -426,15 +431,15 @@
       <div class="u-body">
         <div class="u-top">
           <span class="u-name">${displayName}</span>
+          ${rarityBadge}
           ${factionTags}
           ${traitBadge}
-          ${unit.lucky ? '<span class="u-tag">幸运</span>' : ""}
-          ${unit.evolution ? `<span class="u-tag evo-t">${sym.evolutions[unit.evolution].tag}</span>` : ""}
         </div>
-        <div class="u-xp-bar" title="经验 ${unit.xp}"><i style="width:${xpPct}%"></i></div>
+        <div class="u-xp-bar" title="当前 Lv.${st.heroLv}${nextReq ? ` / Lv.${nextReq} 升 ${st.level + 1}★` : "（已满 5★）"}"><i style="width:${xpPct}%"></i></div>
         <div class="u-stats">
           <span class="u-hp">${Art.UI_ICONS.heart}${st.hp}</span>
           <span class="u-atk">${Art.UI_ICONS.sword}${st.atk}</span>
+          <span style="font-size:.68rem;color:${rarity.color}">技${skills.length}/${rarity.slots}</span>
         </div>
       </div>
     </button>`;
@@ -463,7 +468,7 @@
     $("btn-mode-swap").classList.toggle("active", armyMode === "swap");
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
     $("army-tip").textContent = armyMode === "absorb"
-      ? "吞噬模式：先点【强化目标】，再点【素材单位】（同职业双倍经验，3×同星自动合成升星！）"
+      ? "吞噬模式：先点【主体】，再点任意【素材】弹出抉择——继承技能（+1级）或纯吞噬冲级（白+2/绿+3/蓝+4/紫+5/金+6）！"
       : "自由布阵：直接在上方战场左半区拖拽英雄即可任意摆位！点击下方卡片可上下阵或吞噬。";
 
     const selUnit = selectedSlot
@@ -488,23 +493,36 @@
 
     const sym = G.SYMBOLS[unit.type];
     const st = G.getUnitStats(unit, run);
+    const rarity = G.getUnitRarity(unit.type);
     const evo = unit.evolution ? sym.evolutions[unit.evolution] : null;
-    const sellVal = 15 + unit.xp * 10;
-    const sameStarCopies = [...run.field, ...run.bench].filter(u => u && u.type === unit.type && G.unitLevel(u) === st.level).length;
-    const nextNeed = st.level < 5
-      ? `三合一升 ${st.level + 1} 星进度：${sameStarCopies} / 3 个同星同职业`
-      : "已达 5 星神话满星";
+    const sellVal = 15 + unit.xp * 10 + (unit.trait === "gold_donor" ? 30 : 0);
+    const nextReq = G.nextStarLevel(unit.type, st.heroLv);
+    const nextNeed = nextReq
+      ? `Lv.${st.heroLv} / Lv.${nextReq} 升 ${st.level + 1}★`
+      : `Lv.${st.heroLv}（已达 5★ 满星）`;
+
+    const skills = unit.skills || [];
+    const skillPills = [];
+    for (let i = 0; i < rarity.slots; i += 1) {
+      const sk = skills[i];
+      if (sk && G.INNATE_SKILLS[sk.id]) {
+        const def = G.INNATE_SKILLS[sk.id];
+        skillPills.push(`<span class="skill-pill" style="border-color:${def.color};color:${def.color}" title="${def.name} Lv.${sk.level}：${def.desc(sk.level)}">${def.icon} ${def.name} Lv.${sk.level}</span>`);
+      } else {
+        skillPills.push(`<span class="skill-pill empty">空技能栏（吞噬可继承）</span>`);
+      }
+    }
 
     el.innerHTML = `<div class="ins-left">
-      <div class="ins-avatar" style="--u-color:${sym.color}">${Art.renderPortraitImg(unit.type, sym.name, "ins-sprite")}</div>
+      <div class="ins-avatar" style="--u-color:${rarity.color}">${Art.renderPortraitImg(unit.type, sym.name, "ins-sprite")}</div>
       <div class="ins-info">
-        <div class="ins-title">${evo ? evo.name : sym.name} · <span class="gold-txt">${"★".repeat(st.level)}</span> ${unit.lucky ? '<span class="u-tag">幸运强化 +20%</span>' : ""}</div>
+        <div class="ins-title">${evo ? evo.name : sym.name} · <span style="color:${rarity.color}">${rarity.label}</span> · <span class="gold-txt">${"★".repeat(st.level)}</span> ${unit.lucky ? '<span class="u-tag">幸运强化</span>' : ""}</div>
         <div class="ins-desc">生命 ${st.hp} · 攻击 ${st.atk} · 暴击 ${Math.round(st.crit * 100)}% · 攻速 ${(1 / st.atkCd).toFixed(2)}/s · 移速 ${st.moveSpd} · 射程 ${st.range} · ${nextNeed}</div>
-        <div class="ins-desc">${evo ? `【${evo.tag}】${evo.desc}` : sym.skillDesc}</div>
+        <div class="ins-skills">${skillPills.join("")}</div>
       </div>
     </div>
     <div class="ins-actions">
-      <button type="button" class="secondary-btn" id="btn-ins-absorb">${armyMode === "absorb" ? "点选素材喂养" : "吞噬强化"}</button>
+      <button type="button" class="secondary-btn" id="btn-ins-absorb">${armyMode === "absorb" ? "点选任意素材吞噬" : "吞噬融合"}</button>
       <button type="button" class="danger-btn" id="btn-ins-sell">出售 +${sellVal}G</button>
     </div>`;
 
@@ -738,25 +756,7 @@
     const srcUnit = selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index];
 
     if (armyMode === "absorb" && srcUnit && clickedUnit) {
-      const res = G.absorbUnit(run, srcUnit.id, clickedUnit.id);
-      if (res?.error) {
-        SFX.lock();
-        showAlertPopup("无法吞噬", res.error);
-        setTicker("无法吞噬", res.error);
-        return;
-      }
-      if (res) {
-        G.addLog(run, "军团", `${G.SYMBOLS[res.target.type].name} 吞噬强化 +${res.xpGain} 经验（${res.inherited}）`);
-        SFX.absorb();
-        setTicker(
-          "吞噬进化成功！",
-          `${G.SYMBOLS[res.target.type].name} 获得 +${res.xpGain} 经验（${res.inherited}）`,
-          "win"
-        );
-        save();
-        renderAll();
-        checkPendingModals();
-      }
+      openAbsorbDialog(srcUnit, clickedUnit);
       return;
     }
 
@@ -766,6 +766,102 @@
       save();
       renderAll();
     }
+  }
+
+  function openAbsorbDialog(target, donor) {
+    G.ensureUnitSkillState(target);
+    G.ensureUnitSkillState(donor);
+    const tSym = G.SYMBOLS[target.type];
+    const dSym = G.SYMBOLS[donor.type];
+    const tRar = G.getUnitRarity(target.type);
+    const dRar = G.getUnitRarity(donor.type);
+    const crestBonus = G.coreLevel(run, "devour_crest") ? 1 : 0;
+    const transferBonus = Math.floor(((donor.heroLv || 1) - 1) * 0.5);
+    const pureGain = dRar.feedLevels + transferBonus + crestBonus;
+    const inheritGain = 1 + crestBonus;
+
+    const pureNextLv = (target.heroLv || 1) + pureGain;
+    const pureNextStars = G.calcUnitStars(target.type, pureNextLv);
+    const curStars = G.unitLevel(target);
+    const inheritNextLv = (target.heroLv || 1) + inheritGain;
+    const inheritNextStars = G.calcUnitStars(target.type, inheritNextLv);
+
+    $("absorb-title").textContent = `${tSym.name} 吞噬 ${dSym.name}`;
+    $("absorb-summary").innerHTML =
+      `主体：<strong style="color:${tRar.color}">${tSym.name}（${tRar.label} · Lv.${target.heroLv} · ${curStars}★ · 技能栏 ${target.skills.length}/${tRar.slots}）</strong>`
+      + ` ← 吞噬素材：<strong style="color:${dRar.color}">${dSym.name}（${dRar.label} · Lv.${donor.heroLv}）</strong>`;
+
+    const donorSkills = donor.skills && donor.skills.length ? donor.skills : [{ id: G.getInnateSkill(donor.type).id, level: 1 }];
+    const inheritCards = donorSkills.map(ds => {
+      const sk = G.INNATE_SKILLS[ds.id];
+      if (!sk) return "";
+      const existing = target.skills.find(s => s.id === sk.id);
+      const starHint = inheritNextStars > curStars ? ` · ✨突破升至 ${inheritNextStars}★！` : "";
+      if (existing) {
+        const nextSkLv = Math.min(5, existing.level + 1);
+        const maxed = existing.level >= 5;
+        return `<button type="button" class="absorb-choice-card inherit" data-absorb-mode="inherit" data-skill="${sk.id}"${maxed ? " disabled" : ""}>
+          <div class="ac-head"><span>${sk.icon} 继承升级：${sk.name}</span><span class="ac-lv">仅 +${inheritGain} 级${starHint}</span></div>
+          <p class="ac-desc">${maxed ? "该技能已达满级 Lv.5" : `Lv.${existing.level} → Lv.${nextSkLv}：${sk.desc(nextSkLv)}`}</p>
+        </button>`;
+      }
+      if (target.skills.length < tRar.slots) {
+        return `<button type="button" class="absorb-choice-card inherit" data-absorb-mode="inherit" data-skill="${sk.id}">
+          <div class="ac-head"><span>${sk.icon} 继承新技能：${sk.name} Lv.1</span><span class="ac-lv">仅 +${inheritGain} 级${starHint}</span></div>
+          <p class="ac-desc">装入空技能栏（${target.skills.length + 1}/${tRar.slots}）：${sk.desc(1)}</p>
+        </button>`;
+      }
+      // Skill slots full: offer replacing each existing slot!
+      const replaceBtns = target.skills.map((oldSk, rIdx) => {
+        const oldDef = G.INNATE_SKILLS[oldSk.id];
+        return `<button type="button" class="secondary-btn" data-absorb-mode="inherit" data-skill="${sk.id}" data-replace="${rIdx}">替换【${oldDef?.name || "旧技"} Lv.${oldSk.level}】</button>`;
+      }).join("");
+      return `<div class="absorb-choice-card inherit full">
+        <div class="ac-head"><span>${sk.icon} 继承替换：${sk.name} Lv.1</span><span class="ac-lv">仅 +${inheritGain} 级${starHint}</span></div>
+        <p class="ac-desc">技能栏已满（${tRar.slots}/${tRar.slots}），点击下方槽位替换：${sk.desc(1)}</p>
+        <div class="ac-replace-row">${replaceBtns}</div>
+      </div>`;
+    }).join("");
+
+    const pureStarHint = pureNextStars > curStars ? ` · ✨突破升至 ${pureNextStars}★！` : "";
+    const feedCard = `<button type="button" class="absorb-choice-card feed" data-absorb-mode="feed">
+      <div class="ac-head"><span>🔥 不继承技能 · 纯吞噬冲级</span><span class="ac-lv gold-txt">直升 +${pureGain} 级${pureStarHint}</span></div>
+      <p class="ac-desc">消耗【${dRar.label}】素材（基础 +${dRar.feedLevels} 级${transferBonus ? ` + 经验传承 +${transferBonus} 级` : ""}），主体等级 Lv.${target.heroLv} → <strong>Lv.${pureNextLv}</strong>！</p>
+    </button>`;
+
+    const box = $("absorb-options");
+    box.innerHTML = feedCard + inheritCards;
+    box.onclick = ev => {
+      const btn = ev.target.closest("[data-absorb-mode]");
+      if (!btn || btn.disabled) return;
+      const mode = btn.dataset.absorbMode;
+      const skillId = btn.dataset.skill;
+      const replaceIndex = btn.dataset.replace !== undefined ? Number(btn.dataset.replace) : undefined;
+      const res = G.absorbUnit(run, target.id, donor.id, { mode, skillId, replaceIndex });
+      if (res?.error) {
+        SFX.lock();
+        showAlertPopup("无法吞噬", res.error);
+        return;
+      }
+      if (res) {
+        $("absorb-dialog").close();
+        G.addLog(run, "军团", `${G.SYMBOLS[res.target.type].name} 吞噬 +${res.lvGain}级 → Lv.${res.target.heroLv}（${res.inherited}）`);
+        SFX.absorb();
+        if (res.afterStars > res.beforeStars) {
+          SFX.jackpot();
+          showToast(`升星突破！${G.SYMBOLS[res.target.type].name} → ${"★".repeat(res.afterStars)}！`);
+        }
+        setTicker(
+          res.afterStars > res.beforeStars ? `升星突破 → ${"★".repeat(res.afterStars)}！` : "吞噬融合成功！",
+          `${G.SYMBOLS[res.target.type].name} Lv.${res.target.heroLv}（${res.inherited}）`,
+          res.afterStars > res.beforeStars ? "jackpot" : "win"
+        );
+        save();
+        renderAll();
+        checkPendingModals();
+      }
+    };
+    $("absorb-dialog").showModal();
   }
 
   function handleFight() {

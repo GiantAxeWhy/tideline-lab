@@ -180,6 +180,11 @@
       return { x, y };
     }
 
+    _skillLv(unit, skillId) {
+      const s = unit?.skills?.find(x => x.id === skillId);
+      return s ? Math.min(5, Math.max(1, s.level || 1)) : 0;
+    }
+
     syncPreview(run) {
       this.run = run;
       if (this.mode === "fighting") return;
@@ -199,25 +204,30 @@
       this.allies = [];
       run.field.forEach((u, idx) => {
         if (!u) return;
+        G.ensureUnitSkillState?.(u);
         const pos = this._allyUnitPos(u);
         const st = G.getUnitStats(u, run);
         const inFrontZone = pos.x >= this.w * 0.28;
-        let shield = u.type === "knight" ? 18 : 0;
+        const aegisLv = (u.skills || []).find(s => s.id === "aegis_wall")?.level || 0;
+        let shield = aegisLv > 0 ? Math.round(st.hp * ([0.15, 0.25, 0.36, 0.48, 0.65][aegisLv - 1] || 0.15)) : 0;
         if (u.trait === "iron_skin") shield += 25;
         if (knightSyn) shield += 22;
         if (inFrontZone && G.hasCore(run, "vanguard_oath")) shield += 24;
         if (u.evolution === "fortress") shield += Math.round(st.hp * 0.28);
         if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
 
+        const turretLv = (u.skills || []).find(s => s.id === "auto_turret")?.level || 0;
         this.allies.push({
           uid: u.id,
           side: "ally",
           slotIdx: idx,
           type: u.type,
+          skills: (u.skills || []).map(s => ({ ...s })),
           trait: u.trait || null,
           evolution: u.evolution,
           lucky: u.lucky,
           level: st.level,
+          heroLv: st.heroLv || 1,
           name: u.evolution ? G.SYMBOLS[u.type].evolutions[u.evolution].name : G.SYMBOLS[u.type].short,
           color: G.SYMBOLS[u.type].color,
           x: pos.x,
@@ -244,7 +254,7 @@
           stunTimer: 0,
           invulnerable: 0,
           usedUndying: false,
-          summonTimer: 5,
+          summonTimer: turretLv > 0 ? [7, 6.2, 5.4, 4.6, 3.8][turretLv - 1] : 5,
           soulStacks: 0,
           atkBuff: 1,
           alive: true,
@@ -346,7 +356,7 @@
       this._spawnPhase();
       this._updatePhaseProgress();
       for (const unit of [...this.allies]) {
-        if (unit.type === "engineer") this._summonAlly(unit, "turret");
+        if (this._skillLv(unit, "auto_turret") > 0) this._summonAlly(unit, "turret");
         if (unit.evolution === "sky_charge") this._openSkyCharge(unit);
       }
       if (this.allies.length === 0) this._endBattle(false);
@@ -433,8 +443,11 @@
         }
       }
       if (!target.summonKind) {
-        for (const unit of this.allies.filter(ally => ally.alive && ally.type === "necromancer")) {
-          this._summonAlly(unit, "skeleton");
+        for (const unit of this.allies.filter(ally => ally.alive && this._skillLv(ally, "raise_bone") > 0)) {
+          const boneLv = this._skillLv(unit, "raise_bone");
+          const cap = [1, 2, 2, 3, 4][boneLv - 1] || 2;
+          const cur = this.allies.filter(a => a.alive && a.ownerId === unit.uid && a.summonKind === "skeleton").length;
+          if (cur < cap) this._summonAlly(unit, "skeleton");
           if (target.side === "enemy" && unit.evolution === "soul_mage") unit.soulStacks += 1;
         }
       }
@@ -538,8 +551,12 @@
       this._spawnText(target.x, target.y, txt, col, isCrit ? 18 : 13);
       this._spawnParticles(target.x, target.y, opts.particleColor || target.color, isCrit ? 10 : 5);
 
-      if (attacker?.alive && attacker.side === "ally" && attacker.trait === "vampiric" && dealt > 0 && !opts.isReflect) {
-        this._heal(attacker, dealt * 0.15);
+      if (attacker?.alive && attacker.side === "ally" && dealt > 0 && !opts.isReflect) {
+        if (attacker.trait === "vampiric") this._heal(attacker, dealt * 0.15);
+        const bloodLv = this._skillLv(attacker, "blood_frenzy");
+        if (bloodLv > 0) {
+          this._heal(attacker, dealt * ([0.12, 0.18, 0.25, 0.32, 0.42][bloodLv - 1] || 0.12));
+        }
       }
 
       if (isCrit) {
@@ -562,6 +579,11 @@
       }
 
       if (target.side === "ally" && !opts.isReflect && attacker?.alive) {
+        const aegisLv = this._skillLv(target, "aegis_wall");
+        if (aegisLv > 0) {
+          const refPct = [0.12, 0.20, 0.28, 0.38, 0.50][aegisLv - 1] || 0.12;
+          this._applyDamage(target, attacker, Math.max(2, rawDmg * refPct), { color: "#4fd1a5", isReflect: true });
+        }
         if (target.evolution === "thorns") {
           this._applyDamage(target, attacker, Math.max(3, rawDmg * .35), { color: "#4fd1a5", isReflect: true });
         }
@@ -661,7 +683,9 @@
       u.lunge = 1;
 
       const hasCritDice = G.hasCore(this.run, "crit_dice");
-      const critMult = (hasCritDice ? 2.1 : 1.65) + (this.goldPoet ? .25 : 0);
+      const shadowLv = this._skillLv(u, "shadow_crit");
+      const shadowCritBonus = shadowLv > 0 ? ([0.15, 0.30, 0.45, 0.65, 0.90][shadowLv - 1] || 0) : 0;
+      const critMult = (hasCritDice ? 2.1 : 1.65) + (this.goldPoet ? .25 : 0) + shadowCritBonus;
       let critChance = u.crit + (this.synergies.assassin ? 0.18 : 0) + (u.evolution === "bladedancer" ? 0.15 : 0);
       let isCrit = Math.random() < critChance;
       let dmg = u.atk * u.atkBuff;
@@ -815,6 +839,63 @@
       } else {
         // Knight melee
         this._applyDamage(u, target, dmg, { isCrit });
+      }
+
+      // Trigger ALL equipped cross-class/upgraded skills (Lv.1~Lv.5) on every attack!
+      const volleyLv = this._skillLv(u, "rapid_volley");
+      if (volleyLv > 0 && u.atkCount % 3 === 0) {
+        const arrows = [1, 1, 2, 2, 3][volleyLv - 1] || 1;
+        const mult = [0.55, 0.75, 0.80, 1.00, 1.25][volleyLv - 1] || 0.55;
+        const targets = this.enemies.filter(e => e.alive);
+        for (let i = 0; i < arrows && targets.length > 0; i += 1) {
+          const t = targets[i % targets.length];
+          this.projectiles.push({
+            x: u.x + 10, y: u.y + (i - 1) * 6, tx: t.x, ty: t.y,
+            color: "#5cc8ff", speed: 540,
+            onHit: () => this._applyDamage(u, t, dmg * mult, { color: "#7be7ff" })
+          });
+        }
+      }
+
+      const boltLv = this._skillLv(u, "chain_bolt");
+      if (boltLv > 0 && (u.type !== "mage" || boltLv >= 2)) {
+        const bounces = [1, 2, 2, 3, 4][boltLv - 1] || 1;
+        const mult = [0.40, 0.55, 0.70, 0.85, 1.05][boltLv - 1] || 0.40;
+        const extras = this.enemies.filter(e => e.alive && e !== target).slice(0, bounces);
+        let prev = target;
+        for (const ct of extras) {
+          this.beams.push({ x1: prev.x, y1: prev.y, x2: ct.x, y2: ct.y, color: "#b78bfa", life: 0.22, jagged: true });
+          this._applyDamage(u, ct, u.atk * mult, { color: "#d4b5ff" });
+          prev = ct;
+        }
+      }
+
+      const mendLv = this._skillLv(u, "holy_mend");
+      if (mendLv > 0 && (u.type !== "priest" || mendLv >= 2)) {
+        const injured = this.allies.filter(a => a.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (injured) {
+          const healAmt = Math.round(u.atk * ([0.35, 0.55, 0.75, 1.00, 1.30][mendLv - 1] || 0.35));
+          this._heal(injured, healAmt);
+          this.beams.push({ x1: u.x, y1: u.y, x2: injured.x, y2: injured.y, color: "#57e39c", life: 0.22, jagged: false });
+        }
+      }
+
+      const hymnLv = this._skillLv(u, "war_hymn");
+      if (hymnLv > 0 && (u.type !== "bard" || hymnLv >= 2)) {
+        const bonusG = [2, 3, 4, 5, 7][hymnLv - 1] || 2;
+        this.battleGold += bonusG;
+        this._spawnText(u.x, u.y - 18, `+${bonusG}G`, "#f5c869", 11);
+      }
+
+      const lanceLv = this._skillLv(u, "pierce_lance");
+      if (lanceLv > 0 && (u.type !== "valkyrie" || lanceLv >= 2)) {
+        const rear = this.enemies.filter(e => e.alive && e !== target).sort((a, b) => b.x - a.x)[0];
+        if (rear) {
+          const mult = [0.45, 0.60, 0.75, 0.95, 1.20][lanceLv - 1] || 0.45;
+          const shMult = [1.5, 1.75, 2.0, 2.25, 2.6][lanceLv - 1] || 1.5;
+          this.beams.push({ x1: u.x, y1: u.y, x2: rear.x, y2: rear.y, color: "#ffe598", life: 0.2, jagged: false });
+          this._applyDamage(u, rear, dmg * mult, { color: "#ffe598", shieldMultiplier: shMult });
+        }
       }
     }
 
@@ -1096,9 +1177,11 @@
         }
       }
 
-      const bardActive = this.allies.some(unit => unit.alive && unit.type === "bard");
+      const maxHymnLv = this.allies.reduce((best, unit) =>
+        unit.alive ? Math.max(best, this._skillLv(unit, "war_hymn")) : best, 0);
       this.goldPoet = this.allies.some(unit => unit.alive && unit.evolution === "gold_poet");
-      const songSpeed = (bardActive ? 1.15 : 1) * (this.warSong && this.battleTime < 5 ? 1.35 : 1);
+      const hymnSpeed = maxHymnLv > 0 ? (1 + ([0.08, 0.13, 0.19, 0.26, 0.35][maxHymnLv - 1] || 0.08)) : 1;
+      const songSpeed = hymnSpeed * (this.warSong && this.battleTime < 5 ? 1.35 : 1);
 
       // Allies tick
       for (const u of [...this.allies]) {
@@ -1109,14 +1192,16 @@
         u.invulnerable = Math.max(0, u.invulnerable - dt);
         u.stunTimer = Math.max(0, u.stunTimer - dt);
         if (u.stunTimer > 0) continue;
-        if (u.type === "engineer") {
+        const turretSkillLv = this._skillLv(u, "auto_turret");
+        if (turretSkillLv > 0) {
           u.summonTimer -= dt;
           if (u.summonTimer <= 0) {
             const turrets = this.allies.filter(ally =>
               ally.alive && ally.ownerId === u.uid && ally.summonKind === "turret");
-            if (turrets.length >= (u.evolution === "swarm_turret" ? 3 : 1)) turrets[0].alive = false;
+            const maxT = u.evolution === "swarm_turret" ? 3 : (turretSkillLv >= 4 ? 2 : 1);
+            if (turrets.length >= maxT) turrets[0].alive = false;
             this._summonAlly(u, "turret");
-            u.summonTimer += 5;
+            u.summonTimer += [7, 6.2, 5.4, 4.6, 3.8][turretSkillLv - 1] || 5.5;
           }
         }
 
@@ -1131,7 +1216,10 @@
 
         const envSpeedMult = 1 - (env.speedPenalty || 0);
         let spdMult = envSpeedMult * songSpeed * (this.synergies.archer ? 1.18 : 1) * (u.slowTimer > 0 ? 0.65 : 1);
-        if (u.type === "berserker") spdMult *= 1 + (1 - u.hp / u.maxHp) * .65;
+        const bloodLv = this._skillLv(u, "blood_frenzy");
+        if (bloodLv > 0) {
+          spdMult *= 1 + (1 - u.hp / u.maxHp) * ([0.25, 0.40, 0.55, 0.70, 0.90][bloodLv - 1] || 0.25);
+        }
         if (u.invulnerable > 0) spdMult *= 1.45;
         const bannerLv = G.coreLevel ? G.coreLevel(this.run, "berserk_banner") : (G.hasCore(this.run, "berserk_banner") ? 1 : 0);
         if (bannerLv > 0 && u.hp / u.maxHp < 0.55) {

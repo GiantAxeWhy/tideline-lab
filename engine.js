@@ -319,6 +319,96 @@
     valkyrie: 4
   };
 
+  const UNIT_RARITIES = {
+    white:  { id: "white",  name: "白", label: "白色·普通", color: "#dce4f2", slots: 1, feedLevels: 2, starThresholds: [5, 12, 22, 35] },
+    green:  { id: "green",  name: "绿", label: "绿色·精良", color: "#4fd1a5", slots: 2, feedLevels: 3, starThresholds: [6, 14, 25, 40] },
+    blue:   { id: "blue",   name: "蓝", label: "蓝色·稀有", color: "#5cc8ff", slots: 3, feedLevels: 4, starThresholds: [8, 16, 28, 44] },
+    purple: { id: "purple", name: "紫", label: "紫色·史诗", color: "#c084fc", slots: 4, feedLevels: 5, starThresholds: [10, 20, 34, 52] },
+    gold:   { id: "gold",   name: "金", label: "金色·传说", color: "#ffd86b", slots: 5, feedLevels: 6, starThresholds: [12, 24, 40, 60] }
+  };
+
+  const UNIT_RARITY_MAP = {
+    knight: "white",
+    archer: "white",
+    mage: "green",
+    priest: "green",
+    assassin: "green",
+    berserker: "blue",
+    engineer: "blue",
+    necromancer: "purple",
+    bard: "purple",
+    valkyrie: "gold"
+  };
+
+  const INNATE_SKILLS = {
+    aegis_wall: {
+      id: "aegis_wall", owner: "knight", name: "圣盾壁垒", icon: "🛡️", color: "#4fd1a5",
+      desc: lv => `开局获得 ${[15, 25, 36, 48, 65][lv - 1]}% 最大生命护盾，受击反弹 ${[12, 20, 28, 38, 50][lv - 1]}% 伤害。`
+    },
+    rapid_volley: {
+      id: "rapid_volley", owner: "archer", name: "疾风连矢", icon: "🏹", color: "#5cc8ff",
+      desc: lv => `每 3 次攻击额外齐射 ${[1, 1, 2, 2, 3][lv - 1]} 支追踪箭，每支造成 ${[55, 75, 80, 100, 125][lv - 1]}% 伤害。`
+    },
+    chain_bolt: {
+      id: "chain_bolt", owner: "mage", name: "连锁天雷", icon: "⚡", color: "#b78bfa",
+      desc: lv => `普攻触发连锁闪电弹射 ${[1, 2, 2, 3, 4][lv - 1]} 名额外敌人，造成 ${[40, 55, 70, 85, 105][lv - 1]}% 法伤。`
+    },
+    holy_mend: {
+      id: "holy_mend", owner: "priest", name: "圣光愈合", icon: "💚", color: "#f7cf6d",
+      desc: lv => `每次攻击治疗血量最低的友军，回复 ${[35, 55, 75, 100, 130][lv - 1]}% 攻击力的生命。`
+    },
+    shadow_crit: {
+      id: "shadow_crit", owner: "assassin", name: "致命影袭", icon: "🗡️", color: "#ff6b7a",
+      desc: lv => `暴击率 +${[10, 18, 26, 35, 45][lv - 1]}%，暴击伤害额外 +${[15, 30, 45, 65, 90][lv - 1]}%。`
+    },
+    blood_frenzy: {
+      id: "blood_frenzy", owner: "berserker", name: "嗜血狂怒", icon: "🩸", color: "#ff806a",
+      desc: lv => `普攻附加 ${[12, 18, 25, 32, 42][lv - 1]}% 生命偷取，损失生命时攻速最高 +${[25, 40, 55, 70, 90][lv - 1]}%。`
+    },
+    auto_turret: {
+      id: "auto_turret", owner: "engineer", name: "蒸汽炮台", icon: "⚙️", color: "#f2ba70",
+      desc: lv => `每 ${[7, 6.2, 5.4, 4.6, 3.8][lv - 1]} 秒部署自动炮台，继承 ${[45, 65, 85, 110, 140][lv - 1]}% 攻击力。`
+    },
+    raise_bone: {
+      id: "raise_bone", owner: "necromancer", name: "亡灵复生", icon: "💀", color: "#8ce5aa",
+      desc: lv => `敌军阵亡时召唤骸骨战士抗伤，属性 ${[35, 50, 68, 88, 115][lv - 1]}%，上限 ${[1, 2, 2, 3, 4][lv - 1]} 只。`
+    },
+    war_hymn: {
+      id: "war_hymn", owner: "bard", name: "黄金战歌", icon: "🎵", color: "#eea7f4",
+      desc: lv => `全军攻速 +${[8, 13, 19, 26, 35][lv - 1]}%，每次攻击额外产出 +${[2, 3, 4, 5, 7][lv - 1]} 金币。`
+    },
+    pierce_lance: {
+      id: "pierce_lance", owner: "valkyrie", name: "破晓圣枪", icon: "🔱", color: "#f8e296",
+      desc: lv => `攻击穿透第二目标造成 ${[45, 60, 75, 95, 120][lv - 1]}% 伤害，对护盾造成 ${[1.5, 1.75, 2.0, 2.25, 2.6][lv - 1]}× 伤害。`
+    }
+  };
+
+  const UNIT_INNATE_SKILL_ID = Object.fromEntries(
+    Object.values(INNATE_SKILLS).map(sk => [sk.owner, sk.id])
+  );
+
+  function getUnitRarity(type) {
+    return UNIT_RARITIES[UNIT_RARITY_MAP[type] || "white"];
+  }
+
+  function getInnateSkill(type) {
+    return INNATE_SKILLS[UNIT_INNATE_SKILL_ID[type] || "aegis_wall"];
+  }
+
+  function calcUnitStars(type, heroLv = 1) {
+    const thresholds = getUnitRarity(type).starThresholds;
+    let stars = 1;
+    for (const req of thresholds) {
+      if (heroLv >= req) stars += 1;
+    }
+    return Math.min(5, stars);
+  }
+
+  function nextStarLevel(type, heroLv = 1) {
+    const thresholds = getUnitRarity(type).starThresholds;
+    return thresholds.find(req => heroLv < req) ?? null;
+  }
+
   function getUnitFactions(type) {
     return Object.entries(FACTION_SYNERGIES)
       .filter(([, info]) => info.types.includes(type))
@@ -940,7 +1030,13 @@
       .filter(i => i >= 0 && i < FIELD_SLOTS)
       .sort((a, b) => a - b);
     run.field.forEach(u => {
-      if (u && !u.pos) u.pos = defaultUnitPos(run, u, u.id);
+      if (u) {
+        if (!u.pos) u.pos = defaultUnitPos(run, u, u.id);
+        ensureUnitSkillState(u);
+      }
+    });
+    run.bench.forEach(u => {
+      if (u) ensureUnitSkillState(u);
     });
     run.unlockedBenchSlots ??= Math.max(2, run.bench.findLastIndex(Boolean) + 1);
     run.unlockedCoreSlots ??= Math.max(4, run.cores.length);
@@ -1192,12 +1288,32 @@
     return "";
   }
 
+  function ensureUnitSkillState(unit) {
+    if (!unit) return unit;
+    if (!Number.isFinite(unit.heroLv) || unit.heroLv < 1) {
+      // Migrate legacy units cleanly based on stars/xp
+      const legacyStars = Math.max(1, unit.stars || 1);
+      const th = getUnitRarity(unit.type).starThresholds;
+      unit.heroLv = legacyStars >= 2 ? (th[legacyStars - 2] || 1) : Math.max(1, 1 + Math.floor((unit.xp || 0) / 2));
+    }
+    if (!Array.isArray(unit.skills) || unit.skills.length === 0) {
+      const innate = getInnateSkill(unit.type);
+      unit.skills = [{ id: innate.id, level: 1 }];
+    }
+    unit.stars = calcUnitStars(unit.type, unit.heroLv);
+    return unit;
+  }
+
   function createUnit(id, type, opts = {}) {
+    const innate = getInnateSkill(type);
+    const startLv = Math.max(1, opts.heroLv || (1 + Math.floor((opts.xp || 0) / 2)));
     return {
       id,
       type,
-      stars: Math.min(5, Math.max(1, opts.stars || (opts.xp >= 2 ? 2 : 1))),
+      heroLv: startLv,
+      stars: calcUnitStars(type, startLv),
       xp: opts.xp || 0,
+      skills: opts.skills ? opts.skills.map(s => ({ ...s })) : [{ id: innate.id, level: 1 }],
       trait: opts.trait === undefined ? rollUnitTrait() : opts.trait,
       evolution: opts.evolution || null,
       lucky: !!opts.lucky,
@@ -1207,14 +1323,17 @@
     };
   }
 
-  const STAR_THRESHOLDS = [0, 3, 9, 27, 81]; // 3-of-a-kind merge pyramid: 3×★1=★2, 3×★2=★3, 3×★3=★4, 3×★4=★5
+  const STAR_THRESHOLDS = [5, 12, 22, 35];
 
   function unitLevel(unit) {
-    return Math.min(5, Math.max(1, unit?.stars || 1));
+    if (!unit) return 1;
+    const lv = unit.heroLv || 1;
+    return calcUnitStars(unit.type, lv);
   }
 
-  function nextStarXp(lvl) {
-    return lvl < 5 ? 3 : null; // Always needs 3 copies of current star to merge up
+  function nextStarXp(lvl, unit) {
+    if (unit) return nextStarLevel(unit.type, unit.heroLv || 1);
+    return STAR_THRESHOLDS[lvl - 1] ?? null;
   }
 
   function tryAutoMerge(run) {
@@ -1277,18 +1396,26 @@
   }
 
   function getUnitStats(unit, run) {
+    ensureUnitSkillState(unit);
     const def = SYMBOLS[unit.type];
-    const lvl = unitLevel(unit);
-    const effXp = unit.xp <= 14 ? unit.xp : 14 + (unit.xp - 14) * 0.45;
-    // Higher-tier slot units have higher base quality (incentivizing upgrading the slot machine!)
-    const unitTierMult = [1, 1, 1.15, 1.28, 1.45][UNIT_UNLOCK_TIER[unit.type] || 1] || 1;
-    // Linear growth per XP (+8% HP / +7% ATK), unmistakable jump on Star-Up (+22% HP / +20% ATK per star)!
-    let hp = def.hp * unitTierMult * (1 + effXp * 0.08 + (lvl - 1) * 0.22) + unit.bonusHp + (run?.globalBonusHp || 0);
-    let atk = def.atk * unitTierMult * (1 + effXp * 0.07 + (lvl - 1) * 0.20) + unit.bonusAtk + (run?.globalBonusAtk || 0);
+    const lvl = unitLevel(unit); // 1..5 stars
+    const heroLv = unit.heroLv || 1;
+    const effLv = heroLv <= 24 ? (heroLv - 1) : 23 + (heroLv - 24) * 0.6;
+    // Higher-rarity slot units have higher base quality (White 1.0, Green 1.08, Blue 1.18, Purple 1.30, Gold 1.46)
+    const rarityMult = { white: 1, green: 1.08, blue: 1.18, purple: 1.30, gold: 1.46 }[UNIT_RARITY_MAP[unit.type] || "white"] || 1;
+    // Strong per-level growth (+12% HP / +10% ATK per heroLv) + unmistakable star-up jump (+25% HP / +22% ATK per star)!
+    let hp = def.hp * rarityMult * (1 + effLv * 0.12 + (lvl - 1) * 0.25) + unit.bonusHp + (run?.globalBonusHp || 0);
+    let atk = def.atk * rarityMult * (1 + effLv * 0.10 + (lvl - 1) * 0.22) + unit.bonusAtk + (run?.globalBonusAtk || 0);
     let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.025;
-    let atkCd = def.atkCd * (1 - (lvl - 1) * 0.035);
+    let atkCd = def.atkCd * (1 - (lvl - 1) * 0.04);
     let moveSpd = def.moveSpd || 100;
     const range = def.range || 55;
+
+    // Apply passive stat bonuses from inherited/innate skills
+    const shadowSkill = unit.skills?.find(s => s.id === "shadow_crit");
+    if (shadowSkill) {
+      crit += [0.10, 0.18, 0.26, 0.35, 0.45][Math.min(5, shadowSkill.level) - 1] || 0;
+    }
 
     if (run) {
       const fMap = Object.fromEntries(getFactionSynergies(run).map(f => [f.id, f.tier]));
@@ -1352,10 +1479,11 @@
     return {
       hp: Math.round(hp),
       atk: Math.round(atk),
-      crit: Math.min(0.85, crit),
-      atkCd: Math.max(0.35, atkCd),
+      crit: Math.min(0.95, crit),
+      atkCd: Math.max(0.32, atkCd),
       moveSpd: Math.round(moveSpd),
       range: Math.round(range),
+      heroLv,
       level: lvl
     };
   }
@@ -1644,15 +1772,11 @@
 
         for (let s = 0; s < spawnCount; s += 1) {
           const unit = createUnit(run.nextId++, hit.symbol, {
+            heroLv: 1 + (hasLuckyCell ? 2 : 0) + (tier.bonusXp || 0),
             xp: extraXp,
             lucky: hit.hasWild || isFever || hasLuckyCell
           });
           const placement = addUnitToRoster(run, unit);
-          const merges = tryAutoMerge(run);
-          for (const m of merges) {
-            summary.notes.push(`三合一升星：${SYMBOLS[m.type].name} → ${"★".repeat(m.stars)}！`);
-            if (m.traitLogs?.length) summary.notes.push(...m.traitLogs);
-          }
           if (unitLevel(unit) >= 2 && !unit.evolution && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
             if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
               run.pendingEvolutions.push(unit.id);
@@ -1853,70 +1977,90 @@
     return true;
   }
 
-  function absorbUnit(run, targetId, donorId) {
+  function absorbUnit(run, targetId, donorId, options = {}) {
     if (targetId === donorId) return null;
     const tLoc = findUnitLocation(run, targetId);
     const dLoc = findUnitLocation(run, donorId);
     if (!tLoc || !dLoc) return null;
 
-    const target = tLoc.unit;
-    const donor = dLoc.unit;
-    const tLv = unitLevel(target);
-    const dLv = unitLevel(donor);
+    const target = ensureUnitSkillState(tLoc.unit);
+    const donor = ensureUnitSkillState(dLoc.unit);
+    const targetRarity = getUnitRarity(target.type);
+    const donorRarity = getUnitRarity(donor.type);
+    const beforeStars = unitLevel(target);
 
-    // Prevent weaker/lower-tier units from eating stronger carries!
-    if (dLv > tLv || (dLv === tLv && donor.xp > target.xp) || (donor.evolution && !target.evolution)) {
-      return {
-        error: "无法用低阶单位吞噬高阶主力！请先选中高星/高经验主力作为【主体】，再点选低阶单位作为【素材】。"
-      };
-    }
+    const mode = options.mode === "inherit" ? "inherit" : "feed";
+    const crestLv = coreLevel(run, "devour_crest");
+    let lvGain = 1;
+    let skillSummary = "";
 
-    const beforeLevel = tLv;
-    const sameClass = target.type === donor.type;
-
-    let xpGain = sameClass ? (2 + donor.xp) : (1 + Math.floor(donor.xp * 0.6));
-    if (hasCore(run, "devour_crest")) {
-      xpGain += 1;
-      run.gold += 18;
-    }
-    target.xp += xpGain;
-    if (donor.lucky) target.lucky = true;
-
-    let inherited = "";
-    if (!sameClass) {
-      if (donor.type === "knight") { target.bonusHp += 35; inherited = "跨职继承 +35 生命"; }
-      else if (donor.type === "archer") { target.bonusAtk += 6; inherited = "跨职继承 +6 攻击"; }
-      else if (donor.type === "mage") { target.bonusAtk += 7; inherited = "跨职继承 +7 法强"; }
-      else if (donor.type === "priest") { target.bonusHp += 24; target.bonusAtk += 4; inherited = "跨职继承 +24 生命 +4 攻击"; }
-      else if (donor.type === "assassin") { target.bonusCrit += 0.07; inherited = "跨职继承 +7% 暴击"; }
-      else if (isUnitFrontline(donor.type)) { target.bonusHp += 26; target.bonusAtk += 4; inherited = "跨职继承 +26 生命 +4 攻击"; }
-      else { target.bonusAtk += 6; inherited = "跨职继承 +6 攻击"; }
+    if (mode === "inherit") {
+      // Choosing to inherit a skill grants ONLY +1 level (+1 extra if Devour Crest core)
+      lvGain = 1 + (crestLv ? 1 : 0);
+      const chosenSkillId = options.skillId || getInnateSkill(donor.type).id;
+      const skillDef = INNATE_SKILLS[chosenSkillId] || getInnateSkill(donor.type);
+      const existing = target.skills.find(s => s.id === skillDef.id);
+      if (existing) {
+        if (existing.level < 5) {
+          existing.level += 1;
+          skillSummary = `技能升级：【${skillDef.name}】→ Lv.${existing.level}`;
+        } else {
+          skillSummary = `【${skillDef.name}】已满级 Lv.5`;
+        }
+      } else if (target.skills.length < targetRarity.slots) {
+        target.skills.push({ id: skillDef.id, level: 1 });
+        skillSummary = `习得技能：【${skillDef.name}】Lv.1`;
+      } else if (Number.isInteger(options.replaceIndex) && options.replaceIndex >= 0 && options.replaceIndex < target.skills.length) {
+        const replacedDef = INNATE_SKILLS[target.skills[options.replaceIndex].id];
+        target.skills[options.replaceIndex] = { id: skillDef.id, level: 1 };
+        skillSummary = `替换【${replacedDef?.name || "旧技能"}】→ 习得【${skillDef.name}】Lv.1`;
+      } else {
+        return { error: "技能栏已满，请选择要替换的技能槽位，或改为【纯吞噬升多级】！" };
+      }
     } else {
-      target.bonusHp += 20;
-      target.bonusAtk += 5;
-      inherited = "同职融合 +20 生命 +5 攻击（完整继承经验）";
+      // Pure feed (no skill inheritance): White +2, Green +3, Blue +4, Purple +5, Gold +6 (+ partial donor level transfer!)
+      const transferBonus = Math.floor(((donor.heroLv || 1) - 1) * 0.5);
+      lvGain = donorRarity.feedLevels + transferBonus + (crestLv ? 1 : 0);
+      skillSummary = `纯吞噬【${donorRarity.name}色兵】直升 +${lvGain} 级`;
     }
+
+    if (crestLv) {
+      run.gold += 18 + (crestLv - 1) * 12;
+    }
+
+    target.heroLv = (target.heroLv || 1) + lvGain;
+    target.xp = (target.xp || 0) + lvGain;
+    if (donor.lucky) target.lucky = true;
+    target.stars = calcUnitStars(target.type, target.heroLv);
 
     const traitBonus = triggerConsumedTrait(run, donor, target);
-    if (traitBonus) {
-      inherited = inherited ? `${inherited} · ${traitBonus}` : traitBonus;
-    }
+    const inherited = [skillSummary, traitBonus].filter(Boolean).join(" · ");
 
     if (dLoc.area === "field") run.field[dLoc.index] = null;
     else run.bench[dLoc.index] = null;
+    run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== donor.id);
 
     run.totalAbsorbs += 1;
 
-    const afterLevel = unitLevel(target);
+    const afterStars = unitLevel(target);
     let triggeredEvo = false;
-    if (beforeLevel < 2 && afterLevel >= 2 && !target.evolution) {
+    if (beforeStars < 2 && afterStars >= 2 && !target.evolution) {
       if (!run.pendingEvolutions.includes(target.id)) {
         run.pendingEvolutions.push(target.id);
       }
       triggeredEvo = true;
     }
 
-    return { target, xpGain, sameClass, inherited, triggeredEvo };
+    return {
+      target,
+      xpGain: lvGain,
+      lvGain,
+      beforeStars,
+      afterStars,
+      sameClass: target.type === donor.type,
+      inherited,
+      triggeredEvo
+    };
   }
 
   function sellUnit(run, unitId) {
@@ -2246,6 +2390,14 @@
     retainedCells,
     createRun,
     STAR_THRESHOLDS,
+    UNIT_RARITIES,
+    UNIT_RARITY_MAP,
+    INNATE_SKILLS,
+    getUnitRarity,
+    getInnateSkill,
+    calcUnitStars,
+    nextStarLevel,
+    ensureUnitSkillState,
     UNIT_TRAITS,
     createUnit,
     unitLevel,
