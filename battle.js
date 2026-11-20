@@ -209,7 +209,11 @@
         const st = G.getUnitStats(u, run);
         const inFrontZone = pos.x >= this.w * 0.28;
         const aegisLv = (u.skills || []).find(s => s.id === "aegis_wall")?.level || 0;
+        const frostLv = (u.skills || []).find(s => s.id === "frost_armor")?.level || 0;
+        const masteries = u.masteryBuffs || [];
         let shield = aegisLv > 0 ? Math.round(st.hp * ([0.15, 0.25, 0.36, 0.48, 0.65][aegisLv - 1] || 0.15)) : 0;
+        if (frostLv > 0) shield += Math.round(st.hp * ([0.20, 0.30, 0.42, 0.55, 0.72][frostLv - 1] || 0.20));
+        if (masteries.includes("thorn_armor")) shield += Math.round(st.hp * 0.35);
         if (u.trait === "iron_skin") shield += 25;
         if (knightSyn) shield += 22;
         if (inFrontZone && G.hasCore(run, "vanguard_oath")) shield += 24;
@@ -218,27 +222,30 @@
 
         const turretLv = (u.skills || []).find(s => s.id === "auto_turret")?.level || 0;
         const evoInfo = G.getUnitEvoInfo ? G.getUnitEvoInfo(u) : null;
+        const symDef = G.SYMBOLS[u.type] || G.SYMBOLS.knight;
         this.allies.push({
           uid: u.id,
           side: "ally",
           slotIdx: idx,
           type: u.type,
+          artKey: symDef.artKey || u.type,
           skills: (u.skills || []).map(s => ({ ...s })),
+          masteryBuffs: [...masteries],
           trait: u.trait || null,
           evolution: u.evolution,
           evolution3: u.evolution3 || null,
           lucky: u.lucky,
           level: st.level,
           heroLv: st.heroLv || 1,
-          name: evoInfo ? evoInfo.name : G.SYMBOLS[u.type].short,
-          color: G.SYMBOLS[u.type].color,
+          name: evoInfo ? evoInfo.name : symDef.short,
+          color: symDef.color,
           x: pos.x,
           y: pos.y,
           homeX: pos.x,
           homeY: pos.y,
           hp: st.hp,
           maxHp: st.hp,
-          shield: Math.round(shield * this._holyShieldMultiplier()),
+          shield: Math.round(shield * this._holyShieldMultiplier() * (masteries.includes("aegis_heart") ? 1.65 : 1)),
           atk: st.atk,
           crit: st.crit,
           atkCd: st.atkCd,
@@ -246,16 +253,21 @@
           range: (st.range || 55) * scale,
           rawMoveSpd: st.moveSpd || 100,
           rawRange: st.range || 55,
-          mass: u.type === "knight" || u.type === "berserker" ? 2.4 : 1.0,
+          mass: (u.type === "knight" || u.type === "berserker" || u.type === "frost_warden" || u.type === "sun_templar" ? 2.4 : 1.0) * (masteries.includes("titan_body") ? 2.0 : 1),
           cdTimer: st.atkCd * (0.25 + Math.random() * 0.35),
           atkCount: 0,
           fortressTimer: 4.0,
+          aegisHeartTimer: 4.0,
           lunge: 0,
           hitFlash: 0,
           slowTimer: 0,
           stunTimer: 0,
           invulnerable: 0,
+          dmgReduceTimer: 0,
           usedUndying: false,
+          usedUnderdog: false,
+          leaped: false,
+          pactFirstCrit: false,
           summonTimer: turretLv > 0 ? [7, 6.2, 5.4, 4.6, 3.8][turretLv - 1] : 5,
           soulStacks: 0,
           atkBuff: 1,
@@ -341,6 +353,7 @@
       this.healTick = 0;
       this.battleTime = 0;
       this.flawless = true;
+      this.anyAllyDied = false;
       this.battleGold = 0;
       this.battleCrystals = 0;
       this.kills = 0;
@@ -432,6 +445,9 @@
     }
 
     _onDeath(attacker, target) {
+      if (target.side === "ally" && !target.summonKind) {
+        this.anyAllyDied = true;
+      }
       if (target.side === "enemy") {
         this.kills += 1;
         if (this.run.mode === "endless" && !target.summonKind) {
@@ -480,7 +496,7 @@
         if (this.onFinish) {
           const cb = this.onFinish;
           this.onFinish = null;
-          cb(won, { flawless: this.flawless, gold: this.battleGold,
+          cb(won, { flawless: this.flawless, anyAllyDied: this.anyAllyDied, gold: this.battleGold,
             crystals: this.battleCrystals, kills: this.kills, duration: this.battleTime });
         }
       }, 950);
@@ -542,7 +558,15 @@
       if (target.side === "ally" && attacker?.side === "enemy" && this._getEnv().poison) {
         target.poisonTimer = 2.5;
       }
+      if (target.side === "ally" && target.dmgReduceTimer > 0) {
+        dmg = Math.max(1, Math.round(dmg * 0.55));
+      }
       target.hp = Math.max(0, target.hp - dmg);
+      if (target.side === "ally" && target.hp > 0 && target.hp <= target.maxHp * 0.35 && !target.usedUnderdog && G.hasCore(this.run, "underdog_fury")) {
+        target.usedUnderdog = true;
+        this._grantShield(target, target.maxHp * 0.25);
+        this._spawnText(target.x, target.y - 22, "绝地反击!", "#ffd86b", 13);
+      }
       if (!target.hp && (target.evolution === "undying" || target.evolution3 === "immortal_guard") && !target.usedUndying) {
         target.hp = 1;
         target.usedUndying = true;
@@ -561,6 +585,7 @@
 
       if (attacker?.alive && attacker.side === "ally" && dealt > 0 && !opts.isReflect) {
         if (attacker.trait === "vampiric") this._heal(attacker, dealt * 0.15);
+        if (attacker.masteryBuffs?.includes("phantom_cloak")) this._heal(attacker, dealt * 0.28);
         const bloodLv = this._skillLv(attacker, "blood_frenzy");
         if (bloodLv > 0) {
           this._heal(attacker, dealt * ([0.12, 0.18, 0.25, 0.32, 0.42][bloodLv - 1] || 0.12));
@@ -597,6 +622,12 @@
           this._applyDamage(target, attacker, Math.max(3, rawDmg * tRef), { color: "#4fd1a5", isReflect: true });
           if (target.evolution3 === "iron_maiden") this._heal(target, target.maxHp * 0.06);
         }
+        if (target.masteryBuffs?.includes("thorn_armor")) {
+          this._applyDamage(target, attacker, Math.max(3, rawDmg * 0.40), { color: "#ffd86b", isReflect: true });
+        }
+        if (this._skillLv(target, "frost_armor") > 0) {
+          attacker.slowTimer = Math.max(attacker.slowTimer || 0, 1.8);
+        }
         if (this.factions.alliance >= 2 && oldShield > 0 && target.shield === 0) {
           const holyDamage = oldShield * (this.factions.alliance >= 3 ? .65 : .4);
           this.enemies.filter(enemy => enemy.alive && Math.hypot(enemy.x - attacker.x, enemy.y - attacker.y) <= 105)
@@ -604,6 +635,39 @@
         }
       }
       return dealt;
+    }
+
+    _tryDifficultyStun(target, baseMult = 1) {
+      const Meta = globalThis.SlotboundMeta;
+      const diff = Meta ? Meta.getDifficulty(this.run?.difficulty || "easy") : { stunChance: 0.08, stunDur: 0.4 };
+      const chance = Math.min(0.45, (diff.stunChance || 0.08) * baseMult);
+      if (Math.random() < chance) {
+        const dur = diff.stunDur || 0.4;
+        target.stunTimer = Math.max(target.stunTimer || 0, dur);
+        this._spawnText(target.x, target.y - 20, "眩晕!", "#80f0ff", 12);
+      }
+    }
+
+    _allyAssassinLeap(u) {
+      const living = this.enemies.filter(e => e.alive && !(e.spawnGrace > 0));
+      if (living.length === 0) return;
+      // Prioritize enemy ranged/caster backline units, else furthest right enemy!
+      const backline = living.filter(e => e.kind === "ranged" || e.kind === "caster");
+      const target = [...(backline.length ? backline : living)].sort((a, b) => b.x - a.x)[0];
+      if (!target) return;
+      this._spawnParticles(u.x, u.y, "#ff6b7a", 10);
+      u.x = Math.min(this.w - 26, target.x + 34);
+      u.y = Math.max(36, Math.min(this.h - 36, target.y + (Math.random() - 0.5) * 18));
+      u.leaped = true;
+      if (G.hasCore(this.run, "shadow_pact")) {
+        u.invulnerable = Math.max(u.invulnerable || 0, 1.5);
+        u.pactFirstCrit = true;
+      }
+      if (u.masteryBuffs?.includes("phantom_cloak")) {
+        u.dmgReduceTimer = 2.5;
+      }
+      this._spawnParticles(u.x, u.y, "#c084fc", 14);
+      this._spawnText(u.x, u.y - 22, "暗影跃迁!", "#ff75b5", 13);
     }
 
     _isFrontZone(unit) {
@@ -620,9 +684,11 @@
           ?? [...(rear.length ? rear : living)].sort((a, b) => a.hp - b.hp)[0];
       }
 
-      // Allied assassins dive the furthest opposing backline target!
-      if (actor.type === "assassin") {
-        return [...living].sort((a, b) => (b.x - a.x) * (actor.side === "ally" ? 1 : -1) || a.hp - b.hp)[0];
+      // Allied assassins prioritize enemy ranged/caster backline units!
+      if (actor.side === "ally" && G.ASSASSIN_TYPES?.has(actor.type)) {
+        const ranged = living.filter(e => e.kind === "ranged" || e.kind === "caster");
+        const pool = ranged.length ? ranged : living;
+        return [...pool].sort((a, b) => Math.hypot(a.x - actor.x, a.y - actor.y) - Math.hypot(b.x - actor.x, b.y - actor.y))[0];
       }
 
       // Distance-based targeting with tank/taunt body-blocking priority!
@@ -699,6 +765,26 @@
       let critChance = u.crit + (this.synergies.assassin ? 0.18 : 0) + (u.evolution === "bladedancer" ? 0.15 : 0);
       let isCrit = Math.random() < critChance;
       let dmg = u.atk * u.atkBuff;
+
+      if (u.pactFirstCrit) {
+        u.pactFirstCrit = false;
+        isCrit = true;
+      }
+
+      // Isolation check (target has no other living enemy within 95px)
+      const isIsolated = !this.enemies.some(e => e.alive && e !== target && Math.hypot(e.x - target.x, e.y - target.y) <= 95);
+      if (isIsolated && u.masteryBuffs?.includes("isolation")) {
+        isCrit = true;
+        dmg *= 1.65;
+        this._spawnText(target.x, target.y - 22, "孤立无援!", "#ff75b5", 13);
+      } else if (isIsolated && G.hasCore(this.run, "lone_wolf") && (G.ASSASSIN_TYPES?.has(u.type) || G.SYMBOLS[u.type]?.range <= 115)) {
+        dmg *= 1.40;
+      }
+
+      const ambushLv = this._skillLv(u, "night_ambush");
+      if (ambushLv > 0 && (isIsolated || target.kind === "ranged" || target.kind === "caster")) {
+        dmg *= 1 + ([0.22, 0.34, 0.48, 0.65, 0.88][ambushLv - 1] || 0.22);
+      }
 
       if (G.hasCore(this.run, "berserk_banner") && u.hp / u.maxHp < 0.55) {
         dmg *= 1.45;
@@ -960,6 +1046,57 @@
           this._applyDamage(u, rear, dmg * mult, { color: "#ffe598", shieldMultiplier: shMult });
         }
       }
+
+      // New 2~5 cost innate skills!
+      if (this._skillLv(u, "frost_armor") > 0 && target.alive) {
+        target.slowTimer = Math.max(target.slowTimer || 0, 2.0);
+      }
+      const solarLv = this._skillLv(u, "solar_burn");
+      if (solarLv > 0 && u.atkCount % 3 === 0) {
+        const mult = [0.65, 0.90, 1.20, 1.55, 2.00][solarLv - 1] || 0.65;
+        this.rings.push({ x: u.x, y: u.y, r: 10, maxR: 110, color: "#ffb84d", life: 0.35 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - u.x, e.y - u.y) <= 115)
+          .forEach(e => this._applyDamage(u, e, u.atk * mult, { color: "#ffb84d" }));
+        this._grantShield(u, u.maxHp * 0.08);
+      }
+      const chronoLv = this._skillLv(u, "chrono_warp");
+      if (chronoLv > 0) {
+        this.rings.push({ x: target.x, y: target.y, r: 8, maxR: 82, color: "#c084fc", life: 0.28 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 85).forEach(e => {
+          e.slowTimer = Math.max(e.slowTimer || 0, 2.0);
+          if (e !== target) this._applyDamage(u, e, u.atk * 0.45, { color: "#d4b5ff" });
+        });
+      }
+      const skyLv = this._skillLv(u, "sky_spear");
+      if (skyLv > 0) {
+        const cnt = [2, 3, 3, 4, 5][skyLv - 1] || 2;
+        const shM = [2, 2.4, 2.8, 3.2, 3.8][skyLv - 1] || 2;
+        const extras = this.enemies.filter(e => e.alive && e !== target).slice(0, cnt - 1);
+        for (const e of extras) {
+          this.beams.push({ x1: u.x, y1: u.y, x2: e.x, y2: e.y, color: "#ffd86b", life: 0.22, jagged: false });
+          this._applyDamage(u, e, dmg * 0.85, { color: "#ffd86b", shieldMultiplier: shM });
+        }
+        this.allies.filter(a => a.alive).forEach(a => this._grantShield(a, u.atk * 0.22));
+      }
+      const voidLv = this._skillLv(u, "void_singularity");
+      if (voidLv > 0) {
+        const mult = [0.75, 1.05, 1.40, 1.85, 2.40][voidLv - 1] || 0.75;
+        this.rings.push({ x: target.x, y: target.y, r: 12, maxR: 112, color: "#ff75b5", life: 0.36 });
+        this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 115)
+          .forEach(e => this._applyDamage(u, e, u.atk * mult, { color: "#ff75b5", isCrit }));
+      }
+
+      // Level 30 Mastery procs
+      if (isCrit && u.masteryBuffs?.includes("shadow_double") && Math.random() < 0.45 && target.alive) {
+        this._applyDamage(u, target, dmg * 0.8, { isCrit: true, color: "#ff9bb0" });
+      }
+      if (u.masteryBuffs?.includes("holy_resonance") && Math.random() < 0.35) {
+        const low = this.allies.filter(a => a.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (low) {
+          this._heal(low, u.atk * 0.9);
+          this._grantShield(low, u.atk * 0.7);
+        }
+      }
     }
 
     _performEnemyAttack(e) {
@@ -970,7 +1107,7 @@
       const dmg = e.atk * e.enrage * (isCrit ? 1.5 : 1);
 
       if (e.tactic === "shield_breaker") {
-        if (this._isFrontZone(target)) target.stunTimer = Math.max(target.stunTimer, 1);
+        if (this._isFrontZone(target)) this._tryDifficultyStun(target, 1.2);
         this._applyDamage(e, target, dmg, { isCrit, shieldMultiplier: 2 });
       } else if (e.kind === "ranged" || e.kind === "caster") {
         this.projectiles.push({
@@ -1091,8 +1228,7 @@
           this.beams.push({ x1: boss.x, y1: boss.y, x2: snipeTarget.x, y2: snipeTarget.y, color: "#80f0ff", life: 0.35, jagged: true });
           this.rings.push({ x: snipeTarget.x, y: snipeTarget.y, r: 10, maxR: 62, color: "#6be5ff", life: 0.45 });
           this._applyDamage(boss, snipeTarget, boss.atk * 1.95, { color: "#a5f1ff", isCrit: true });
-          snipeTarget.stunTimer = Math.max(snipeTarget.stunTimer, 1.5);
-          this._spawnText(snipeTarget.x, snipeTarget.y - 22, "冻结!", "#80f0ff", 14);
+          this._tryDifficultyStun(snipeTarget, 1.8);
         }
         livingAllies.forEach(ally => {
           this._applyDamage(boss, ally, boss.atk * 0.72, { color: "#a5f1ff" });
@@ -1245,8 +1381,13 @@
       this.goldPoet = this.allies.some(unit => unit.alive && unit.evolution === "gold_poet");
       const chronoActive = this.allies.some(unit => unit.alive && unit.evolution3 === "astral_chrono");
       const chaplainActive = this.allies.some(unit => unit.alive && unit.evolution3 === "war_chaplain");
+      const maxChronoLv = this.allies.reduce((best, unit) =>
+        unit.alive ? Math.max(best, this._skillLv(unit, "chrono_warp")) : best, 0);
+      const chronoSkillSpd = maxChronoLv > 0 ? (1 + ([0.10, 0.16, 0.22, 0.30, 0.40][maxChronoLv - 1] || 0.10)) : 1;
+      const masterCount = this.allies.filter(a => a.alive && (a.heroLv || 1) >= 30).length;
+      const tomeSpd = G.hasCore(this.run, "mastery_tome") ? (1 + masterCount * 0.15) : 1;
       const hymnSpeed = (maxHymnLv > 0 ? (1 + ([0.08, 0.13, 0.19, 0.26, 0.35][maxHymnLv - 1] || 0.08)) : 1)
-        * (chronoActive ? 1.18 : 1) * (chaplainActive ? 1.20 : 1);
+        * (chronoActive ? 1.18 : 1) * (chaplainActive ? 1.20 : 1) * chronoSkillSpd * tomeSpd;
       const songSpeed = hymnSpeed * (this.warSong && this.battleTime < 5 ? 1.35 : 1);
 
       // Allies tick
@@ -1256,8 +1397,21 @@
         if (u.lunge > 0) u.lunge = Math.max(0, u.lunge - dt * 5);
         u.slowTimer = Math.max(0, u.slowTimer - dt);
         u.invulnerable = Math.max(0, u.invulnerable - dt);
+        u.dmgReduceTimer = Math.max(0, (u.dmgReduceTimer || 0) - dt);
         u.stunTimer = Math.max(0, u.stunTimer - dt);
         if (u.stunTimer > 0) continue;
+
+        // Allied Assassins leap directly behind enemy backline ranged units!
+        if (!u.leaped && G.ASSASSIN_TYPES?.has(u.type) && this.battleTime >= 0.3) {
+          this._allyAssassinLeap(u);
+        }
+        if (u.masteryBuffs?.includes("aegis_heart")) {
+          u.aegisHeartTimer = (u.aegisHeartTimer ?? 4) - dt;
+          if (u.aegisHeartTimer <= 0) {
+            u.aegisHeartTimer = 4.0;
+            this._heal(u, u.maxHp * 0.10);
+          }
+        }
         const turretSkillLv = this._skillLv(u, "auto_turret");
         if (turretSkillLv > 0) {
           u.summonTimer -= dt;

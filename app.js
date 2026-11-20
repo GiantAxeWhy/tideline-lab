@@ -2,6 +2,7 @@
   "use strict";
 
   const G = globalThis.Slotbound;
+  const Meta = globalThis.SlotboundMeta;
   const SFX = globalThis.SFX;
   const Art = globalThis.GameArt;
   const $ = id => document.getElementById(id);
@@ -55,7 +56,6 @@
   $("ico-power").innerHTML = Art.UI_ICONS.sword;
   $("ico-rig").innerHTML = Art.UI_ICONS.rig;
   $("ico-fight").innerHTML = Art.UI_ICONS.sword;
-  $("ico-swap").innerHTML = Art.UI_ICONS.swap;
   $("ico-absorb").innerHTML = Art.UI_ICONS.absorb;
   $("btn-mute").innerHTML = Art.UI_ICONS.soundOn;
 
@@ -163,6 +163,12 @@
       affixes.textContent = effects.map(effect => effect.name).join(" · ");
       affixes.title = effects.map(effect => effect.name + " " + effect.desc).join(" · ");
     }
+    const diff = Meta ? Meta.getDifficulty(run.difficulty || "easy") : { name: "简单", wavesPerChapter: 6 };
+    const wInCh = waveDef.waveInChapter || run.waveInChapter || 1;
+    const totalW = waveDef.totalWavesInChapter || diff.wavesPerChapter || 6;
+    $("wave-badge").textContent = endless
+      ? `无尽轮回 · 第 ${run.endlessWave} 波`
+      : `第 ${chapter.id} 章 · ${chapter.name} [${diff.name} ${wInCh}/${totalW} 波]`;
     $("wave-badge").style.color = chapter.themeColor;
     $("wave-name").textContent = waveDef.name;
     $("hud-gold").textContent = run.gold;
@@ -170,14 +176,31 @@
     $("hud-hp").textContent = `${run.hp} / ${run.maxHp}`;
     $("hud-power").textContent = G.getTotalPower(run);
 
-    $("wave-dots").innerHTML = chapter.waves.map((w, index) => {
+    $("wave-dots").innerHTML = Array.from({ length: totalW }, (_, index) => {
+      const wNum = index + 1;
       const cls = [
         "wave-dot",
-        w.wave < run.wave ? "past" : w.wave === run.wave ? "current" : "",
-        w.boss ? "boss" : ""
+        wNum < wInCh ? "past" : wNum === wInCh ? "current" : "",
+        wNum === totalW ? "boss" : ""
       ].filter(Boolean).join(" ");
-      return `<span class="${cls}" title="本章第 ${index + 1} 波 · ${w.name}"></span>`;
+      return `<span class="${cls}" title="本章第 ${wNum}/${totalW} 波"></span>`;
     }).join("");
+
+    // Side Quest bar & Elite Wheel button
+    const q = run.sideQuest;
+    if ($("quest-text")) {
+      $("quest-text").textContent = q
+        ? (q.completed
+          ? `✅ 支线【${q.name}】已完成！已发放独立高级轮盘券！`
+          : `🎯 支线【${q.name}】：${q.desc}（进度 ${q.progress}/${q.target} · 剩余 ${q.wavesLeft} 波）`)
+        : "🎯 支线挑战：完成任务赢取独立高级轮盘免费 1 转！";
+    }
+    const eliteBtn = $("btn-elite-wheel");
+    if (eliteBtn) {
+      const tokens = run.eliteWheelTokens || 0;
+      eliteBtn.hidden = tokens <= 0;
+      eliteBtn.textContent = `🎰 开启高级轮盘 (×${tokens})`;
+    }
 
     const bossPill = $("boss-pill");
     const env = chapter.env;
@@ -222,6 +245,16 @@
     const tier = G.getReelTier(run);
     $("tier-badge").textContent = `Lv.${tier.level} ${tier.name}`;
     $("tier-sub").textContent = tier.desc;
+    if ($("rarity-odds-strip") && G.getEffectiveRarityOdds) {
+      const o = G.getEffectiveRarityOdds(run);
+      const pct = v => `${(v * 100).toFixed(v > 0 && v < 0.02 ? 1 : 0)}%`;
+      $("rarity-odds-strip").innerHTML =
+        `<span style="color:#dce4f2">白 ${pct(o.white)}</span>`
+        + `<span style="color:#4fd1a5">绿 ${pct(o.green)}</span>`
+        + `<span style="color:#5cc8ff">蓝 ${pct(o.blue)}</span>`
+        + `<span style="color:#c084fc">紫 ${pct(o.purple)}</span>`
+        + `<span style="color:#ffd86b">金 ${pct(o.gold)}</span>`;
+    }
     const tierBtn = $("btn-tier-up");
     if (tier.upgradeCost) {
       tierBtn.textContent = `↑ 升阶 ${tier.upgradeCost}G`;
@@ -336,6 +369,12 @@
 
   function renderCores() {
     $("core-count").textContent = `${run.cores.length} / ${run.unlockedCoreSlots}`;
+    if ($("core-milestone-pill") && G.getNextCoreMilestone) {
+      const nextM = G.getNextCoreMilestone(run);
+      $("core-milestone-pill").textContent = nextM
+        ? `距下枚核心还差 ${Math.max(0, nextM - (run.totalSpins || 0))} 转`
+        : "核心里程碑已满";
+    }
     const levels = run.coreLevels || {};
     const slots = [];
     for (let i = 0; i < 6; i += 1) {
@@ -424,9 +463,10 @@
     const skills = unit.skills || [];
     const rarityBadge = `<span class="u-tag" style="border:1px solid ${rarity.color};color:${rarity.color};background:rgba(10,14,24,0.85)" title="${rarity.label} · ${rarity.slots} 技能栏 · 纯吞噬+${rarity.feedLevels}级">${rarity.name}·Lv.${st.heroLv}</span>`;
 
-    return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
+    const artKey = sym.artKey || unit.type;
+    return `<button type="button" class="${cls}" draggable="true" data-area="${area}" data-index="${index}" data-uid="${unit.id}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
-        ${Art.renderPortraitImg(unit.type, displayName, "unit-sprite")}
+        ${Art.renderPortraitImg(artKey, displayName, "unit-sprite")}
         <span class="u-lvl-badge">${"★".repeat(st.level)}</span>
       </div>
       <div class="u-body">
@@ -466,11 +506,10 @@
     const benchUsed = run.bench.filter(Boolean).length;
     $("bench-count").textContent = `${benchUsed} / ${run.unlockedBenchSlots}`;
 
-    $("btn-mode-swap").classList.toggle("active", armyMode === "swap");
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
     $("army-tip").textContent = armyMode === "absorb"
-      ? "吞噬模式：先点【主体】，再点任意【素材】弹出抉择——继承技能（+1级）或纯吞噬冲级（白+2/绿+3/蓝+4/紫+5/金+6）！"
-      : "自由布阵：直接在上方战场左半区拖拽英雄即可任意摆位！点击下方卡片可上下阵或吞噬。";
+      ? "吞噬模式已开启：先点【主体】，再点任意【素材】弹出抉择（或直接将一个兵拖动叠放到另一个兵上）！"
+      : "直接拖拽：上方战场左半区拖动摆位；下方任意两个兵拖动叠在一起即可直接触发吞噬！";
 
     const selUnit = selectedSlot
       ? (selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index])
@@ -514,12 +553,18 @@
       }
     }
 
+    const masteryTags = (unit.masteryBuffs || []).map(id => {
+      const allM = [...G.MASTERY_BUFFS.assassin, ...G.MASTERY_BUFFS.front, ...G.MASTERY_BUFFS.ranged];
+      const def = allM.find(m => m.id === id);
+      return def ? `<span class="skill-pill" style="border-color:#ffd86b;color:#ffd86b" title="${def.desc}">${def.icon} ${def.name}</span>` : "";
+    }).join("");
+
     el.innerHTML = `<div class="ins-left">
-      <div class="ins-avatar" style="--u-color:${rarity.color}">${Art.renderPortraitImg(unit.type, sym.name, "ins-sprite")}</div>
+      <div class="ins-avatar" style="--u-color:${rarity.color}">${Art.renderPortraitImg(sym.artKey || unit.type, sym.name, "ins-sprite")}</div>
       <div class="ins-info">
         <div class="ins-title">${evo ? evo.name : sym.name} · <span style="color:${rarity.color}">${rarity.label}</span> · <span class="gold-txt">${"★".repeat(st.level)}</span> ${unit.lucky ? '<span class="u-tag">幸运强化</span>' : ""}</div>
         <div class="ins-desc">生命 ${st.hp} · 攻击 ${st.atk} · 暴击 ${Math.round(st.crit * 100)}% · 攻速 ${(1 / st.atkCd).toFixed(2)}/s · 移速 ${st.moveSpd} · 射程 ${st.range} · ${nextNeed}</div>
-        <div class="ins-skills">${skillPills.join("")}</div>
+        <div class="ins-skills">${skillPills.join("")}${masteryTags}</div>
       </div>
     </div>
     <div class="ins-actions">
@@ -901,6 +946,10 @@
       openChapterDialog();
       return;
     }
+    if (run.pendingMastery && run.pendingMastery.length > 0) {
+      openMasteryDialog();
+      return;
+    }
     if (run.pendingEvolutions.length > 0) {
       openEvoDialog();
       return;
@@ -1273,14 +1322,223 @@
     checkPendingModals();
   });
 
-  $("btn-mode-swap").addEventListener("click", () => {
-    armyMode = "swap";
-    renderArmy();
-  });
-  $("btn-mode-absorb").addEventListener("click", () => {
-    armyMode = "absorb";
-    renderArmy();
-  });
+    $("btn-open-hub").addEventListener("click", openHub);
+    $("btn-hub-resume").addEventListener("click", closeHub);
+    $("btn-hub-start").addEventListener("click", () => {
+      if (busy) return;
+      const meta = Meta.loadMeta();
+      closeHub();
+      startRun(
+        G.createRun({ chapter: meta.selectedChapter, difficulty: meta.selectedDifficulty }),
+        `出征：第 ${meta.selectedChapter} 章 [${Meta.getDifficulty(meta.selectedDifficulty).name}]`,
+        `初始军费 ${Math.min(150, 100 + (meta.upgrades.startGold || 0) * 10)}G，拉动轮盘召唤军团！`
+      );
+    });
+    $("btn-elite-wheel").addEventListener("click", openEliteWheelDialog);
+    $("btn-elite-spin").addEventListener("click", () => {
+      const res = G.executeEliteWheel(run);
+      if (!res) return;
+      SFX.jackpot();
+      const sym = G.SYMBOLS[res.unit.type];
+      const rar = G.getUnitRarity(res.unit);
+      $("elite-result-box").innerHTML = `<div class="elite-win" style="border-color:${rar.color}">
+        ${Art.renderPortraitImg(sym.artKey || res.unit.type, sym.name, "ins-sprite")}
+        <div><strong style="color:${rar.color}">🎉 抽中【${rar.label}】${sym.name}！</strong><p>${sym.skillDesc}</p></div>
+      </div>`;
+      $("btn-elite-spin").disabled = (run.eliteWheelTokens || 0) <= 0;
+      $("btn-elite-spin").textContent = (run.eliteWheelTokens || 0) > 0
+        ? `🎰 再转一次（剩余 ${run.eliteWheelTokens}）`
+        : "已用完";
+      save();
+      renderAll();
+    });
+
+    $("btn-mode-absorb").addEventListener("click", () => {
+      armyMode = armyMode === "absorb" ? "swap" : "absorb";
+      renderArmy();
+    });
+
+    // Drag-and-drop stacking between hero cards in formation & bench -> triggers Absorb Choice modal!
+    let dragSrc = null;
+    const bindDragZone = el => {
+      el.addEventListener("dragstart", e => {
+        const card = e.target.closest("[data-area][data-uid]");
+        if (!card || busy || run.outcome) { e.preventDefault(); return; }
+        dragSrc = { area: card.dataset.area, index: Number(card.dataset.index), uid: Number(card.dataset.uid) };
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+      el.addEventListener("dragend", () => {
+        dragSrc = null;
+        document.querySelectorAll(".unit-slot.dragging, .unit-slot.drag-over-absorb").forEach(n => {
+          n.classList.remove("dragging", "drag-over-absorb");
+        });
+      });
+      el.addEventListener("dragover", e => {
+        if (!dragSrc) return;
+        const target = e.target.closest("[data-area]");
+        if (!target) return;
+        e.preventDefault();
+        target.classList.add("drag-over-absorb");
+      });
+      el.addEventListener("dragleave", e => {
+        const target = e.target.closest("[data-area]");
+        if (target) target.classList.remove("drag-over-absorb");
+      });
+      el.addEventListener("drop", e => {
+        if (!dragSrc) return;
+        const target = e.target.closest("[data-area]");
+        if (!target) return;
+        e.preventDefault();
+        target.classList.remove("drag-over-absorb");
+        const toArea = target.dataset.area;
+        const toIdx = Number(target.dataset.index);
+        if (dragSrc.area === toArea && dragSrc.index === toIdx) return;
+        const donor = dragSrc.area === "field" ? run.field[dragSrc.index] : run.bench[dragSrc.index];
+        const receiver = toArea === "field" ? run.field[toIdx] : run.bench[toIdx];
+        if (donor && receiver && donor.id !== receiver.id) {
+          // Dragged one hero onto another -> trigger Absorb Choice modal (receiver absorbs donor)!
+          openAbsorbDialog(receiver, donor);
+        } else if (donor && !receiver) {
+          // Dragged hero onto an empty slot -> deploy/bench move
+          if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
+            SFX.lock();
+            save();
+            renderAll();
+          }
+        }
+      });
+    };
+    bindDragZone($("formation-grid"));
+    bindDragZone($("bench-grid"));
+
+    function openMasteryDialog() {
+      const item = run.pendingMastery?.[0];
+      if (!item) return;
+      const loc = G.findUnitLocation(run, item.unitId);
+      if (!loc) {
+        run.pendingMastery.shift();
+        checkPendingModals();
+        return;
+      }
+      const sym = G.SYMBOLS[loc.unit.type];
+      $("mastery-title").textContent = `${sym.name} · 满 ${item.level} 级宗师觉醒`;
+      $("mastery-desc").textContent = `恭喜【${sym.name}】突破 Lv.${item.level}！请从以下 3 项专属宗师 Buff 中任选其一：`;
+      $("mastery-choices").innerHTML = item.options.map(opt => `
+        <button type="button" class="core-card legendary" data-mastery="${opt.id}">
+          <span class="core-ico">${opt.icon}</span>
+          <strong>${opt.name}</strong>
+          <p>${opt.desc}</p>
+        </button>
+      `).join("");
+      $("mastery-choices").querySelectorAll("[data-mastery]").forEach(btn => {
+        btn.onclick = () => {
+          G.applyMastery(run, item.unitId, btn.dataset.mastery);
+          SFX.evolve();
+          $("mastery-dialog").close();
+          save();
+          renderAll();
+          checkPendingModals();
+        };
+      });
+      if (!$("mastery-dialog").open) $("mastery-dialog").showModal();
+    }
+
+    function openEliteWheelDialog() {
+      const tokens = run.eliteWheelTokens || 0;
+      $("elite-result-box").textContent = tokens > 0
+        ? `你拥有 ${tokens} 次免费高级轮盘机会！点击下方按钮抽取蓝/紫/金高费英雄！`
+        : "完成支线挑战任务或在秘宝商店购买高级轮盘券即可获得抽取机会！";
+      $("btn-elite-spin").disabled = tokens <= 0;
+      $("btn-elite-spin").textContent = tokens > 0 ? `🎰 免费转动高级轮盘 (×${tokens})` : "暂无次数";
+      if (!$("elite-wheel-dialog").open) $("elite-wheel-dialog").showModal();
+    }
+
+    function renderHub() {
+      if (!Meta) return;
+      const meta = Meta.loadMeta();
+      $("hub-crystals").textContent = meta.crystals || 0;
+
+      // 1. Difficulty selector
+      $("hub-diff-grid").innerHTML = Meta.DIFFICULTIES.map(d => {
+        const unlocked = Meta.isDifficultyUnlocked(meta, d.id);
+        const active = meta.selectedDifficulty === d.id;
+        return `<button type="button" class="hub-card${active ? " active" : ""}${unlocked ? "" : " locked"}" data-hub-diff="${d.id}"${unlocked ? "" : " disabled"}>
+          <div class="hub-card-head"><strong>${d.name}</strong><span>${unlocked ? `${d.wavesPerChapter} 波/章` : "🔒 未解锁"}</span></div>
+          <p>${d.desc}</p>
+        </button>`;
+      }).join("");
+
+      // 2. Chapter selector
+      const diffId = meta.selectedDifficulty || "easy";
+      $("hub-chapter-grid").innerHTML = G.CHAPTERS.map(ch => {
+        const unlocked = Meta.isChapterUnlocked(meta, diffId, ch.id);
+        const active = meta.selectedChapter === ch.id;
+        return `<button type="button" class="hub-card${active ? " active" : ""}${unlocked ? "" : " locked"}" data-hub-ch="${ch.id}"${unlocked ? "" : " disabled"}>
+          <div class="hub-card-head"><strong>第 ${ch.id} 章 · ${ch.name}</strong><span>${unlocked ? "已解锁" : "🔒 通关上一章解锁"}</span></div>
+          <p>关底 Boss：${ch.bossName}</p>
+        </button>`;
+      }).join("");
+
+      // 3. Permanent Meta Upgrades
+      $("hub-upgrades-grid").innerHTML = Object.values(Meta.META_UPGRADES).map(up => {
+        const lv = meta.upgrades[up.id] || 0;
+        const cost = Meta.getUpgradeCost(meta, up.id);
+        const canBuy = cost !== null && meta.crystals >= cost;
+        return `<div class="hub-up-card">
+          <div class="hub-up-info">
+            <strong>${up.icon} ${up.name} <span class="gold-txt">Lv.${lv}/${up.maxLevel}</span></strong>
+            <p>${up.desc(lv)}</p>
+          </div>
+          <button type="button" class="secondary-btn" data-hub-up="${up.id}"${canBuy ? "" : " disabled"}>
+            ${cost === null ? "已满级" : `升级 · ${cost}💎`}
+          </button>
+        </div>`;
+      }).join("");
+    }
+
+    function openHub() {
+      if (busy) return;
+      renderHub();
+      $("hub-view").hidden = false;
+      $("game-view").hidden = true;
+    }
+
+    function closeHub() {
+      $("hub-view").hidden = true;
+      $("game-view").hidden = false;
+      arena.resize();
+      renderAll();
+    }
+
+    $("hub-diff-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-hub-diff]");
+      if (!btn || btn.disabled) return;
+      const meta = Meta.loadMeta();
+      meta.selectedDifficulty = btn.dataset.hubDiff;
+      if (!Meta.isChapterUnlocked(meta, meta.selectedDifficulty, meta.selectedChapter)) {
+        meta.selectedChapter = 1;
+      }
+      Meta.saveMeta(meta);
+      renderHub();
+    });
+    $("hub-chapter-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-hub-ch]");
+      if (!btn || btn.disabled) return;
+      const meta = Meta.loadMeta();
+      meta.selectedChapter = Number(btn.dataset.hubCh);
+      Meta.saveMeta(meta);
+      renderHub();
+    });
+    $("hub-upgrades-grid").addEventListener("click", e => {
+      const btn = e.target.closest("[data-hub-up]");
+      if (!btn || btn.disabled) return;
+      const meta = Meta.loadMeta();
+      if (Meta.buyMetaUpgrade(meta, btn.dataset.hubUp)) {
+        SFX.tierUp();
+        renderHub();
+      }
+    });
 
   $("btn-speed").addEventListener("click", () => {
     speedMult = speedMult === 1 ? 2 : 1;

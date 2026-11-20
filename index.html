@@ -5,20 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0c12">
   <meta name="description" content="转运军团 — 融合 3×3 机械老虎机、概率调校、吞噬转职与实时自走棋防守的暗黑奇幻 Roguelike 策略游戏。">
-  <title>转运军团 · SLOTBOUND</title>
+  <title>星陨像素 · 命运军团 SLOTBOUND</title>
   <link rel="icon" type="image/svg+xml" href="assets/items/crystal-fate.svg">
   <link rel="stylesheet" href="styles.css">
+  <script defer src="meta.js"></script>
   <script defer src="sfx.js"></script>
   <script defer src="art.js"></script>
   <script defer src="engine.js"></script>
   <script defer src="battle.js"></script>
   <script defer src="app.js"></script>
 </head>
-<body>
+<body class="pixel-theme">
   <div id="game-alert-toast" class="game-alert-toast" role="alert" hidden>
     <strong id="alert-toast-title">无法吞噬</strong>
     <span id="alert-toast-msg"></span>
   </div>
+
+  <!-- STANDALONE WAR-HALL / HUB PAGE: STAGE SELECT + DIFFICULTY + PERMANENT META UPGRADES -->
+  <section id="hub-view" class="hub-view" hidden>
+    <div class="hub-shell">
+      <header class="hub-header">
+        <div class="hub-brand">
+          <div class="hub-crest">⚔️</div>
+          <div>
+            <h1>星陨像素 · 命运军团</h1>
+            <p class="hub-lore">星陨降世，像素城塞危在旦夕！在战备大厅永久强化军团科技，挑战四阶难度与五章像素魔潮。</p>
+          </div>
+        </div>
+        <div class="hub-treasury">
+          <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="">
+          <span>局外命运水晶：<strong id="hub-crystals">0</strong></span>
+        </div>
+      </header>
+
+      <div class="hub-grid">
+        <div class="hub-panel">
+          <h2>① 选择难度（以波数区分 · 通关解锁）</h2>
+          <div class="hub-diff-grid" id="hub-diff-grid"></div>
+
+          <h2 style="margin-top:0.9rem">② 选择出征章节（通关上一章解锁）</h2>
+          <div class="hub-chapter-grid" id="hub-chapter-grid"></div>
+
+          <div class="hub-launch-row">
+            <button id="btn-hub-start" class="spin-btn compact-btn" type="button">⚔️ 开始新征程</button>
+            <button id="btn-hub-resume" class="secondary-btn" type="button">返回当前战局</button>
+          </div>
+        </div>
+
+        <div class="hub-panel">
+          <h2>③ 永久军团科技（切换关卡与难度永久带入）</h2>
+          <div class="hub-upgrades-grid" id="hub-upgrades-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="game-view">
   <header class="topbar">
     <div class="brand">
       <div class="crest" id="brand-crest" aria-hidden="true"></div>
@@ -54,6 +96,7 @@
         <strong id="hud-power">0</strong>
       </div>
       <div class="top-controls">
+        <button id="btn-open-hub" class="icon-btn" type="button" title="返回战备大厅：选关卡、选难度、升级永久科技">🏰大厅</button>
         <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="随时打开命运秘宝商店消耗水晶">
           <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
         </button>
@@ -95,6 +138,7 @@
             <div class="fever-track"><div class="fever-fill" id="fever-fill"></div></div>
             <span class="fever-text" id="fever-text">狂热充能 0%</span>
           </div>
+          <div class="rarity-odds-strip" id="rarity-odds-strip"></div>
 
           <div class="cabinet-lights" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
@@ -139,6 +183,7 @@
       <div class="cores-panel">
         <div class="panel-head">
           <h3>转运核心</h3>
+          <span class="badge-count" id="core-milestone-pill">距下枚核心 5 转</span>
           <span class="badge-count" id="core-count">0 / 6</span>
         </div>
         <div class="cores-grid" id="cores-grid"></div>
@@ -163,6 +208,10 @@
           <progress id="reinforcement-progress" max="9" value="0" aria-label="援军进度"></progress>
           <span id="reinforcement-next"></span>
         </div>
+        <div class="side-quest-bar" id="side-quest-bar">
+          <span id="quest-text">🎯 支线挑战加载中…</span>
+          <button id="btn-elite-wheel" class="elite-wheel-btn" type="button" hidden>🎰 开启高级轮盘 (×0)</button>
+        </div>
         <div class="arena-stage">
           <canvas id="battle-canvas"></canvas>
         </div>
@@ -177,7 +226,6 @@
             <span class="army-tip" id="army-tip">点击单位选中，再点另一单位可【吞噬进化】或【交换站位】</span>
           </div>
           <div class="army-mode-btns">
-            <button id="btn-mode-swap" class="mode-pill active" type="button"><span id="ico-swap"></span>换位</button>
             <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬模式</button>
           </div>
         </div>
@@ -330,6 +378,32 @@
     </div>
   </dialog>
 
+  <!-- MODAL: LEVEL 30 MASTER AWAKENING (3-CHOICE) -->
+  <dialog id="mastery-dialog" class="game-dialog" aria-labelledby="mastery-title">
+    <div class="dialog-inner">
+      <div class="dialog-tag evo">满 30 级宗师觉醒</div>
+      <h2 id="mastery-title">选择一项宗师职业强化</h2>
+      <p class="dialog-desc" id="mastery-desc"></p>
+      <div class="core-choices" id="mastery-choices"></div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: INDEPENDENT HIGH-TIER ELITE WHEEL -->
+  <dialog id="elite-wheel-dialog" class="game-dialog" aria-labelledby="elite-title">
+    <div class="dialog-inner center">
+      <div class="dialog-tag evo">支线奖励 · 独立高级轮盘</div>
+      <h2 id="elite-title">星陨高级命运轮盘</h2>
+      <p class="dialog-desc">独立高阶奖池：<strong>40% 蓝色 3 费 · 45% 紫色 4 费 · 15% 金色 5 费</strong>！免费转动 1 次！</p>
+      <div class="elite-wheel-stage" id="elite-wheel-stage">
+        <div class="elite-result-box" id="elite-result-box">点击下方按钮启动高级轮盘！</div>
+      </div>
+      <div class="end-actions">
+        <button id="btn-elite-spin" class="spin-btn compact-btn" type="button">🎰 免费转动高级轮盘</button>
+        <button class="secondary-btn" data-close="elite-wheel-dialog" type="button">关闭</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- MODAL: RUN SUMMARY -->
   <dialog id="end-dialog" class="game-dialog">
     <div class="dialog-inner center">
@@ -338,10 +412,11 @@
       <p class="dialog-desc" id="end-desc"></p>
       <div class="end-stats" id="end-stats"></div>
       <div class="end-actions">
-        <button id="btn-end-restart" class="secondary-btn" type="button">新开战役</button>
+        <button id="btn-end-restart" class="secondary-btn" type="button">返回战备大厅</button>
         <button id="btn-endless-continue" class="spin-btn compact-btn" type="button" hidden>开启无尽轮回</button>
       </div>
     </div>
   </dialog>
+  </div>
 </body>
 </html>

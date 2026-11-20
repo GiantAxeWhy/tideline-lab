@@ -168,45 +168,168 @@
         })
       }
     },
-    // Legacy classes kept strictly for old-save compatibility (not rolled on the 6-class wheel)
+    // ===== 2费 · 绿色独立卡池（2 技能栏 · 独立职业与 2★/3★ 转职树） =====
     berserker: {
-      id: "berserker", kind: "legacy", name: "狂战斧手", short: "狂战",
-      role: "前排 · 吸血", color: "#ff806a", bg: "#46272b", baseWeight: 0,
-      hp: 145, atk: 23, atkCd: 1.05, moveSpd: 125, range: 58, crit: 0.12,
-      skillDesc: "生命越低攻速越高，普攻恢复造成伤害的 20%。",
+      id: "berserker", kind: "pool", rarity: "green", artKey: "berserker", name: "狂战斧手", short: "狂战",
+      role: "前排 · 2费绿", color: "#4fd1a5", bg: "#1c382c", baseWeight: 0,
+      hp: 175, atk: 27, atkCd: 1.02, moveSpd: 128, range: 58, crit: 0.14,
+      skillDesc: "【2费绿卡】血陨部落的狂战士，血越低攻速越高且自带强力吸血。",
       evolutions: {
-        bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血", "横扫最多 2 个目标，吸血提高至 35%。", 1.34, 1.35),
-        undying: evolution("undying", "不屈狂魔", "锁血狂暴", "每战首次受致命伤时保留 1 生命，无敌且狂暴 3 秒。", 1.3, 1.38)
+        bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血", "横扫最多 2 名目标，吸血提高至 35%。", 1.38, 1.38, {
+          crimson_tyrant: evolution("crimson_tyrant", "猩红战尊", "狂血大扫", "横扫 3 名敌军并造成 50% 吸血，越战越勇！", 1.5, 1.55),
+          soul_reaver: evolution("soul_reaver", "噬魂狂神", "斩杀狂暴", "每次击杀永久提升 +14% 攻击与移速！", 1.44, 1.58)
+        }),
+        undying: evolution("undying", "不屈狂魔", "锁血狂暴", "每战首次受致命伤锁血无敌 3 秒且攻速暴涨。", 1.36, 1.4, {
+          iron_immortal: evolution("iron_immortal", "钢铁不灭", "二次不屈", "锁血时回复 45% 护盾并击退周围所有敌军！", 1.55, 1.48),
+          doom_tide: evolution("doom_tide", "毁灭狂潮", "低血毁灭", "低血状态暴击率 +40%，普攻附带范围震爆！", 1.45, 1.6)
+        })
       }
     },
     engineer: {
-      id: "engineer", kind: "legacy", name: "矮人炮手", short: "炮手",
-      role: "后排 · 炮台", color: "#f2ba70", bg: "#3d2c16", baseWeight: 0,
-      hp: 103, atk: 19, atkCd: 1.15, moveSpd: 94, range: 240, crit: 0.11,
-      skillDesc: "开战时和此后每 5 秒布置一座蒸汽炮台。",
+      id: "engineer", kind: "pool", rarity: "green", artKey: "engineer", name: "蒸汽炮手", short: "炮手",
+      role: "后排 · 2费绿", color: "#4fd1a5", bg: "#1f3428", baseWeight: 0,
+      hp: 120, atk: 23, atkCd: 1.12, moveSpd: 94, range: 245, crit: 0.12,
+      skillDesc: "【2费绿卡】像素工坊的齿轮技师，定时部署自动火炮。",
       evolutions: {
-        heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围眩晕", "重炮攻击造成范围溅射并眩晕命中单位。", 1.25, 1.4),
-        swarm_turret: evolution("swarm_turret", "机械蜂群", "三座炮台", "可同时维持 3 座射速更快的机枪炮台。", 1.28, 1.33)
+        heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围重炮", "重炮攻击造成范围溅射并小概率震晕敌人。", 1.32, 1.42, {
+          doom_cannon: evolution("doom_cannon", "末日火炮", "超载轰炸", "重炮溅射范围翻倍且附带 2 倍破盾！", 1.42, 1.58),
+          thunder_fort: evolution("thunder_fort", "雷霆要塞", "电网炮台", "炮台攻击额外弹射连锁电流！", 1.45, 1.5)
+        }),
+        swarm_turret: evolution("swarm_turret", "机械蜂群", "三座炮台", "可同时维持 3 座高速射击的机枪炮台。", 1.34, 1.36, {
+          hive_carrier: evolution("hive_carrier", "蜂群母舰", "四座机炮", "最多维持 4 座超高速炮台，弹幕倾泻！", 1.44, 1.52),
+          nano_smith: evolution("nano_smith", "纳米工匠", "炮台护盾", "部署炮台同时为全军叠加机械护盾！", 1.5, 1.45)
+        })
       }
     },
-    necromancer: {
-      id: "necromancer", kind: "legacy", name: "亡灵唤师", short: "唤师",
-      role: "后排 · 亡灵", color: "#8ce5aa", bg: "#193c34", baseWeight: 0,
-      hp: 102, atk: 23, atkCd: 1.25, moveSpd: 92, range: 265, crit: 0.12,
-      skillDesc: "每阵亡一名单位，召唤骸骨战士抵挡伤害。",
+    frost_warden: {
+      id: "frost_warden", kind: "pool", rarity: "green", artKey: "knight", name: "霜刃守卫", short: "霜卫",
+      role: "前排 · 2费绿", color: "#4fd1a5", bg: "#17333a", baseWeight: 0,
+      hp: 195, atk: 20, atkCd: 1.15, moveSpd: 96, range: 56, crit: 0.1,
+      skillDesc: "【2费绿卡】凛冬要塞的寒冰卫士，受击与攻击均冻结减速敌军。",
       evolutions: {
-        bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽", "召唤持盾的强化骸骨，优先替友军承伤。", 1.36, 1.25),
-        soul_mage: evolution("soul_mage", "噬魂巫师", "灵魂叠加", "每有一名敌军阵亡，本场战斗永久增加 15% 法强。", 1.22, 1.37)
+        ice_paladin: evolution("ice_paladin", "寒冰圣骑", "冰甲反控", "开局自带 35% 冰霜护盾，受击大幅减速攻击者。", 1.45, 1.28, {
+          permafrost_wall: evolution("permafrost_wall", "永冻壁垒", "群体冰甲", "每 4 秒释放寒冰光环为前排叠盾并减速四周！", 1.6, 1.38),
+          aurora_lord: evolution("aurora_lord", "极光领主", "极光反弹", "受击反弹 45% 冰霜伤害并回复自身生命！", 1.55, 1.42)
+        }),
+        frost_warlord: evolution("frost_warlord", "霜狼督军", "冰刃横扫", "攻击释放冰锥横扫前方敌军造成减速与破甲。", 1.38, 1.4, {
+          glacial_tyrant: evolution("glacial_tyrant", "冰原暴君", "碎冰斩杀", "对减速目标造成 180% 碎冰暴击伤害！", 1.48, 1.58),
+          rime_general: evolution("rime_general", "霜魂战将", "寒霜领军", "提升全军 15% 攻速并令全军普攻附带寒意！", 1.5, 1.46)
+        })
+      }
+    },
+    // ===== 3费 · 蓝色独立卡池（3 技能栏 · 独立职业与 2★/3★ 转职树） =====
+    necromancer: {
+      id: "necromancer", kind: "pool", rarity: "blue", artKey: "necromancer", name: "亡灵唤师", short: "唤师",
+      role: "后排 · 3费蓝", color: "#5cc8ff", bg: "#152b3c", baseWeight: 0,
+      hp: 138, atk: 29, atkCd: 1.2, moveSpd: 95, range: 270, crit: 0.14,
+      skillDesc: "【3费蓝卡】幽冥地窟的死灵大师，召唤骸骨大军淹没敌阵。",
+      evolutions: {
+        bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽", "召唤持盾强化骸骨，优先替友军承伤。", 1.42, 1.32, {
+          underworld_king: evolution("underworld_king", "冥界暴君", "亡灵军团", "骸骨上限 +2 且骸骨阵亡引爆冥火溅射！", 1.55, 1.48),
+          bone_citadel: evolution("bone_citadel", "白骨圣殿", "骸骨反伤", "骸骨获得 60% 额外护盾并反伤 35%！", 1.6, 1.42)
+        }),
+        soul_mage: evolution("soul_mage", "噬魂巫师", "灵魂叠加", "每有一名敌军阵亡，本战永久 +15% 法强。", 1.32, 1.45, {
+          soul_harvester: evolution("soul_harvester", "灵魂收割", "收割爆发", "每击杀敌军触发全屏灵魂冲击并回血！", 1.42, 1.62),
+          abyss_archmage: evolution("abyss_archmage", "深渊魔导", "暗影连锁", "普攻进化为暗影 3 重连锁法球！", 1.4, 1.58)
+        })
       }
     },
     bard: {
-      id: "bard", kind: "legacy", name: "命运吟游者", short: "吟游者",
-      role: "后排 · 战歌", color: "#eea7f4", bg: "#382340", baseWeight: 0,
-      hp: 94, atk: 14, atkCd: 1.7, moveSpd: 112, range: 235, crit: 0.15,
-      skillDesc: "存活时全军攻速 +15%，每次演奏产出 3 金币。",
+      id: "bard", kind: "pool", rarity: "blue", artKey: "bard", name: "命运吟游者", short: "吟游",
+      role: "后排 · 3费蓝", color: "#5cc8ff", bg: "#1d2642", baseWeight: 0,
+      hp: 130, atk: 22, atkCd: 1.45, moveSpd: 115, range: 245, crit: 0.16,
+      skillDesc: "【3费蓝卡】星陨酒馆的吟游诗人，战歌加速全军并持续爆金。",
       evolutions: {
-        gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金", "全军暴伤倍率增加 0.25，每次暴击额外获得 2 金币。", 1.28, 1.23),
-        war_song: evolution("war_song", "战歌领主", "开场战歌", "开战前 5 秒，全军攻速额外 +35%。", 1.32, 1.3)
+        gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金", "全军暴伤 +25%，每次暴击额外 +2 金币。", 1.35, 1.3, {
+          fortune_maestro: evolution("fortune_maestro", "财神乐圣", "黄金暴雨", "全军暴伤 +50%，每次演奏额外爆 +6 金币！", 1.48, 1.45),
+          star_singer: evolution("star_singer", "星辉歌者", "星落协奏", "演奏同时降下星落范围法伤！", 1.45, 1.55)
+        }),
+        war_song: evolution("war_song", "战歌领主", "开场狂热", "开战前 5 秒全军攻速额外 +35%。", 1.38, 1.35, {
+          berserk_horn: evolution("berserk_horn", "狂战号角", "全程狂奏", "全军攻速常驻 +35% 且移速 +20%！", 1.5, 1.48),
+          eternal_symphony: evolution("eternal_symphony", "永恒交响", "战歌圣疗", "每次演奏同时为全体友军回复 8% 生命！", 1.55, 1.42)
+        })
+      }
+    },
+    shadow_blade: {
+      id: "shadow_blade", kind: "pool", rarity: "blue", artKey: "assassin", name: "夜刃影舞", short: "夜刃",
+      role: "刺客 · 3费蓝", color: "#5cc8ff", bg: "#221a3c", baseWeight: 0,
+      hp: 142, atk: 34, atkCd: 0.84, moveSpd: 180, range: 56, crit: 0.34,
+      skillDesc: "【3费蓝卡】暗影议会的高阶刺客，开局跃迁敌方后排精准斩杀。",
+      evolutions: {
+        phantom_assassin: evolution("phantom_assassin", "幽影刺客", "背刺必爆", "切入后排前 3 次攻击必定暴击并附带破盾！", 1.34, 1.48, {
+          void_blade: evolution("void_blade", "虚空之刃", "孤立斩杀", "攻击孤立后排造成 220% 真实暴击！", 1.42, 1.65),
+          silent_king: evolution("silent_king", "寂灭影王", "影遁无敌", "击杀后排立即隐身无敌 1.2 秒并跳向下一目标！", 1.46, 1.6)
+        }),
+        bloodmoon_duelist: evolution("bloodmoon_duelist", "血月剑豪", "血刃连舞", "高额吸血与高速连斩，在敌阵后排永动收割。", 1.4, 1.44, {
+          crimson_master: evolution("crimson_master", "猩红剑圣", "四连瞬斩", "每 2 击瞬发双重血刃并回复 30% 造成伤害！", 1.48, 1.62),
+          soul_dancer: evolution("soul_dancer", "断魂舞者", "血月爆破", "暴击引爆血月范围溅射并恐惧减速周围敌军！", 1.5, 1.58)
+        })
+      }
+    },
+    // ===== 4费 · 紫色独立卡池（4 技能栏 · 独立史诗职业与 2★/3★ 转职树） =====
+    sun_templar: {
+      id: "sun_templar", kind: "pool", rarity: "purple", artKey: "knight", name: "烈阳圣殿骑", short: "烈阳骑",
+      role: "前排 · 4费紫", color: "#c084fc", bg: "#2c1a40", baseWeight: 0,
+      hp: 265, atk: 34, atkCd: 1.05, moveSpd: 112, range: 72, crit: 0.16,
+      skillDesc: "【4费紫卡】星陨圣殿的紫金统帅，群体圣盾 + 烈阳范围灼烧。",
+      evolutions: {
+        radiant_overlord: evolution("radiant_overlord", "辉光大领主", "全军圣域", "开局为全军赋予 30% 最大生命圣盾并持续灼烧近身敌军。", 1.5, 1.38, {
+          solar_guardian: evolution("solar_guardian", "太阳神卫", "不灭圣光", "每 3 秒全军刷新圣盾并回复 10% 生命！", 1.68, 1.52),
+          immortal_domain: evolution("immortal_domain", "不朽圣域", "绝对反伤", "全军护盾反伤 45%，坦克终极形态！", 1.72, 1.48)
+        }),
+        judgement_templar: evolution("judgement_templar", "审判圣骑士", "圣火重击", "长剑附带烈阳范围斩击，对护盾造成 2.5 倍伤害。", 1.44, 1.52, {
+          wrath_blade: evolution("wrath_blade", "天罚之剑", "圣剑天降", "每 3 击召唤天罚圣剑轰击敌方集群！", 1.56, 1.68),
+          holy_verdict: evolution("holy_verdict", "圣火裁决", "灼烧处决", "对半血以下敌军造成双倍圣火斩杀！", 1.58, 1.64)
+        })
+      }
+    },
+    chrono_mage: {
+      id: "chrono_mage", kind: "pool", rarity: "purple", artKey: "mage", name: "星界时法师", short: "时法",
+      role: "后排 · 4费紫", color: "#c084fc", bg: "#26183d", baseWeight: 0,
+      hp: 168, atk: 42, atkCd: 1.12, moveSpd: 102, range: 295, crit: 0.2,
+      skillDesc: "【4费紫卡】掌控像素星轨的时空大魔导，扭曲敌我攻速并降下星爆。",
+      evolutions: {
+        void_starcaller: evolution("void_starcaller", "虚空星使", "星陨风暴", "每次施法召唤 3 道星陨轰炸敌方密集区域。", 1.36, 1.54, {
+          starfall_god: evolution("starfall_god", "崩星法神", "全屏星爆", "星陨风暴覆盖 5 名目标并附带 50% 破盾！", 1.48, 1.72),
+          galaxy_ruler: evolution("galaxy_ruler", "银河主宰", "引力漩涡", "施法触发引力冲击大幅减速并持续灼烧敌军！", 1.5, 1.66)
+        }),
+        time_sage: evolution("time_sage", "逆时贤者", "时空加速", "全军攻速永久 +25%，敌军攻速 -20%。", 1.42, 1.45, {
+          eternal_clock: evolution("eternal_clock", "永恒时计", "极速超频", "全军攻速 +45%，每 4 秒重置 1 名友军冷却！", 1.54, 1.6),
+          fate_weaver: evolution("fate_weaver", "命运织者", "双倍回响", "每次施法有 45% 概率立即双重施法！", 1.5, 1.65)
+        })
+      }
+    },
+    // ===== 5费 · 金色传说独立卡池（5 技能栏 · 独立神级职业与 2★/3★ 转职树） =====
+    astral_valkyrie: {
+      id: "astral_valkyrie", kind: "pool", rarity: "gold", artKey: "valkyrie", name: "天穹女武神", short: "女武神",
+      role: "前排 · 5费金", color: "#ffd86b", bg: "#3f3314", baseWeight: 0,
+      hp: 340, atk: 52, atkCd: 0.94, moveSpd: 162, range: 110, crit: 0.25,
+      skillDesc: "【5费金卡】星陨神殿的传说英灵，5 技能栏！贯通全场的终极圣枪。",
+      evolutions: {
+        dawn_spear_god: evolution("dawn_spear_god", "破晓神枪", "全屏贯穿", "圣枪穿透 4 名敌军，3 倍破盾并为全军叠盾。", 1.52, 1.56, {
+          final_spear: evolution("final_spear", "终焉圣枪", "毁天灭地", "圣枪贯通全场所有敌人，必定暴击并撕碎护盾！", 1.7, 1.8),
+          dawn_oracle: evolution("dawn_oracle", "黎明神谕", "神圣庇护", "每次贯穿同时为全体友军回复 15% 生命与护盾！", 1.75, 1.7)
+        }),
+        sky_warlord: evolution("sky_warlord", "苍穹战神", "天降神罚", "开战天降神雷轰击敌方全体并大幅加速。", 1.55, 1.58, {
+          thunder_wings: evolution("thunder_wings", "雷霆神翼", "极速雷暴", "攻速移速 +45%，每击附带 4 重神雷！", 1.68, 1.78),
+          eternal_einherjar: evolution("eternal_einherjar", "永恒英灵", "不死神躯", "致命伤无敌 4 秒并召唤英灵虚影协同作战！", 1.78, 1.72)
+        })
+      }
+    },
+    void_emperor: {
+      id: "void_emperor", kind: "pool", rarity: "gold", artKey: "mage", name: "虚空星主", short: "星主",
+      role: "后排 · 5费金", color: "#ffd86b", bg: "#3a2518", baseWeight: 0,
+      hp: 245, atk: 62, atkCd: 1.02, moveSpd: 112, range: 325, crit: 0.28,
+      skillDesc: "【5费金卡】掌控命运轮盘的虚空之主，5 技能栏！全图星界黑洞斩杀。",
+      evolutions: {
+        annihilation_lord: evolution("annihilation_lord", "湮灭君王", "黑洞塌缩", "普攻在目标处引爆虚空黑洞，造成超大范围毁灭伤害。", 1.48, 1.62, {
+          omega_singularity: evolution("omega_singularity", "终极奇点", "万物湮灭", "黑洞伤害 +80%，直接斩杀 15% 血量以下非 Boss 敌人！", 1.64, 1.85),
+          cataclysm_god: evolution("cataclysm_god", "灭世星神", "多重奇点", "每次施法同时引爆 2 个虚空奇点！", 1.62, 1.82)
+        }),
+        chaos_weaver: evolution("chaos_weaver", "混沌织星者", "命运律令", "存活时全军全属性 +22%，每 3 击额外爆 +8 金币！", 1.52, 1.54, {
+          fate_sovereign: evolution("fate_sovereign", "命运主宰", "全军神化", "存活时全军暴击 +30%、攻速 +35%！", 1.68, 1.75),
+          void_omnipotent: evolution("void_omnipotent", "虚空万象", "万法归宗", "每装备 1 个继承技能，自身全属性额外 +25%！", 1.7, 1.78)
+        })
       }
     },
     joker: {
@@ -218,12 +341,22 @@
       color: "#ff99e5",
       bg: "#3c1a38",
       baseWeight: 2,
-      skillDesc: "可替代任意兵种连线！参与召唤的单位获得【幸运强化】+12%全属性。"
+      skillDesc: "可替代任意兵种连线！参与召唤的单位获得【幸运强化】+12%全属性且爆高阶率提升。"
     }
   };
 
   const UNIT_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit");
-  const FRONTLINE = new Set(["knight", "assassin", "valkyrie", "berserker"]);
+  const ALL_HERO_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit" || SYMBOLS[id].kind === "pool");
+  const FRONTLINE = new Set(["knight", "assassin", "valkyrie", "berserker", "frost_warden", "shadow_blade", "sun_templar", "astral_valkyrie"]);
+  const ASSASSIN_TYPES = new Set(["assassin", "shadow_blade"]);
+
+  const HERO_POOL_BY_RARITY = {
+    white: ["knight", "assassin", "valkyrie", "archer", "mage", "priest"],
+    green: ["berserker", "engineer", "frost_warden"],
+    blue: ["necromancer", "bard", "shadow_blade"],
+    purple: ["sun_templar", "chrono_mage"],
+    gold: ["astral_valkyrie", "void_emperor"]
+  };
 
   function isUnitFrontline(type) {
     return FRONTLINE.has(type);
@@ -297,14 +430,20 @@
   const UNIT_RARITY_MAP = {
     knight: "white",
     archer: "white",
-    mage: "green",
-    priest: "green",
-    assassin: "green",
-    berserker: "blue",
-    engineer: "blue",
-    necromancer: "purple",
-    bard: "purple",
-    valkyrie: "gold"
+    mage: "white",
+    priest: "white",
+    assassin: "white",
+    valkyrie: "white",
+    berserker: "green",
+    engineer: "green",
+    frost_warden: "green",
+    necromancer: "blue",
+    bard: "blue",
+    shadow_blade: "blue",
+    sun_templar: "purple",
+    chrono_mage: "purple",
+    astral_valkyrie: "gold",
+    void_emperor: "gold"
   };
 
   const INNATE_SKILLS = {
@@ -328,6 +467,10 @@
       id: "shadow_crit", owner: "assassin", name: "致命影袭", icon: "🗡️", color: "#ff6b7a",
       desc: lv => `暴击率 +${[10, 18, 26, 35, 45][lv - 1]}%，暴击伤害额外 +${[15, 30, 45, 65, 90][lv - 1]}%。`
     },
+    pierce_lance: {
+      id: "pierce_lance", owner: "valkyrie", name: "轻骑穿刺", icon: "🔱", color: "#f8e296",
+      desc: lv => `攻击穿透第二目标造成 ${[45, 60, 75, 95, 120][lv - 1]}% 伤害，对护盾造成 ${[1.5, 1.75, 2.0, 2.25, 2.6][lv - 1]}× 伤害。`
+    },
     blood_frenzy: {
       id: "blood_frenzy", owner: "berserker", name: "嗜血狂怒", icon: "🩸", color: "#ff806a",
       desc: lv => `普攻附加 ${[12, 18, 25, 32, 42][lv - 1]}% 生命偷取，损失生命时攻速最高 +${[25, 40, 55, 70, 90][lv - 1]}%。`
@@ -335,6 +478,10 @@
     auto_turret: {
       id: "auto_turret", owner: "engineer", name: "蒸汽炮台", icon: "⚙️", color: "#f2ba70",
       desc: lv => `每 ${[7, 6.2, 5.4, 4.6, 3.8][lv - 1]} 秒部署自动炮台，继承 ${[45, 65, 85, 110, 140][lv - 1]}% 攻击力。`
+    },
+    frost_armor: {
+      id: "frost_armor", owner: "frost_warden", name: "凛冬冰甲", icon: "❄️", color: "#6be5ff",
+      desc: lv => `开局 +${[20, 30, 42, 55, 72][lv - 1]}% 冰霜护盾，普攻与受击令敌人减速 ${[25, 32, 40, 48, 55][lv - 1]}%。`
     },
     raise_bone: {
       id: "raise_bone", owner: "necromancer", name: "亡灵复生", icon: "💀", color: "#8ce5aa",
@@ -344,11 +491,52 @@
       id: "war_hymn", owner: "bard", name: "黄金战歌", icon: "🎵", color: "#eea7f4",
       desc: lv => `全军攻速 +${[8, 13, 19, 26, 35][lv - 1]}%，每次攻击额外产出 +${[2, 3, 4, 5, 7][lv - 1]} 金币。`
     },
-    pierce_lance: {
-      id: "pierce_lance", owner: "valkyrie", name: "破晓圣枪", icon: "🔱", color: "#f8e296",
-      desc: lv => `攻击穿透第二目标造成 ${[45, 60, 75, 95, 120][lv - 1]}% 伤害，对护盾造成 ${[1.5, 1.75, 2.0, 2.25, 2.6][lv - 1]}× 伤害。`
+    night_ambush: {
+      id: "night_ambush", owner: "shadow_blade", name: "夜刃背刺", icon: "🌙", color: "#9d7bff",
+      desc: lv => `对孤立或后排目标伤害 +${[22, 34, 48, 65, 88][lv - 1]}%，暴击回复 ${[10, 15, 22, 28, 36][lv - 1]}% 生命。`
+    },
+    solar_burn: {
+      id: "solar_burn", owner: "sun_templar", name: "烈阳圣域", icon: "☀️", color: "#ffb84d",
+      desc: lv => `每 3 击引爆烈阳冲击波，对周围敌军造成 ${[65, 90, 120, 155, 200][lv - 1]}% 圣伤并为自身叠盾。`
+    },
+    chrono_warp: {
+      id: "chrono_warp", owner: "chrono_mage", name: "时空扭曲", icon: "⏳", color: "#c084fc",
+      desc: lv => `全军攻速 +${[10, 16, 22, 30, 40][lv - 1]}%，普攻附带范围星爆减速敌军。`
+    },
+    sky_spear: {
+      id: "sky_spear", owner: "astral_valkyrie", name: "天穹神枪", icon: "🌟", color: "#ffd86b",
+      desc: lv => `普攻穿透 ${[2, 3, 3, 4, 5][lv - 1]} 名敌人，破盾 ${[2, 2.4, 2.8, 3.2, 3.8][lv - 1]}× 并为全军叠盾！`
+    },
+    void_singularity: {
+      id: "void_singularity", owner: "void_emperor", name: "虚空奇点", icon: "🕳️", color: "#ff75b5",
+      desc: lv => `每次攻击在目标处引爆虚空黑洞，造成 ${[75, 105, 140, 185, 240][lv - 1]}% 范围毁灭法伤！`
     }
   };
+
+  // Level 30 (and 60) Master Awakening 3-choice buffs tailored by role!
+  const MASTERY_BUFFS = {
+    assassin: [
+      { id: "isolation", name: "孤立无援", icon: "🐺", desc: "目标周围 95px 内无其他敌军时，伤害 +65% 且必定暴击！" },
+      { id: "shadow_double", name: "暗影连斩", icon: "⚔️", desc: "暴击时有 45% 概率瞬间追加一次 80% 伤害的影刃连斩！" },
+      { id: "phantom_cloak", name: "影遁吸血", icon: "🦇", desc: "开局跃迁切后排获得 2.5 秒 45% 减伤，并永久获得 +28% 吸血！" }
+    ],
+    front: [
+      { id: "titan_body", name: "泰坦之躯", icon: "🗿", desc: "最大生命永久 +45%，碰撞质量翻倍，稳如磐石挡住敌军！" },
+      { id: "thorn_armor", name: "真实反甲", icon: "🦔", desc: "受击反弹 40% 伤害给攻击者，且开局额外 +35% 护盾！" },
+      { id: "aegis_heart", name: "不屈壁垒", icon: "💠", desc: "自身获得的所有护盾效果 +65%，每 4 秒自动回复 10% 生命！" }
+    ],
+    ranged: [
+      { id: "overdrive_shot", name: "超载射击", icon: "🎯", desc: "攻击距离 +65px，攻击速度永久 +30%！" },
+      { id: "arcane_overload", name: "奥术过载", icon: "🔮", desc: "攻击与所有继承技能伤害永久 +45%！" },
+      { id: "holy_resonance", name: "神圣共鸣", icon: "✨", desc: "暴击率 +22%，每次攻击有 35% 概率为血量最低友军叠盾回血！" }
+    ]
+  };
+
+  function getMasteryPoolForUnit(unit) {
+    if (ASSASSIN_TYPES.has(unit.type)) return MASTERY_BUFFS.assassin;
+    if (isUnitFrontline(unit.type)) return MASTERY_BUFFS.front;
+    return MASTERY_BUFFS.ranged;
+  }
 
   const UNIT_INNATE_SKILL_ID = Object.fromEntries(
     Object.values(INNATE_SKILLS).map(sk => [sk.owner, sk.id])
@@ -573,8 +761,90 @@
       rarity: "legendary",
       icon: "🪽",
       desc: "全军最大生命 +25%、攻击力 +15%，每波开局额外 +1 免费转动。"
+    },
+    {
+      id: "gold_compass",
+      name: "黄金罗盘",
+      rarity: "rare",
+      icon: "🧭",
+      desc: "轮盘 5 费金色英雄爆率永久 +1.2%，4 费紫色爆率 +4%！"
+    },
+    {
+      id: "astral_altar",
+      name: "星界召唤阵",
+      rarity: "legendary",
+      icon: "🌠",
+      desc: "轮盘 5 费金色爆率 +1.8%、紫率 +6%，每次召唤高费英雄全军 +3 攻击！"
+    },
+    {
+      id: "lone_wolf",
+      name: "孤狼徽记",
+      rarity: "rare",
+      icon: "🐺",
+      desc: "我方刺客与前排攻击周围无其他敌军的孤立目标时，伤害 +40%！"
+    },
+    {
+      id: "skill_resonator",
+      name: "技能共鸣器",
+      rarity: "legendary",
+      icon: "💎",
+      desc: "英雄每多装备 1 个继承技能，自身全属性额外 +12%！"
+    },
+    {
+      id: "high_roller",
+      name: "豪赌筹码",
+      rarity: "rare",
+      icon: "🎰",
+      desc: "每消耗 100 金币转动轮盘，永久提升 +0.4% 金率与 +2% 紫率！"
+    },
+    {
+      id: "shadow_pact",
+      name: "暗影契约",
+      rarity: "rare",
+      icon: "🌑",
+      desc: "所有刺客开局跃迁敌方后排后，获得 1.5 秒无敌且首击必定暴击！"
+    },
+    {
+      id: "underdog_fury",
+      name: "绝地反击",
+      rarity: "common",
+      icon: "⚡",
+      desc: "任意英雄血量首次低于 35% 时，立刻获得 25% 最大生命护盾！"
+    },
+    {
+      id: "mastery_tome",
+      name: "宗师秘典",
+      rarity: "legendary",
+      icon: "📖",
+      desc: "吞噬冲级额外 +1 级，全军每有 1 名满 30 级宗师英雄则全军攻速 +15%！"
     }
   ];
+
+  const CORE_SPIN_MILESTONES = [5, 10, 18, 28, 40, 55, 75, 100];
+
+  const SIDE_QUESTS = [
+    { id: "no_death", name: "完美防线", target: 2, window: 3, desc: "在 3 波内累计 2 波战斗无英雄阵亡", reward: "免费开启【高级命运轮盘】1 次（高爆紫/金！）" },
+    { id: "no_spin", name: "节俭赌徒", target: 1, window: 2, desc: "在 2 波内不使用轮盘摇杆并赢得 1 场战斗", reward: "免费开启【高级命运轮盘】1 次（高爆紫/金！）" },
+    { id: "no_shop", name: "清心寡欲", target: 2, window: 3, desc: "在 3 波内不购买商店货品并赢得 2 场战斗", reward: "免费开启【高级命运轮盘】1 次（高爆紫/金！）" },
+    { id: "combo_line", name: "连线大师", target: 1, window: 3, desc: "在 3 波内触发 1 次 2 线及以上多重连线", reward: "免费开启【高级命运轮盘】1 次（高爆紫/金！）" }
+  ];
+
+  function assignSideQuest(run) {
+    const prevId = run.sideQuest?.id;
+    const pool = SIDE_QUESTS.filter(q => q.id !== prevId);
+    const q = pool[Math.floor(Math.random() * pool.length)] || SIDE_QUESTS[0];
+    run.sideQuest = {
+      id: q.id,
+      name: q.name,
+      desc: q.desc,
+      target: q.target,
+      progress: 0,
+      wavesLeft: q.window,
+      completed: false,
+      failed: false
+    };
+    run.shopBoughtThisWave = false;
+  }
 
   function coreLevel(run, coreId) {
     if (!run || !run.cores.includes(coreId)) return 0;
@@ -955,7 +1225,71 @@
 
   function getWave(run) {
     if (run?.mode === "endless") return getEndlessWave(run);
-    return WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0];
+    const Meta = globalThis.SlotboundMeta;
+    const diff = Meta ? Meta.getDifficulty(run?.difficulty || "easy") : { id: "easy", wavesPerChapter: 6, hpMult: 0.85, atkMult: 0.82, rewardMult: 1 };
+    const totalWaves = diff.wavesPerChapter || 6;
+    const chId = Math.max(1, Math.min(CHAPTERS.length, run?.chapter || 1));
+    const chapter = CHAPTERS[chId - 1] || CHAPTERS[0];
+    const waveInCh = Math.max(1, Math.min(totalWaves, run?.waveInChapter || ((run?.wave || 1) - 1) % totalWaves + 1));
+
+    const isBoss = waveInCh === totalWaves;
+    const isMiniBoss = !isBoss && waveInCh > 1 && (waveInCh % Math.max(3, Math.floor(totalWaves / 3)) === 0);
+    // Map current waveInCh onto the 5 normal encounter templates or boss template of this chapter
+    const tpl = isBoss
+      ? chapter.waves[5]
+      : chapter.waves[Math.min(4, Math.floor(((waveInCh - 1) / Math.max(1, totalWaves - 1)) * 5))];
+
+    // Wave 1 Floor Guarantee (Ch1-W1): even a single weakest 1-cost white hero can clear Wave 1!
+    if (chId === 1 && waveInCh === 1) {
+      const baseEnemy = tpl.enemies[0];
+      const lightEnemy = {
+        ...baseEnemy,
+        name: "巡逻斥候",
+        hp: 42,
+        atk: 5,
+        cd: 1.45,
+        shieldPierce: 0
+      };
+      return {
+        ...tpl,
+        chapter: 1,
+        wave: 1,
+        waveInChapter: 1,
+        totalWavesInChapter: totalWaves,
+        name: "初阵试炼 · 巡逻斥候",
+        boss: false,
+        miniBoss: false,
+        reward: 22,
+        enemies: [lightEnemy, lightEnemy, lightEnemy],
+        phases: [
+          { delay: 0, enemies: [lightEnemy, lightEnemy] },
+          { delay: 4.0, enemies: [lightEnemy] }
+        ]
+      };
+    }
+
+    const progressRatio = (waveInCh - 1) / Math.max(1, totalWaves - 1);
+    const waveScaleHp = (0.85 + progressRatio * 0.55) * diff.hpMult * (isMiniBoss ? 1.25 : 1);
+    const waveScaleAtk = (0.88 + progressRatio * 0.42) * diff.atkMult * (isMiniBoss ? 1.18 : 1);
+    const scaleList = list => list.map(e => ({
+      ...e,
+      hp: Math.max(25, Math.round(e.hp * waveScaleHp)),
+      atk: Math.max(4, Math.round(e.atk * waveScaleAtk))
+    }));
+
+    return {
+      ...tpl,
+      chapter: chId,
+      wave: (chId - 1) * totalWaves + waveInCh,
+      waveInChapter: waveInCh,
+      totalWavesInChapter: totalWaves,
+      boss: isBoss,
+      miniBoss: isMiniBoss,
+      name: isBoss ? tpl.name : (isMiniBoss ? `精英小首领 · 第 ${waveInCh} 波` : `${tpl.name} (${waveInCh}/${totalWaves})`),
+      reward: Math.round(tpl.reward * (diff.rewardMult || 1)),
+      enemies: scaleList(tpl.enemies),
+      phases: tpl.phases.map(p => ({ ...p, enemies: scaleList(p.enemies) }))
+    };
   }
 
   function getChapter(run) {
@@ -966,11 +1300,13 @@
   const BENCH_SLOTS = 4;
   const START_FIELD = [0, 1, 2, 3, 4, 5];
   const SHOP_ITEMS = {
-    enchant: { name: "单格附魔铁砧", cost: 3, art: "shopAnvil", desc: "为指定盘面格永久设置一种符文。" },
-    nudge: { name: "时间微调沙漏", cost: 2, art: "shopHourglass", desc: "补充 2 次可跨波保留的微调。" },
-    dice: { name: "灌铅命运骰", cost: 3, art: "shopDice", desc: "增加指定兵种 20 权重，或移除一种符号。" },
-    repair: { name: "修复基地生命 (+1 ❤️)", cost: 2, art: "fateCrystal", desc: "恢复 1 点顶部红心【基地城防生命】（战败扣血、归零失败；英雄每波自动满血）。" },
-    spins: { name: "免费转包", cost: 2, art: "shopDice", desc: "下一场战斗前可额外免费转动 3 次。" }
+    gold_dice: { name: "神铸金骰 (+0.8%金率)", cost: 3, art: "shopDice", desc: "本局永久提升 5 费金色爆率 +0.8%、4 费紫率 +3%！", reqVault: 0 },
+    enchant: { name: "单格附魔铁砧", cost: 3, art: "shopAnvil", desc: "为指定盘面格永久设置一种符文。", reqVault: 0 },
+    nudge: { name: "时间微调沙漏", cost: 2, art: "shopHourglass", desc: "补充 2 次可跨波保留的微调。", reqVault: 0 },
+    dice: { name: "灌铅命运骰", cost: 3, art: "shopDice", desc: "增加指定兵种 20 权重，或移除一种符号。", reqVault: 0 },
+    repair: { name: "修复基地生命 (+1 ❤️)", cost: 2, art: "fateCrystal", desc: "恢复 1 点顶部红心【基地城防生命】。", reqVault: 0 },
+    spins: { name: "免费转包", cost: 2, art: "shopDice", desc: "下一场战斗前可额外免费转动 3 次。", reqVault: 0 },
+    elite_ticket: { name: "高级轮盘券", cost: 5, art: "shopSlot", desc: "立即获得 1 次【独立高级命运轮盘】免费转动（40%蓝/45%紫/15%金）！", reqVault: 1 }
   };
   const SLOT_UPGRADES = {
     field: { name: "出战人口 (+1)", base: 6, max: FIELD_SLOTS, costs: [3, 5, 7] },
@@ -1039,6 +1375,16 @@
     run.coreLevels ??= {};
     run.shop ??= createShop(false);
     run.logs ??= [];
+    run.difficulty ??= "easy";
+    run.waveInChapter ??= 1;
+    run.eliteWheelTokens ??= 0;
+    run.goldRateBonus ??= 0;
+    run.purpleRateBonus ??= 0;
+    run.totalGoldSpentOnSpins ??= 0;
+    run.nextCoreMilestoneIdx ??= 0;
+    run.pendingMastery ??= [];
+    run.shopBoughtThisWave ??= false;
+    if (!run.sideQuest) assignSideQuest(run);
     run.pendingShop ??= null;
     run.queuedShop ??= null;
     run.pendingEncounter ??= null;
@@ -1161,8 +1507,16 @@
       case "spins":
         run.freeSpins += 3;
         break;
+      case "gold_dice":
+        run.goldRateBonus = (run.goldRateBonus || 0) + 0.008;
+        run.purpleRateBonus = (run.purpleRateBonus || 0) + 0.03;
+        break;
+      case "elite_ticket":
+        run.eliteWheelTokens = (run.eliteWheelTokens || 0) + 1;
+        break;
     }
     run.crystals -= cost;
+    run.shopBoughtThisWave = true;
     shop.bought.push(item);
     return true;
   }
@@ -1184,9 +1538,9 @@
       statBonus: 0,
       bonusSpins: 0,
       bonusXp: 0,
-      rarityOdds: { white: 0.85, green: 0.15, blue: 0, purple: 0, gold: 0 },
+      rarityOdds: { white: 0.94, green: 0.06, blue: 0, purple: 0, gold: 0 },
       unlocked: CORE_SIX_POOL,
-      desc: "6 大核心兵种（三前排+三后排）· 主出白兵(1技)，15% 绿兵(2技)"
+      desc: "白 94% · 绿 6%（1~2费卡池）· 1 锁格位"
     },
     {
       level: 2,
@@ -1197,9 +1551,9 @@
       statBonus: 0.08,
       bonusSpins: 0,
       bonusXp: 0,
-      rarityOdds: { white: 0.25, green: 0.55, blue: 0.20, purple: 0, gold: 0 },
+      rarityOdds: { white: 0.76, green: 0.21, blue: 0.03, purple: 0, gold: 0 },
       unlocked: CORE_SIX_POOL,
-      desc: "主出绿兵(2技) + 20% 蓝兵(3技) · 锁格 +1 · 属性 +8%"
+      desc: "白 76% · 绿 21% · 蓝 3% · 锁格 +1 · 全军属性 +8%"
     },
     {
       level: 3,
@@ -1210,10 +1564,10 @@
       statBonus: 0.16,
       bonusSpins: 1,
       bonusXp: 0,
-      rarityOdds: { white: 0, green: 0.35, blue: 0.45, purple: 0.20, gold: 0 },
+      rarityOdds: { white: 0.58, green: 0.28, blue: 0.12, purple: 0.02, gold: 0 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double" },
-      desc: "主出蓝兵(3技) + 20% 紫兵(4技) · 中心【×2 双倍格】+ 免费转 +1"
+      desc: "白 58% · 绿 28% · 蓝 12% · 紫 2% · 中心【×2 双倍格】"
     },
     {
       level: 4,
@@ -1224,10 +1578,10 @@
       statBonus: 0.26,
       bonusSpins: 1,
       bonusXp: 1,
-      rarityOdds: { white: 0, green: 0, blue: 0.28, purple: 0.48, gold: 0.24 },
+      rarityOdds: { white: 0.42, green: 0.32, blue: 0.18, purple: 0.075, gold: 0.005 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold" },
-      desc: "主出紫兵(4技) + 24% 金兵(5技) · 对角【+25G】+ 新召 +1 级"
+      desc: "白 42% · 绿 32% · 蓝 18% · 紫 7.5% · 金 0.5% · 对角【+25G】"
     },
     {
       level: 5,
@@ -1238,26 +1592,92 @@
       statBonus: 0.38,
       bonusSpins: 2,
       bonusXp: 2,
-      rarityOdds: { white: 0, green: 0, blue: 0, purple: 0.45, gold: 0.55 },
+      rarityOdds: { white: 0.30, green: 0.32, blue: 0.23, purple: 0.14, gold: 0.01 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold", 2: "lucky", 6: "lucky" },
-      desc: "55% 金兵(5技) + 45% 紫兵(4技) · 副对角【★2 赐福】+ 属性 +38%！"
+      desc: "白 30% · 绿 32% · 蓝 23% · 紫 14% · 金 1.0%（核心/商店可再提金率！）"
     }
   ];
 
-  function rollRarityForTier(run, lucky = false) {
+  function getEffectiveRarityOdds(run) {
     const tier = getReelTier(run);
-    const odds = tier.rarityOdds || { white: 1 };
-    const entries = Object.entries(odds).filter(([, p]) => p > 0);
-    // Lucky spin shifts odds slightly upward toward rarer quality!
+    const base = { ...(tier.rarityOdds || { white: 1, green: 0, blue: 0, purple: 0, gold: 0 }) };
+    const Meta = globalThis.SlotboundMeta;
+    const meta = Meta ? Meta.loadMeta() : null;
+    const maxTier = Meta && meta ? Meta.getMaxUnlockedRarityTier(meta) : 5;
+
+    let goldBonus = (run?.goldRateBonus || 0);
+    let purpleBonus = (run?.purpleRateBonus || 0);
+    if (run) {
+      const compLv = coreLevel(run, "gold_compass");
+      if (compLv) { goldBonus += 0.012 * compLv; purpleBonus += 0.04 * compLv; }
+      const altarLv = coreLevel(run, "astral_altar");
+      if (altarLv) { goldBonus += 0.018 * altarLv; purpleBonus += 0.06 * altarLv; }
+      const rollerLv = coreLevel(run, "high_roller");
+      if (rollerLv) {
+        const stacks = Math.floor((run.totalGoldSpentOnSpins || 0) / 100);
+        goldBonus += stacks * 0.004 * rollerLv;
+        purpleBonus += stacks * 0.02 * rollerLv;
+      }
+    }
+    if ((meta?.upgrades?.heroArchive || 0) >= 4) goldBonus += 0.003;
+
+    if (maxTier < 5) { base.gold = 0; goldBonus = 0; }
+    if (maxTier < 4) { base.purple = 0; purpleBonus = 0; }
+    if (maxTier < 3) { base.blue = 0; }
+
+    base.gold = Math.min(0.18, (base.gold || 0) + (base.gold > 0 || (run?.reelLevel || 1) >= 4 ? goldBonus : 0));
+    base.purple = Math.min(0.40, (base.purple || 0) + (base.purple > 0 || (run?.reelLevel || 1) >= 3 ? purpleBonus : 0));
+
+    // Rebalance white down so total sums to 1.0 cleanly
+    const highSum = base.green + base.blue + base.purple + base.gold;
+    base.white = Math.max(0.05, 1 - highSum);
+    const total = base.white + base.green + base.blue + base.purple + base.gold;
+    for (const k of Object.keys(base)) base[k] = Number((base[k] / total).toFixed(4));
+    return base;
+  }
+
+  function rollRarityForTier(run, lucky = false) {
+    const odds = getEffectiveRarityOdds(run);
+    const order = ["white", "green", "blue", "purple", "gold"];
     let r = Math.random();
-    if (lucky) r = Math.min(0.999, r + 0.14);
+    if (lucky) r = Math.min(0.999, r + 0.06);
     let acc = 0;
-    for (const [id, p] of entries) {
-      acc += p;
+    for (const id of order) {
+      acc += odds[id] || 0;
       if (r <= acc) return id;
     }
-    return entries.at(-1)?.[0] || "white";
+    return "white";
+  }
+
+  function pickHeroForRoll(run, symbolId, isLucky = false, forcedRarity = null) {
+    const rarity = forcedRarity || rollRarityForTier(run, isLucky);
+    if (rarity === "white") return { type: symbolId, rarity: "white" };
+    const pool = HERO_POOL_BY_RARITY[rarity] || HERO_POOL_BY_RARITY.white;
+    const wantFront = isUnitFrontline(symbolId);
+    const matchedRole = pool.filter(id => isUnitFrontline(id) === wantFront);
+    const candidates = matchedRole.length > 0 && Math.random() < 0.7 ? matchedRole : pool;
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)] || symbolId;
+    return { type: chosen, rarity };
+  }
+
+  function executeEliteWheel(run) {
+    if (!run || (run.eliteWheelTokens || 0) <= 0) return null;
+    run.eliteWheelTokens -= 1;
+    // Independent High-Tier Wheel: 40% Blue / 45% Purple / 15% Gold!
+    const r = Math.random();
+    const rarity = r < 0.15 ? "gold" : r < 0.60 ? "purple" : "blue";
+    const pool = HERO_POOL_BY_RARITY[rarity];
+    const heroType = pool[Math.floor(Math.random() * pool.length)];
+    const unit = createUnit(run.nextId++, heroType, { rarity, heroLv: 2, lucky: true });
+    const placement = addUnitToRoster(run, unit);
+    if (getEvolutionChoices(unit) && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
+      if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
+        run.pendingEvolutions.push(unit.id);
+      }
+    }
+    addLog(run, "高级轮盘", `开启独立高级命运轮盘，抽中【${getUnitRarity(unit).label}】${SYMBOLS[heroType].name}！`);
+    return { unit, rarity, placement };
   }
 
   const CELL_ENCHANT_INFO = {
@@ -1431,12 +1851,36 @@
     let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.025;
     let atkCd = def.atkCd * (1 - (lvl - 1) * 0.04);
     let moveSpd = def.moveSpd || 100;
-    const range = def.range || 55;
+    let range = def.range || 55;
 
     // Apply passive stat bonuses from inherited/innate skills
     const shadowSkill = unit.skills?.find(s => s.id === "shadow_crit");
     if (shadowSkill) {
       crit += [0.10, 0.18, 0.26, 0.35, 0.45][Math.min(5, shadowSkill.level) - 1] || 0;
+    }
+
+    // Apply Level 30/60 Master Awakening Buffs
+    const masteries = unit.masteryBuffs || [];
+    if (masteries.includes("titan_body")) hp *= 1.45;
+    if (masteries.includes("overdrive_shot")) { range += 65; atkCd *= 0.77; }
+    if (masteries.includes("arcane_overload")) atk *= 1.45;
+    if (masteries.includes("holy_resonance")) crit += 0.22;
+
+    // Skill Resonator core & Void Omnipotent evo
+    if (run && coreLevel(run, "skill_resonator") > 0) {
+      const extraSkills = Math.max(0, (unit.skills?.length || 1) - 1);
+      if (extraSkills > 0) {
+        const mult = 1 + extraSkills * 0.12 * coreLevel(run, "skill_resonator");
+        hp *= mult;
+        atk *= mult;
+      }
+    }
+    if (unit.evolution3 === "void_omnipotent") {
+      const extraSkills = Math.max(0, (unit.skills?.length || 1) - 1);
+      if (extraSkills > 0) {
+        hp *= (1 + extraSkills * 0.25);
+        atk *= (1 + extraSkills * 0.25);
+      }
     }
 
     if (run) {
@@ -1533,20 +1977,28 @@
     }));
   }
 
-  function createRun() {
+  function createRun(opts = {}) {
+    const Meta = globalThis.SlotboundMeta;
+    const meta = Meta ? Meta.loadMeta() : null;
+    const startGoldLv = meta?.upgrades?.startGold || 0;
+    const startPopLv = meta?.upgrades?.popCap || 0;
+    const startGold = Math.min(150, 100 + startGoldLv * 10);
+    const startUnlockedField = Array.from({ length: Math.min(FIELD_SLOTS, 6 + startPopLv) }, (_, i) => i);
+
     const weights = {};
     for (const id of SYMBOL_IDS) {
       weights[id] = SYMBOLS[id].baseWeight;
     }
-    // Zero-unit start: 0 starting heroes, 100 Gold, spins cost 20 -> 30 -> 40...
     const field = Array(FIELD_SLOTS).fill(null);
 
-    return restoreRun({
+    const run = restoreRun({
       mode: "campaign",
-      chapter: 1,
+      chapter: opts.chapter || meta?.selectedChapter || 1,
+      difficulty: opts.difficulty || meta?.selectedDifficulty || "easy",
       wave: 1,
+      waveInChapter: 1,
       startedAt: Date.now(),
-      gold: 100,
+      gold: startGold,
       crystals: 2,
       hp: 5,
       maxHp: 5,
@@ -1554,6 +2006,8 @@
       paidSpinsThisWave: 0,
       spinsThisWave: 0,
       totalSpins: 0,
+      totalGoldSpentOnSpins: 0,
+      nextCoreMilestoneIdx: 0,
       totalMatches: 0,
       totalAbsorbs: 0,
       nextId: 3,
@@ -1563,9 +2017,10 @@
       cellEnchants: Array(9).fill(null),
       nudgesLeft: 2,
       nudgePreview: ["knight", "archer", "mage"],
+      unlockedFieldSlots: startUnlockedField,
       field,
       bench: Array(BENCH_SLOTS).fill(null),
-      board: ["knight", "archer", "mage", "priest", "assassin", "knight", "archer", "mage", "priest"],
+      board: ["knight", "archer", "mage", "priest", "assassin", "valkyrie", "archer", "mage", "priest"],
       locked: [],
       lastLines: [],
       cores: [],
@@ -1574,11 +2029,18 @@
       rigBoosts: {},
       globalBonusHp: 0,
       globalBonusAtk: 0,
+      goldRateBonus: 0,
+      purpleRateBonus: 0,
+      eliteWheelTokens: 0,
+      shopBoughtThisWave: false,
       pendingEvolutions: [],
+      pendingMastery: [],
       pendingCoreChoices: null,
       pendingChapterClear: null,
-      outcome: null // null | "victory" | "defeat"
+      outcome: null
     });
+    assignSideQuest(run);
+    return run;
   }
 
   function getReelTier(run) {
@@ -1742,6 +2204,16 @@
       summary.goldGained += comboGold;
       summary.notes.push(`${hits.length} 重连线暴击！额外 +${comboGold} 金币`);
 
+      // Check combo_line side quest
+      if (run.sideQuest && !run.sideQuest.completed && run.sideQuest.id === "combo_line") {
+        run.sideQuest.progress = Math.min(run.sideQuest.target, (run.sideQuest.progress || 0) + 1);
+        if (run.sideQuest.progress >= run.sideQuest.target) {
+          run.sideQuest.completed = true;
+          run.eliteWheelTokens = (run.eliteWheelTokens || 0) + 1;
+          summary.notes.push("🎯 支线完成！奖励【独立高级命运轮盘】免费 1 转！");
+        }
+      }
+
       if (hasCore(run, "blast_cart")) {
         run.gold += 35;
         run.globalBonusAtk += 2;
@@ -1803,13 +2275,16 @@
 
         for (let s = 0; s < spawnCount; s += 1) {
           const isLucky = hit.hasWild || isFever || hasLuckyCell;
-          const rolledRarity = rollRarityForTier(run, isLucky);
-          const unit = createUnit(run.nextId++, hit.symbol, {
-            rarity: rolledRarity,
+          const rolled = pickHeroForRoll(run, hit.symbol, isLucky);
+          const unit = createUnit(run.nextId++, rolled.type, {
+            rarity: rolled.rarity,
             heroLv: 1 + (hasLuckyCell ? 2 : 0) + (tier.bonusXp || 0),
             xp: extraXp,
             lucky: isLucky
           });
+          if (rolled.rarity !== "white" && coreLevel(run, "astral_altar") > 0) {
+            run.globalBonusAtk += 3 * coreLevel(run, "astral_altar");
+          }
           const placement = addUnitToRoster(run, unit);
           if (getEvolutionChoices(unit) && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
             if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
@@ -1827,6 +2302,7 @@
     if (run.gold < cost) return null;
 
     run.gold -= cost;
+    run.totalGoldSpentOnSpins = (run.totalGoldSpentOnSpins || 0) + cost;
     const isFever = !!run.feverActive;
     if (isFever) {
       run.feverActive = false;
@@ -1838,6 +2314,14 @@
     }
     run.spinsThisWave += 1;
     run.totalSpins += 1;
+
+    // Spin-linked Core Draft milestone (5, 10, 18, 28, 40, 55... spins!)
+    const nextMilestone = CORE_SPIN_MILESTONES[run.nextCoreMilestoneIdx || 0];
+    if (nextMilestone && run.totalSpins >= nextMilestone) {
+      run.nextCoreMilestoneIdx = (run.nextCoreMilestoneIdx || 0) + 1;
+      const choices = draftCoreChoices(run);
+      if (choices.length) run.pendingCoreChoices = choices;
+    }
 
     const retained = retainedCells(run);
     const nextBoard = Array.from({ length: 9 }, (_, i) =>
@@ -2062,10 +2546,29 @@
       run.gold += 18 + (crestLv - 1) * 12;
     }
 
-    target.heroLv = (target.heroLv || 1) + lvGain;
+    const beforeHeroLv = target.heroLv || 1;
+    const tomeBonus = coreLevel(run, "mastery_tome") > 0 ? 1 : 0;
+    target.heroLv = beforeHeroLv + lvGain + (mode === "feed" ? tomeBonus : 0);
     target.xp = (target.xp || 0) + lvGain;
     if (donor.lucky) target.lucky = true;
+    // Rarity NEVER changes from absorbing! Only level & stars progress within the hero's own rarity!
     target.stars = calcUnitStars(target, target.heroLv);
+
+    // Every 30 levels (Lv.30, Lv.60...), trigger a 3-choice Master Awakening Buff!
+    const beforeMasteryTier = Math.floor(beforeHeroLv / 30);
+    const afterMasteryTier = Math.floor(target.heroLv / 30);
+    if (afterMasteryTier > beforeMasteryTier) {
+      run.pendingMastery ??= [];
+      const owned = new Set(target.masteryBuffs || []);
+      const pool = getMasteryPoolForUnit(target).filter(b => !owned.has(b.id));
+      if (pool.length > 0) {
+        run.pendingMastery.push({
+          unitId: target.id,
+          level: afterMasteryTier * 30,
+          options: pool.slice(0, 3)
+        });
+      }
+    }
 
     const traitBonus = triggerConsumedTrait(run, donor, target);
     const inherited = [skillSummary, traitBonus].filter(Boolean).join(" · ");
@@ -2130,6 +2633,25 @@
     return true;
   }
 
+  function applyMastery(run, unitId, buffId) {
+    const loc = findUnitLocation(run, unitId);
+    if (!loc) {
+      run.pendingMastery = (run.pendingMastery || []).filter(m => m.unitId !== unitId);
+      return false;
+    }
+    loc.unit.masteryBuffs ??= [];
+    if (!loc.unit.masteryBuffs.includes(buffId)) {
+      loc.unit.masteryBuffs.push(buffId);
+    }
+    const idx = (run.pendingMastery || []).findIndex(m => m.unitId === unitId);
+    if (idx >= 0) run.pendingMastery.splice(idx, 1);
+    return true;
+  }
+
+  function getNextCoreMilestone(run) {
+    return CORE_SPIN_MILESTONES[run?.nextCoreMilestoneIdx || 0] ?? null;
+  }
+
   function getRigBoostCost(run, symId) {
     const count = run.rigBoosts[symId] || 0;
     return count < 2 ? 1 : 2; // Costs Fate Crystals!
@@ -2173,16 +2695,32 @@
     const ch = run.chapter || 1;
     const levels = run.coreLevels || {};
     const slotsFull = run.cores.length >= run.unlockedCoreSlots;
+    const Meta = globalThis.SlotboundMeta;
+    const meta = Meta ? Meta.loadMeta() : null;
+    const workshopLv = meta?.upgrades?.coreWorkshop || 0;
+    const choiceCount = workshopLv >= 2 ? 4 : 3;
 
-    const rarityOdds = ch === 1
-      ? { common: 0.95, rare: 0.05, legendary: 0 }
+    const baseOdds = ch === 1
+      ? { common: 0.78, rare: 0.20, legendary: 0.02 }
       : ch === 2
-        ? { common: 0.72, rare: 0.26, legendary: 0.02 }
+        ? { common: 0.58, rare: 0.34, legendary: 0.08 }
         : ch === 3
-          ? { common: 0.45, rare: 0.45, legendary: 0.1 }
+          ? { common: 0.38, rare: 0.44, legendary: 0.18 }
           : ch === 4
-            ? { common: 0.22, rare: 0.52, legendary: 0.26 }
-            : { common: 0.1, rare: 0.45, legendary: 0.45 };
+            ? { common: 0.20, rare: 0.50, legendary: 0.30 }
+            : { common: 0.10, rare: 0.44, legendary: 0.46 };
+
+    const legBoost = workshopLv * 0.06;
+    const rareBoost = workshopLv * 0.06;
+    const rarityOdds = {
+      common: Math.max(0.05, baseOdds.common - legBoost - rareBoost),
+      rare: baseOdds.rare + rareBoost,
+      legendary: baseOdds.legendary + legBoost
+    };
+    const sum = rarityOdds.common + rarityOdds.rare + rarityOdds.legendary;
+    rarityOdds.common /= sum;
+    rarityOdds.rare /= sum;
+    rarityOdds.legendary /= sum;
 
     const pickWeighted = (list, count, picked) => {
       const rem = list.filter(c => !picked.includes(c.id));
@@ -2203,14 +2741,12 @@
     const upgradeable = CORES.filter(c => run.cores.includes(c.id) && (levels[c.id] || 1) < 3);
 
     if (!slotsFull) {
-      // Offer 3 fresh unowned cores; if fewer than 3 left, top up with upgradeable owned cores
-      pickWeighted(unowned, 3, picked);
-      pickWeighted(upgradeable, 3, picked);
+      pickWeighted(unowned, choiceCount, picked);
+      pickWeighted(upgradeable, choiceCount, picked);
     } else {
-      // Slots full: offer up to 2 upgradeable owned cores + 1-3 new unowned replacement cores so there are ALWAYS 3 distinct options!
       pickWeighted(upgradeable, Math.min(2, upgradeable.length), picked);
-      pickWeighted(unowned, 3, picked);
-      pickWeighted(upgradeable, 3, picked);
+      pickWeighted(unowned, choiceCount, picked);
+      pickWeighted(upgradeable, choiceCount, picked);
     }
     return picked;
   }
@@ -2347,9 +2883,39 @@
     const crystalBonus = won ? (waveDef.boss ? 5 : 2) + Number(!!battle.flawless) + prismLv : 0;
     const crystalsGained = crystalBonus + (battle.crystals ?? 0);
     run.crystals += crystalsGained;
+    // Sync earned crystals into permanent Meta War-Hall treasury!
+    const Meta = globalThis.SlotboundMeta;
+    if (Meta && crystalsGained > 0) {
+      const meta = Meta.loadMeta();
+      meta.crystals = (meta.crystals || 0) + Math.max(1, Math.round(crystalsGained * 0.7));
+      Meta.saveMeta(meta);
+    }
+
+    // Evaluate Side Quest progress!
+    let questNote = "";
+    if (run.sideQuest && !run.sideQuest.completed) {
+      const q = run.sideQuest;
+      if (won) {
+        if (q.id === "no_death" && !battle.anyAllyDied) q.progress += 1;
+        if (q.id === "no_spin" && (run.spinsThisWave || 0) === 0) q.progress += 1;
+        if (q.id === "no_shop" && !run.shopBoughtThisWave) q.progress += 1;
+      }
+      if (q.progress >= q.target) {
+        q.completed = true;
+        run.eliteWheelTokens = (run.eliteWheelTokens || 0) + 1;
+        questNote = `🎯 支线【${q.name}】完成！获得【高级命运轮盘】免费 1 转！`;
+      } else {
+        q.wavesLeft = Math.max(0, (q.wavesLeft || 1) - 1);
+        if (q.wavesLeft === 0) assignSideQuest(run);
+      }
+    } else if (run.sideQuest?.completed) {
+      assignSideQuest(run);
+    }
+    run.shopBoughtThisWave = false;
+
     const dmg = won ? 0 : (waveDef.boss ? 2 : 1);
     run.hp = Math.max(0, run.hp - dmg);
-    const summary = { wave: waveDef, won, reward, interest, crystalsGained, dmg, finished: true };
+    const summary = { wave: waveDef, won, reward, interest, crystalsGained, dmg, questNote, finished: true };
     if (!run.hp) {
       run.outcome = "defeat";
       return summary;
@@ -2361,31 +2927,35 @@
       const chapterReward = getChapter(run).crystalReward;
       run.crystals += chapterReward;
       summary.crystalsGained += chapterReward;
+      if (Meta) {
+        const meta = Meta.loadMeta();
+        meta.crystals = (meta.crystals || 0) + chapterReward;
+        Meta.recordChapterClear(meta, run.difficulty || "easy", run.chapter || 1);
+      }
       run.hp = run.maxHp;
       run.pendingChapterClear = waveDef.chapter;
-      // Auto-pop Crystal Shop ONCE upon clearing a Chapter Map!
       run.pendingShop = run.shop;
-      if (waveDef.wave === WAVES.length) run.outcome = "victory";
+      if ((run.chapter || 1) >= CHAPTERS.length) run.outcome = "victory";
     }
 
     const advanced = won || (!endless && !waveDef.boss);
-    if (advanced && waveDef.wave % 3 === 0) run.pendingEncounter = draftEncounter(run);
+    if (advanced && waveDef.waveInChapter && waveDef.waveInChapter % 3 === 0) run.pendingEncounter = draftEncounter(run);
     if (run.outcome === "victory") return summary;
 
     if (advanced) {
       if (endless) putEndlessWave(run, run.endlessWave + 1);
       else {
-        run.wave += 1;
-        run.chapter = getWave(run).chapter;
+        const totalInCh = waveDef.totalWavesInChapter || 6;
+        if ((run.waveInChapter || 1) >= totalInCh) {
+          run.chapter = Math.min(CHAPTERS.length, (run.chapter || 1) + 1);
+          run.waveInChapter = 1;
+        } else {
+          run.waveInChapter = (run.waveInChapter || 1) + 1;
+        }
+        run.wave = (run.chapter - 1) * totalInCh + run.waveInChapter;
       }
     }
     prepareNextWave(run);
-    // Authentic Slotbound cadence: Core Draft at Chapter midpoint (Wave 3) & Chapter Boss (Wave 6)
-    const waveInChapter = (waveDef.wave - 1) % 6 + 1;
-    if (won && (waveInChapter === 3 || waveInChapter === 6)) {
-      const choices = draftCoreChoices(run);
-      if (choices.length) run.pendingCoreChoices = choices;
-    }
     return { ...summary, finished: false };
   }
 
@@ -2434,12 +3004,24 @@
     STAR_THRESHOLDS,
     UNIT_RARITIES,
     UNIT_RARITY_MAP,
+    HERO_POOL_BY_RARITY,
+    ALL_HERO_IDS,
+    ASSASSIN_TYPES,
     INNATE_SKILLS,
+    MASTERY_BUFFS,
+    CORE_SPIN_MILESTONES,
+    SIDE_QUESTS,
     getUnitRarity,
     getInnateSkill,
     getEvolutionChoices,
     getUnitEvoInfo,
+    getEffectiveRarityOdds,
     rollRarityForTier,
+    pickHeroForRoll,
+    executeEliteWheel,
+    applyMastery,
+    getNextCoreMilestone,
+    assignSideQuest,
     calcUnitStars,
     nextStarLevel,
     ensureUnitSkillState,
