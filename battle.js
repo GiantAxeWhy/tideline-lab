@@ -35,9 +35,11 @@
       this.hoverAlly = null;
       this.dragOffset = { x: 0, y: 0 };
       this.resultBanner = null;
+      this.bossHud = null;
       this._raf = null;
       this._lastTs = 0;
 
+      this._initBossHud();
       this.resize();
       this._bindPointerEvents();
       window.addEventListener("resize", () => this.resize());
@@ -177,8 +179,46 @@
       const x = cols === 1 ? this.w * 0.72 : (col === 0 ? this.w * 0.66 : this.w * 0.80);
       const y = perCol === 1
         ? this.h * 0.5
-        : this.h * (0.20 + (rowIdx / Math.max(1, perCol - 1)) * 0.60);
+        : this.h * (0.22 + (rowIdx / Math.max(1, perCol - 1)) * 0.56);
       return { x, y };
+    }
+
+    _bossThronePos(bossIdx = 0, bossTotal = 1) {
+      if (bossTotal <= 1) {
+        return { x: this.w * 0.74, y: this.h * 0.50 };
+      }
+      const span = 0.30;
+      const yNorm = 0.50 - span / 2 + (bossIdx / Math.max(1, bossTotal - 1)) * span;
+      return { x: this.w * 0.74, y: this.h * yNorm };
+    }
+
+    _bossWingSlots() {
+      return [
+        { x: this.w * 0.64, y: this.h * 0.24 }, // Upper-front wing
+        { x: this.w * 0.64, y: this.h * 0.76 }, // Lower-front wing
+        { x: this.w * 0.85, y: this.h * 0.24 }, // Upper-rear wing
+        { x: this.w * 0.85, y: this.h * 0.76 }, // Lower-rear wing
+        { x: this.w * 0.57, y: this.h * 0.32 }, // Outer upper-vanguard
+        { x: this.w * 0.57, y: this.h * 0.68 }, // Outer lower-vanguard
+        { x: this.w * 0.88, y: this.h * 0.36 }, // Far upper-back
+        { x: this.w * 0.88, y: this.h * 0.64 }  // Far lower-back
+      ];
+    }
+
+    _enemySquadPositions(defs) {
+      const bossTotal = defs.filter(d => d.kind === "boss").length;
+      if (bossTotal === 0) {
+        return defs.map((_, idx) => this._enemySlotPos(idx, defs.length));
+      }
+      const wings = this._bossWingSlots();
+      let bossIdx = 0;
+      let wingIdx = 0;
+      return defs.map(def => {
+        if (def.kind === "boss") {
+          return this._bossThronePos(bossIdx++, bossTotal);
+        }
+        return wings[wingIdx++ % wings.length];
+      });
     }
 
     _skillLv(unit, skillId) {
@@ -284,8 +324,10 @@
       });
 
       const waveDef = G.getWave(run);
+      const previewPositions = this._enemySquadPositions(waveDef.enemies);
       this.enemies = waveDef.enemies.map((def, index) =>
-        this._createEnemy(def, this._enemySlotPos(index, waveDef.enemies.length), "preview-" + index));
+        this._createEnemy(def, previewPositions[index], "preview-" + index));
+      this._syncBossHud();
     }
 
     _createEnemy(def, pos, uid, isReinforcement = false) {
@@ -319,11 +361,22 @@
       const phase = this.phases[this.phaseIndex];
       const isReinforcement = this.phaseIndex > 0;
       const occupied = this.enemies.filter(enemy => enemy.alive);
-      const positions = Array.from({ length: 6 }, (_, index) => this._enemySlotPos(index, 6));
+      const bossTotalInPhase = phase.enemies.filter(d => d.kind === "boss").length;
+      const hasBossContext = bossTotalInPhase > 0 || occupied.some(e => e.isBoss);
+      const wingSlots = this._bossWingSlots();
+      const normalSlots = Array.from({ length: 6 }, (_, index) => this._enemySlotPos(index, 6));
+      const candidatePool = hasBossContext ? wingSlots : normalSlots;
+      let bossSpawnIdx = 0;
+
       for (const def of phase.enemies) {
-        const pos = positions.find(candidate => !occupied.some(enemy =>
-          Math.abs(enemy.homeX - candidate.x) < 12 && Math.abs(enemy.homeY - candidate.y) < 18))
-          ?? this._enemySlotPos(occupied.length % 6, 6);
+        let pos;
+        if (def.kind === "boss") {
+          pos = this._bossThronePos(bossSpawnIdx++, bossTotalInPhase);
+        } else {
+          pos = candidatePool.find(candidate => !occupied.some(enemy =>
+            Math.abs(enemy.homeX - candidate.x) < 14 && Math.abs(enemy.homeY - candidate.y) < 18))
+            ?? candidatePool[occupied.length % candidatePool.length];
+        }
         const enemy = this._createEnemy(def, pos, "enemy-" + this.nextEnemyId++, isReinforcement);
         this.enemies.push(enemy);
         occupied.push(enemy);
@@ -331,7 +384,7 @@
         if (enemy.isBoss) {
           this.shake = Math.max(this.shake, 11);
           this.rings.push({ x: pos.x, y: pos.y, r: 18, maxR: 160, color: "#ff3b5c", life: 0.55 });
-          this._spawnText(this.w * 0.5, 62, `⚠️ 审判降临：${enemy.name}`, "#ff5964", 19);
+          this._spawnText(this.w * 0.5, Math.max(44, this.h * 0.16), `⚠️ 审判降临：${enemy.name}`, "#ff5964", 19);
         }
       }
       if (isReinforcement) {
@@ -772,8 +825,10 @@
           }
         }
         for (const u of actors) {
+          const padTop = u.isBoss ? Math.min(this.h * 0.45, 64) : minY;
+          const padBot = u.isBoss ? Math.max(this.h * 0.55, this.h - 66) : maxY;
           u.x = Math.max(minX, Math.min(maxX, u.x));
-          u.y = Math.max(minY, Math.min(maxY, u.y));
+          u.y = Math.max(padTop, Math.min(padBot, u.y));
         }
       }
     }
@@ -2139,7 +2194,7 @@
         ctx.textAlign = "center";
         const width = ctx.measureText(text).width + 24;
         const x = Math.min(this.w - width / 2 - 4, Math.max(width / 2 + 4, boss.x));
-        const y = Math.max(10, boss.y - 64);
+        const y = Math.max(10, boss.y - 82);
         ctx.beginPath();
         ctx.roundRect(x - width / 2, y, width, 23, 7);
         ctx.fillStyle = "#431d37";
@@ -2187,46 +2242,8 @@
         ctx.restore();
       }
 
-      // Dedicated Top-of-Arena Raid Boss Health Bar when a Boss is active!
-      const activeBoss = this.enemies.find(e => e.alive && e.isBoss);
-      if (activeBoss) {
-        const bw = Math.min(460, this.w - 80);
-        const bx = (this.w - bw) / 2;
-        const by = 12;
-        ctx.save();
-        ctx.fillStyle = "rgba(10, 8, 16, 0.86)";
-        ctx.strokeStyle = activeBoss.phaseTwo ? "#ff9ce5" : "#ff4d6d";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.roundRect(bx - 10, by - 4, bw + 20, 34, 8);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = "#ffe6a3";
-        ctx.font = '800 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-        ctx.textAlign = "left";
-        ctx.fillText(`☠️ ${activeBoss.name}${activeBoss.phaseTwo ? " · 狂暴 P2" : ""}`, bx, by + 10);
-
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#ffb3be";
-        ctx.font = '700 11.5px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-        ctx.fillText(`${Math.ceil(activeBoss.hp)} / ${activeBoss.maxHp}${activeBoss.shield > 0 ? ` (+${Math.ceil(activeBoss.shield)}盾)` : ""}`, bx + bw, by + 10);
-
-        // Bar track
-        ctx.fillStyle = "#1c121b";
-        ctx.fillRect(bx, by + 16, bw, 9);
-        const ratio = Math.max(0, activeBoss.hp / activeBoss.maxHp);
-        const bgGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
-        bgGrad.addColorStop(0, "#c9184a");
-        bgGrad.addColorStop(1, "#ff4d6d");
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(bx, by + 16, bw * ratio, 9);
-        if (activeBoss.shield > 0) {
-          ctx.fillStyle = "#6be5ff";
-          ctx.fillRect(bx, by + 13, bw * Math.min(1, activeBoss.shield / activeBoss.maxHp), 2.5);
-        }
-        ctx.restore();
-      }
+      // Sync dedicated external Pixel Raid Boss DOM HUD Bar (zero Canvas overlap!)
+      this._syncBossHud();
 
       // Result Banner
       if (this.resultBanner) {
@@ -2245,6 +2262,157 @@
       }
 
       ctx.restore();
+    }
+
+    _initBossHud() {
+      if (typeof document === "undefined") return;
+      const bar = document.getElementById("boss-hud-bar");
+      if (!bar) {
+        this.bossHud = null;
+        return;
+      }
+      const ico = document.getElementById("boss-hud-ico");
+      if (ico && globalThis.GameArt?.UI_ICONS?.boss) {
+        ico.innerHTML = globalThis.GameArt.UI_ICONS.boss;
+      }
+      this.bossHud = {
+        bar,
+        portrait: document.getElementById("boss-hud-portrait"),
+        name: document.getElementById("boss-hud-name"),
+        tag: document.getElementById("boss-hud-tag"),
+        hp: document.getElementById("boss-hud-hp"),
+        shieldTxt: document.getElementById("boss-hud-shield-txt"),
+        trail: document.getElementById("boss-hud-trail"),
+        fill: document.getElementById("boss-hud-fill"),
+        shieldBar: document.getElementById("boss-hud-shield"),
+        sig: ""
+      };
+    }
+
+    _syncBossHud() {
+      const hud = this.bossHud;
+      if (!hud) return;
+      const Art = globalThis.GameArt;
+
+      const livingBosses = this.enemies.filter(e => e.alive && e.isBoss);
+      const activeBoss = livingBosses[0] || null;
+      let upcomingBossDef = null;
+      if (!activeBoss && (this.mode === "fighting" || this.mode === "result") && Array.isArray(this.phases)) {
+        for (let i = this.phaseIndex; i < this.phases.length; i += 1) {
+          const found = this.phases[i]?.enemies?.find(d => d.kind === "boss");
+          if (found) {
+            upcomingBossDef = found;
+            break;
+          }
+        }
+      }
+      const slainBoss = (!activeBoss && !upcomingBossDef && (this.mode === "fighting" || this.mode === "result"))
+        ? this.enemies.find(e => e.isBoss)
+        : null;
+
+      if (!activeBoss && !upcomingBossDef && !slainBoss) {
+        if (hud.sig !== "hidden") {
+          hud.sig = "hidden";
+          hud.bar.hidden = true;
+          hud.bar.classList.remove("is-p2", "is-standby", "is-slain");
+        }
+        return;
+      }
+
+      const waveDef = this.run ? G.getWave(this.run) : null;
+      let artKey = "ch1_boss_warlord";
+      let displayName = "首领";
+      let hpVal = 0;
+      let maxHpVal = 1;
+      let shieldVal = 0;
+      let isP2 = false;
+      let isStandby = false;
+      let isSlain = false;
+      let tagText = "关底首领";
+      let tagCls = "boss-hud-tag";
+
+      if (activeBoss) {
+        artKey = Art ? Art.getEnemyArtKey(activeBoss) : (activeBoss.artKey || "ch1_boss_warlord");
+        displayName = (livingBosses.length === 1 && waveDef?.bossTitle && !waveDef.endless)
+          ? waveDef.bossTitle
+          : activeBoss.name;
+        hpVal = Math.max(0, Math.ceil(activeBoss.hp));
+        maxHpVal = Math.max(1, activeBoss.maxHp);
+        shieldVal = Math.max(0, Math.ceil(activeBoss.shield || 0));
+        isP2 = !!activeBoss.phaseTwo;
+        if (isP2) {
+          tagText = livingBosses.length > 1 ? `🔥 狂暴 P2 · 余${livingBosses.length}王` : "🔥 狂暴 P2";
+          tagCls = "boss-hud-tag p2";
+        } else if (livingBosses.length > 1) {
+          tagText = `双王降临 ×${livingBosses.length}`;
+          tagCls = "boss-hud-tag";
+        } else {
+          tagText = this.mode === "preview" ? "关底首领" : "⚔ 激战中";
+          tagCls = "boss-hud-tag";
+        }
+      } else if (upcomingBossDef) {
+        isStandby = true;
+        artKey = Art ? Art.getEnemyArtKey(upcomingBossDef) : (upcomingBossDef.artKey || "ch1_boss_warlord");
+        displayName = (waveDef?.bossTitle && !waveDef.endless) ? waveDef.bossTitle : upcomingBossDef.name;
+        maxHpVal = Math.max(1, upcomingBossDef.hp);
+        hpVal = maxHpVal;
+        shieldVal = Math.round(maxHpVal * 0.35);
+        tagText = "⏳ 末批压境";
+        tagCls = "boss-hud-tag standby";
+      } else if (slainBoss) {
+        isSlain = true;
+        artKey = Art ? Art.getEnemyArtKey(slainBoss) : (slainBoss.artKey || "ch1_boss_warlord");
+        displayName = (waveDef?.bossTitle && !waveDef.endless) ? waveDef.bossTitle : slainBoss.name;
+        maxHpVal = Math.max(1, slainBoss.maxHp);
+        hpVal = 0;
+        shieldVal = 0;
+        tagText = "✓ 已讨伐";
+        tagCls = "boss-hud-tag slain";
+      }
+
+      const sig = `${artKey}|${displayName}|${tagText}|${isP2 ? 1 : 0}|${isStandby ? 1 : 0}|${isSlain ? 1 : 0}|${hpVal}|${maxHpVal}|${shieldVal}`;
+      if (hud.sig === sig) return;
+      hud.sig = sig;
+
+      hud.bar.hidden = false;
+      hud.bar.classList.toggle("is-p2", isP2);
+      hud.bar.classList.toggle("is-standby", isStandby);
+      hud.bar.classList.toggle("is-slain", isSlain);
+
+      const spriteUrl = Art?.SPRITE_URLS?.[artKey];
+      if (hud.portrait && spriteUrl && hud.portrait.getAttribute("src") !== spriteUrl) {
+        hud.portrait.setAttribute("src", spriteUrl);
+        hud.portrait.setAttribute("alt", displayName);
+      }
+      if (hud.name) hud.name.textContent = displayName;
+      if (hud.tag) {
+        hud.tag.className = tagCls;
+        hud.tag.textContent = tagText;
+      }
+      if (hud.hp) hud.hp.textContent = `${hpVal} / ${maxHpVal}`;
+      if (hud.shieldTxt) {
+        if (shieldVal > 0) {
+          hud.shieldTxt.hidden = false;
+          hud.shieldTxt.textContent = `(+${shieldVal}盾)`;
+        } else {
+          hud.shieldTxt.hidden = true;
+          hud.shieldTxt.textContent = "";
+        }
+      }
+
+      const hpPct = Math.max(0, Math.min(100, (hpVal / maxHpVal) * 100));
+      if (hud.fill) hud.fill.style.width = `${hpPct.toFixed(2)}%`;
+      if (hud.trail) hud.trail.style.width = `${hpPct.toFixed(2)}%`;
+      if (hud.shieldBar) {
+        if (shieldVal > 0) {
+          const shPct = Math.max(0, Math.min(100, (shieldVal / maxHpVal) * 100));
+          hud.shieldBar.hidden = false;
+          hud.shieldBar.style.width = `${shPct.toFixed(2)}%`;
+        } else {
+          hud.shieldBar.hidden = true;
+          hud.shieldBar.style.width = "0%";
+        }
+      }
     }
 
     _loop(ts) {

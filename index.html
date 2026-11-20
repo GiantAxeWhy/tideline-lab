@@ -229,6 +229,32 @@
             </div>
           </div>
 
+          <!-- DEDICATED PIXEL RAID BOSS HUD BAR (OUTSIDE CANVAS — ZERO SPRITE OCCLUSION) -->
+          <div id="boss-hud-bar" class="boss-hud-bar" role="status" aria-label="首领生命值" hidden>
+            <div class="boss-hud-portrait" id="boss-hud-portrait-wrap">
+              <img id="boss-hud-portrait" class="boss-hud-sprite" src="assets/enemies/ch1/boss-warlord.svg" alt="" draggable="false">
+            </div>
+            <div class="boss-hud-main">
+              <div class="boss-hud-top">
+                <div class="boss-hud-title-group">
+                  <span class="boss-hud-skull" id="boss-hud-ico" aria-hidden="true"></span>
+                  <strong class="boss-hud-name" id="boss-hud-name">首领</strong>
+                  <span class="boss-hud-tag" id="boss-hud-tag">关底首领</span>
+                </div>
+                <div class="boss-hud-nums">
+                  <strong class="boss-hud-hp" id="boss-hud-hp">0 / 0</strong>
+                  <span class="boss-hud-shield-txt" id="boss-hud-shield-txt" hidden></span>
+                </div>
+              </div>
+              <div class="boss-hud-track" title="首领生命与护盾 · 50% 刻度触发二阶段狂暴觉醒">
+                <div class="boss-hud-trail" id="boss-hud-trail"></div>
+                <div class="boss-hud-fill" id="boss-hud-fill"></div>
+                <div class="boss-hud-shield" id="boss-hud-shield" hidden></div>
+                <span class="boss-hud-p2-tick" aria-hidden="true"></span>
+              </div>
+            </div>
+          </div>
+
           <div class="arena-stage">
             <canvas id="battle-canvas"></canvas>
           </div>
