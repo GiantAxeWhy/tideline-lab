@@ -245,11 +245,18 @@
       return shield;
     }
 
+    _getEnv() {
+      return G.getChapter(this.run)?.env || { healPenalty: 0, speedPenalty: 0, burnPct: 0, poison: false, shieldPierce: 0 };
+    }
+
     _heal(unit, amount) {
-      const healed = Math.min(unit.maxHp - unit.hp, Math.round(amount));
+      const env = unit.side === "ally" ? this._getEnv() : null;
+      const healMult = env ? Math.max(0.1, 1 - (env.healPenalty || 0)) : 1;
+      const healed = Math.min(unit.maxHp - unit.hp, Math.round(amount * healMult));
       if (healed <= 0) return;
       unit.hp += healed;
-      this._spawnText(unit.x, unit.y - 6, `+${healed}`, "#57e39c", 12);
+      const col = env && env.healPenalty > 0 ? "#8ad9b3" : "#57e39c";
+      this._spawnText(unit.x, unit.y - 6, `+${healed}`, col, 12);
     }
 
     _summonAlly(owner, summonKind) {
@@ -382,11 +389,16 @@
       const oldHp = target.hp;
       const oldShield = target.shield;
       if (oldShield > 0) {
-        const enemyPierce = (attacker?.side === "enemy" && attacker.definition?.shieldPierce) || 0;
+        const envPierce = (attacker?.side === "enemy" ? (this._getEnv().shieldPierce || 0) : 0);
+        const enemyPierce = ((attacker?.side === "enemy" && attacker.definition?.shieldPierce) || 0) + envPierce;
         const mult = (opts.shieldMultiplier ?? 1) * (1 + enemyPierce);
         const absorbed = Math.min(oldShield, Math.round(dmg * mult));
         target.shield -= absorbed;
         dmg = Math.max(0, Math.round(dmg - absorbed / mult));
+      }
+      // Chapter 2 Poison Miasma: enemy hits inflict 2.5s poison DoT
+      if (target.side === "ally" && attacker?.side === "enemy" && this._getEnv().poison) {
+        target.poisonTimer = 2.5;
       }
       target.hp = Math.max(0, target.hp - dmg);
       if (!target.hp && target.evolution === "undying" && !target.usedUndying) {
@@ -877,15 +889,37 @@
       this._updatePhaseProgress();
       this._updateArtillery(dt);
 
+      // Chapter Environmental Hazards (Lava Burn / Poison Miasma tick)
+      const env = this._getEnv();
+      if (env.burnPct > 0) {
+        this.burnTick = (this.burnTick || 0) + dt;
+        if (this.burnTick >= 3.0) {
+          this.burnTick -= 3.0;
+          this.allies.filter(a => a.alive && !a.summonKind).forEach(a => {
+            const bdmg = Math.max(4, Math.round(a.maxHp * env.burnPct));
+            this._applyDamage(null, a, bdmg, { color: "#ff7a38", isReflect: true });
+          });
+        }
+      }
+      if (env.poison) {
+        this.poisonTick = (this.poisonTick || 0) + dt;
+        if (this.poisonTick >= 1.0) {
+          this.poisonTick -= 1.0;
+          this.allies.filter(a => a.alive && a.poisonTimer > 0).forEach(a => {
+            a.poisonTimer = Math.max(0, a.poisonTimer - 1.0);
+            const pdmg = Math.max(3, Math.round(a.maxHp * 0.02));
+            this._applyDamage(null, a, pdmg, { color: "#42e89d", isReflect: true });
+          });
+        }
+      }
+
       // Priest synergy HoT
       if (this.synergies.priest) {
         this.healTick += dt;
         if (this.healTick >= 2.0) {
           this.healTick -= 2.0;
           this.allies.filter(a => a.alive).forEach(a => {
-            const h = Math.max(4, Math.round(a.maxHp * 0.04));
-            a.hp = Math.min(a.maxHp, a.hp + h);
-            this._spawnText(a.x, a.y - 8, `+${h}`, "#57e39c", 11);
+            this._heal(a, Math.max(4, Math.round(a.maxHp * 0.04)));
           });
         }
       }
@@ -923,7 +957,8 @@
           }
         }
 
-        let spdMult = songSpeed * (this.synergies.archer ? 1.18 : 1) * (u.slowTimer > 0 ? 0.65 : 1);
+        const envSpeedMult = 1 - (env.speedPenalty || 0);
+        let spdMult = envSpeedMult * songSpeed * (this.synergies.archer ? 1.18 : 1) * (u.slowTimer > 0 ? 0.65 : 1);
         if (u.type === "berserker") spdMult *= 1 + (1 - u.hp / u.maxHp) * .65;
         if (u.invulnerable > 0) spdMult *= 1.45;
         const bannerLv = G.coreLevel ? G.coreLevel(this.run, "berserk_banner") : (G.hasCore(this.run, "berserk_banner") ? 1 : 0);

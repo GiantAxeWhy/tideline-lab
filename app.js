@@ -169,15 +169,12 @@
     }).join("");
 
     const bossPill = $("boss-pill");
-    const threat = waveDef.threat;
+    const env = chapter.env;
     const threatBadge = $("enemy-threat");
-    threatBadge.hidden = !threat?.label;
-    if (threat?.label) {
-      const hp = Math.round((threat.hpMult - 1) * 100);
-      const atk = Math.round((threat.atkMult - 1) * 100);
-      const shield = Math.round(threat.shieldPierce * 100);
-      threatBadge.textContent = `敌军升阶 · ${threat.label} · 破盾 +${shield}%`;
-      threatBadge.title = `受出战英雄星级影响：敌军生命 +${hp}%，攻击 +${atk}%，对护盾伤害 +${shield}%`;
+    threatBadge.hidden = !env?.name;
+    if (env?.name) {
+      threatBadge.textContent = `${env.name} · 治疗-${Math.round(env.healPenalty * 100)}%`;
+      threatBadge.title = `章节环境效果【${env.name}】：${env.desc}`;
     }
     if (waveDef.boss) {
       bossPill.hidden = false;

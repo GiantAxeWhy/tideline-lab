@@ -664,6 +664,7 @@
     {
       id: 1, key: "ch1", name: "暮色古堡",
       mapAsset: "assets/maps/map-01-citadel.webp", themeColor: "#f5c869",
+      env: { name: "", healPenalty: 0, speedPenalty: 0, burnPct: 0, poison: false, shieldPierce: 0, desc: "" },
       bossId: "grom", bossName: "赤甲战神 · 格罗姆", crystalReward: 10,
       enemies: {
         raider: campaignEnemy("哥布林掠袭者", "melee", "ch1_goblin_raider", 105, 10, 1.15),
@@ -686,6 +687,7 @@
     {
       id: 2, key: "ch2", name: "幽冥地窟",
       mapAsset: "assets/maps/map-02-catacombs.svg", themeColor: "#38e8a8",
+      env: { name: "瘟疫毒雾", healPenalty: 0.35, speedPenalty: 0, burnPct: 0, poison: true, shieldPierce: 0, desc: "治疗/吸血 -35%，受击附带尸毒持续掉血" },
       bossId: "lich", bossName: "深渊巫妖 · 玛尔扎", crystalReward: 12,
       enemies: {
         ghoul: campaignEnemy("墓穴食尸鬼", "melee", "ch2_crypt_ghoul", 232, 18, 1.05),
@@ -709,6 +711,7 @@
     {
       id: 3, key: "ch3", name: "凛冬要塞",
       mapAsset: "assets/maps/map-03-frostpeak.svg", themeColor: "#6be5ff",
+      env: { name: "极寒冻伤", healPenalty: 0.25, speedPenalty: 0.12, burnPct: 0, poison: false, shieldPierce: 0, desc: "治疗/吸血 -25%，全军攻速 -12%" },
       bossId: "icequeen", bossName: "霜狱女皇 · 芙蕾雅", crystalReward: 14,
       enemies: {
         guard: campaignEnemy("霜甲卫兵", "tank", "ch3_frost_guard", 385, 25, 1.2),
@@ -731,6 +734,7 @@
     {
       id: 4, key: "ch4", name: "熔岩祭坛",
       mapAsset: "assets/maps/map-04-inferno.svg", themeColor: "#ff6d24",
+      env: { name: "地狱灼烧", healPenalty: 0.45, speedPenalty: 0, burnPct: 0.025, poison: false, shieldPierce: 0.12, desc: "重伤治疗 -45%，每 3 秒灼烧 2.5% 生命" },
       bossId: "balrog", bossName: "炎魔领主 · 卡扎克", crystalReward: 16,
       enemies: {
         imp: campaignEnemy("熔岩小鬼", "caster", "ch4_lava_imp", 310, 36, 1.1),
@@ -753,6 +757,7 @@
     {
       id: 5, key: "ch5", name: "星界神殿",
       mapAsset: "assets/maps/map-05-astral.svg", themeColor: "#c77dff",
+      env: { name: "虚空侵蚀", healPenalty: 0.50, speedPenalty: 0.08, burnPct: 0.02, poison: false, shieldPierce: 0.20, desc: "重伤治疗 -50%，敌军额外 +20% 破盾" },
       bossId: "dragon", bossName: "厄运魔龙 · 阿斯特拉", crystalReward: 20,
       enemies: {
         stalker: campaignEnemy("虚空潜行者", "assassin", "ch5_void_stalker", 463, 43, 0.91),
