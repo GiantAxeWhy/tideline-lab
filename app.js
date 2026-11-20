@@ -169,14 +169,24 @@
     }).join("");
 
     const bossPill = $("boss-pill");
+    const threat = waveDef.threat;
+    const threatBadge = $("enemy-threat");
+    threatBadge.hidden = !threat?.label;
+    if (threat?.label) {
+      const hp = Math.round((threat.hpMult - 1) * 100);
+      const atk = Math.round((threat.atkMult - 1) * 100);
+      const shield = Math.round(threat.shieldPierce * 100);
+      threatBadge.textContent = `敌军升阶 · ${threat.label} · 破盾 +${shield}%`;
+      threatBadge.title = `受出战英雄星级影响：敌军生命 +${hp}%，攻击 +${atk}%，对护盾伤害 +${shield}%`;
+    }
     if (waveDef.boss) {
       bossPill.hidden = false;
       bossPill.innerHTML = `${Art.UI_ICONS.boss}<span>${waveDef.bossTitle}</span>`;
       $("enemy-intel").textContent = waveDef.bossSkill;
     } else {
       bossPill.hidden = true;
-      const totalHp = waveDef.enemies.reduce((s, e) => s + e.hp, 0);
-      $("enemy-intel").textContent = `来袭 ${waveDef.enemies.length} 名敌军 · 总生命 ${totalHp} · 赏金 ${waveDef.reward} 金币`;
+      const totalHp = waveDef.phases.flatMap(p => p.enemies).reduce((s, e) => s + e.hp, 0);
+      $("enemy-intel").textContent = `来袭 ${waveDef.phases.length} 批敌军 · 总生命 ${totalHp} · 赏金 ${waveDef.reward} 金币`;
     }
 
     $("enemy-warning").hidden = !waveDef.enemies.some(enemy => enemy.tactic === "backline_diver");

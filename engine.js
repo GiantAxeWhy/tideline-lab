@@ -817,9 +817,59 @@
     return run;
   }
 
+  const THREAT_TIERS = ["", "", "精锐", "统领", "霸主", "梦魇"];
+
+  function getEnemyThreatScale(run, chapter = run?.chapter ?? 1) {
+    let maxStar = 1;
+    let promoted = 0;
+    for (const unit of run?.field ?? []) {
+      if (!unit) continue;
+      const stars = unitLevel(unit);
+      maxStar = Math.max(maxStar, stars);
+      if (stars >= 2) promoted += 1;
+    }
+    if (!promoted) {
+      return { maxStar, hpMult: 1, atkMult: 1, shieldPierce: 0, label: "" };
+    }
+
+    // The first promotion modestly raises enemy stats. Stacked promotions
+    // mainly increase damage against shields, with bounded gains for large teams.
+    const additionalUnits = Math.min(3, promoted - 1);
+    const additionalStars = maxStar - 2;
+    const weight = chapter === 1 && run.mode !== "endless" ? 1 : 0.5;
+    return {
+      maxStar,
+      hpMult: 1 + weight * (0.30 + additionalUnits * 0.18 + additionalStars * 0.04),
+      atkMult: 1 + weight * (0.14 + additionalUnits * 0.10 + additionalStars * 0.05),
+      shieldPierce: weight * (0.55 + additionalUnits * 0.38 + additionalStars * 0.12),
+      label: THREAT_TIERS[maxStar]
+    };
+  }
+
+  function applyThreatToWave(wave, run) {
+    const threat = getEnemyThreatScale(run, wave.chapter);
+    if (threat.maxStar < 2) return { ...wave, threat };
+    const scaleE = e => ({
+      ...e,
+      name: e.kind === "boss" ? e.name : `${threat.label}·${e.name}`,
+      lv: (e.lv || 1) + (threat.maxStar - 1),
+      hp: Math.round(e.hp * threat.hpMult),
+      atk: Math.round(e.atk * threat.atkMult),
+      shieldPierce: threat.shieldPierce
+    });
+    return {
+      ...wave,
+      threat,
+      enemies: wave.enemies.map(scaleE),
+      phases: wave.phases.map(p => ({ ...p, enemies: p.enemies.map(scaleE) }))
+    };
+  }
+
   function getWave(run) {
-    if (run?.mode === "endless") return getEndlessWave(run);
-    return WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0];
+    const base = run?.mode === "endless"
+      ? getEndlessWave(run)
+      : (WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0]);
+    return run ? applyThreatToWave(base, run) : base;
   }
 
   function getChapter(run) {
@@ -1991,6 +2041,7 @@
     CHAPTERS,
     WAVES,
     getWave,
+    getEnemyThreatScale,
     getChapter,
     FIELD_SLOTS,
     BENCH_SLOTS,

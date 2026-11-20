@@ -368,7 +368,8 @@
       const oldHp = target.hp;
       const oldShield = target.shield;
       if (oldShield > 0) {
-        const mult = opts.shieldMultiplier ?? 1;
+        const enemyPierce = (attacker?.side === "enemy" && attacker.definition?.shieldPierce) || 0;
+        const mult = (opts.shieldMultiplier ?? 1) * (1 + enemyPierce);
         const absorbed = Math.min(oldShield, Math.round(dmg * mult));
         target.shield -= absorbed;
         dmg = Math.max(0, Math.round(dmg - absorbed / mult));
@@ -661,6 +662,7 @@
           const minion = this._createEnemy({
             name: inferno ? "熔岩小鬼" : "召唤食尸鬼", kind: "melee",
             artKey: inferno ? "ch4_lava_imp" : "ch2_crypt_ghoul",
+            lv: enemy.lv, shieldPierce: enemy.definition.shieldPierce,
             hp: Math.round(enemy.maxHp * .16), atk: Math.round(enemy.atk * .42), cd: 1.25
           }, pos, "enemy-" + this.nextEnemyId++);
           minion.ownerId = enemy.uid;
