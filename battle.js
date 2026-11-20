@@ -28,14 +28,119 @@
       this.healTick = 0;
       this.run = null;
       this.onFinish = null;
+      this.onUnitSelect = null;
+      this.onUnitMove = null;
+      this.selectedUnitId = null;
+      this.draggingAlly = null;
+      this.hoverAlly = null;
+      this.dragOffset = { x: 0, y: 0 };
       this.resultBanner = null;
       this._raf = null;
       this._lastTs = 0;
 
       this.resize();
+      this._bindPointerEvents();
       window.addEventListener("resize", () => this.resize());
       this._loop = this._loop.bind(this);
       this._raf = requestAnimationFrame(this._loop);
+    }
+
+    setSelectedUnit(unitId) {
+      this.selectedUnitId = unitId ?? null;
+    }
+
+    _canvasScale() {
+      return Math.max(0.68, Math.min(1.15, (this.w || 620) / 620));
+    }
+
+    _pointerPos(ev) {
+      const rect = this.canvas.getBoundingClientRect();
+      return {
+        x: (ev.clientX - rect.left) * (this.w / Math.max(1, rect.width)),
+        y: (ev.clientY - rect.top) * (this.h / Math.max(1, rect.height))
+      };
+    }
+
+    _hitTestAlly(px, py) {
+      let best = null;
+      let bestDist = Infinity;
+      for (const a of this.allies) {
+        if (!a.alive || a.summonKind) continue;
+        const d = Math.hypot(a.x - px, a.y - py);
+        if (d <= (a.radius || 20) + 16 && d < bestDist) {
+          best = a;
+          bestDist = d;
+        }
+      }
+      return best;
+    }
+
+    _bindPointerEvents() {
+      this.canvas.addEventListener("pointerdown", ev => {
+        if (this.mode !== "preview" || !this.run) return;
+        const p = this._pointerPos(ev);
+        const hit = this._hitTestAlly(p.x, p.y);
+        if (!hit) return;
+        this.draggingAlly = hit;
+        this.selectedUnitId = hit.uid;
+        this.dragOffset = { x: hit.x - p.x, y: hit.y - p.y };
+        this.canvas.setPointerCapture?.(ev.pointerId);
+        this.canvas.style.cursor = "grabbing";
+        if (this.onUnitSelect) this.onUnitSelect(hit.uid);
+      });
+
+      this.canvas.addEventListener("pointermove", ev => {
+        if (this.mode !== "preview") return;
+        const p = this._pointerPos(ev);
+        if (this.draggingAlly) {
+          const minX = this.w * 0.06;
+          const maxX = this.w * 0.46;
+          const minY = this.h * 0.15;
+          const maxY = this.h * 0.87;
+          const nx = Math.max(minX, Math.min(maxX, p.x + this.dragOffset.x));
+          const ny = Math.max(minY, Math.min(maxY, p.y + this.dragOffset.y));
+          this.draggingAlly.x = nx;
+          this.draggingAlly.y = ny;
+          this.draggingAlly.homeX = nx;
+          this.draggingAlly.homeY = ny;
+          // Gently push apart other preview allies so units never stack on the exact same pixel
+          for (const other of this.allies) {
+            if (other === this.draggingAlly || !other.alive) continue;
+            const dx = other.x - this.draggingAlly.x;
+            const dy = other.y - this.draggingAlly.y;
+            const dist = Math.hypot(dx, dy) || 0.01;
+            const minSep = (other.radius || 18) + (this.draggingAlly.radius || 18) + 4;
+            if (dist < minSep) {
+              const push = (minSep - dist) * 0.7;
+              other.x = Math.max(minX, Math.min(maxX, other.x + (dx / dist) * push));
+              other.y = Math.max(minY, Math.min(maxY, other.y + (dy / dist) * push));
+              other.homeX = other.x;
+              other.homeY = other.y;
+            }
+          }
+        } else {
+          const hit = this._hitTestAlly(p.x, p.y);
+          this.hoverAlly = hit;
+          this.canvas.style.cursor = hit ? "grab" : "default";
+        }
+      });
+
+      const finishDrag = ev => {
+        if (!this.draggingAlly) return;
+        const moved = this.draggingAlly;
+        this.draggingAlly = null;
+        this.canvas.style.cursor = "grab";
+        try { this.canvas.releasePointerCapture?.(ev.pointerId); } catch {}
+        if (this.run) {
+          for (const a of this.allies) {
+            if (!a.summonKind) G.setUnitPos(this.run, a.uid, a.x / this.w, a.y / this.h);
+          }
+          if (this.onUnitMove) this.onUnitMove(moved.uid);
+        }
+      };
+
+      this.canvas.addEventListener("pointerup", finishDrag);
+      this.canvas.addEventListener("pointercancel", finishDrag);
     }
 
     resize() {
@@ -55,13 +160,12 @@
       this.speed = mult;
     }
 
-    _allySlotPos(slotIdx) {
-      // 0,1,2 front col (closer to center); 3,4,5 back col
-      const isFront = slotIdx < 3;
-      const row = slotIdx % 3;
-      const x = isFront ? this.w * 0.40 : this.w * 0.24;
-      const y = this.h * (0.24 + row * 0.26);
-      return { x, y };
+    _allyUnitPos(u) {
+      const p = u.pos || G.defaultUnitPos(this.run, u, u.id);
+      return {
+        x: Math.max(this.w * 0.06, Math.min(this.w * 0.46, p.x * this.w)),
+        y: Math.max(this.h * 0.15, Math.min(this.h * 0.87, p.y * this.h))
+      };
     }
 
     _enemySlotPos(idx, total) {
@@ -69,10 +173,10 @@
       const col = idx < Math.ceil(total / cols) ? 0 : 1;
       const perCol = col === 0 ? Math.ceil(total / cols) : total - Math.ceil(total / cols);
       const rowIdx = col === 0 ? idx : idx - Math.ceil(total / cols);
-      const x = cols === 1 ? this.w * 0.60 : (col === 0 ? this.w * 0.56 : this.w * 0.68);
+      const x = cols === 1 ? this.w * 0.72 : (col === 0 ? this.w * 0.66 : this.w * 0.80);
       const y = perCol === 1
         ? this.h * 0.5
-        : this.h * (0.22 + (rowIdx / Math.max(1, perCol - 1)) * 0.56);
+        : this.h * (0.20 + (rowIdx / Math.max(1, perCol - 1)) * 0.60);
       return { x, y };
     }
 
@@ -90,18 +194,20 @@
       const syns = G.getActiveSynergies(run);
       const knightSyn = syns.find(s => s.type === "knight")?.active;
       this.factions = Object.fromEntries(G.getFactionSynergies(run).map(f => [f.id, f.tier]));
+      const scale = this._canvasScale();
 
       this.allies = [];
       run.field.forEach((u, idx) => {
         if (!u) return;
-        const pos = this._allySlotPos(idx);
+        const pos = this._allyUnitPos(u);
         const st = G.getUnitStats(u, run);
+        const inFrontZone = pos.x >= this.w * 0.28;
         let shield = u.type === "knight" ? 18 : 0;
         if (u.trait === "iron_skin") shield += 25;
         if (knightSyn) shield += 22;
-        if (idx < 3 && G.hasCore(run, "vanguard_oath")) shield += 24;
+        if (inFrontZone && G.hasCore(run, "vanguard_oath")) shield += 24;
         if (u.evolution === "fortress") shield += Math.round(st.hp * 0.28);
-      if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
+        if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
 
         this.allies.push({
           uid: u.id,
@@ -124,7 +230,12 @@
           atk: st.atk,
           crit: st.crit,
           atkCd: st.atkCd,
-          cdTimer: st.atkCd * (0.3 + Math.random() * 0.4),
+          moveSpd: (st.moveSpd || 100) * scale,
+          range: (st.range || 55) * scale,
+          rawMoveSpd: st.moveSpd || 100,
+          rawRange: st.range || 55,
+          mass: u.type === "knight" || u.type === "berserker" ? 2.4 : 1.0,
+          cdTimer: st.atkCd * (0.25 + Math.random() * 0.35),
           atkCount: 0,
           fortressTimer: 4.0,
           lunge: 0,
@@ -137,7 +248,7 @@
           soulStacks: 0,
           atkBuff: 1,
           alive: true,
-          radius: st.level >= 3 ? 23 : st.level === 2 ? 20 : 18
+          radius: st.level >= 3 ? 21 : st.level === 2 ? 19 : 17
         });
       });
 
@@ -148,19 +259,25 @@
 
     _createEnemy(def, pos, uid, isReinforcement = false) {
       const isBoss = def.kind === "boss";
+      const scale = this._canvasScale();
+      const baseMove = def.moveSpd || (isBoss ? 78 : def.kind === "assassin" ? 158 : def.kind === "tank" ? 82 : 108);
+      const baseRange = def.range || (isBoss ? 76 : (def.kind === "ranged" || def.kind === "caster") ? 250 : 52);
       return {
         uid, side: "enemy", kind: def.kind, artKey: def.artKey, tactic: def.tactic,
         definition: def, bossId: def.bossId, name: def.name, lv: def.lv,
         color: G.getChapter(this.run).themeColor,
-        x: isReinforcement ? Math.min(this.w - 28, pos.x + 110) : pos.x, y: pos.y, homeX: pos.x, homeY: pos.y,
+        x: isReinforcement ? Math.min(this.w - 24, pos.x + 95) : pos.x, y: pos.y, homeX: pos.x, homeY: pos.y,
         hp: def.hp, maxHp: def.hp, shield: isBoss ? Math.round(def.hp * .22) : 0,
         atk: def.atk, crit: isBoss ? .15 : .08, atkCd: def.cd,
-        cdTimer: def.cd * (.45 + Math.random() * .4),
+        moveSpd: baseMove * scale,
+        range: baseRange * scale,
+        mass: isBoss ? 4.5 : def.kind === "tank" ? 2.5 : 1.0,
+        cdTimer: def.cd * (.35 + Math.random() * .35),
         skillInterval: def.skillInterval, skillTimer: def.skillInterval,
         tacticTimer: 0, enrage: 1, lunge: 0, hitFlash: 0, slowTimer: 0,
         stunTimer: 0, spawnGrace: isReinforcement ? 0.22 : 0,
         alive: true, isBoss,
-        radius: isBoss ? 29 : def.kind === "tank" ? 21 : 17
+        radius: isBoss ? 27 : def.kind === "tank" ? 20 : 16
       };
     }
 
@@ -270,8 +387,9 @@
         (faction >= 3 ? 1.9 : faction >= 2 ? 1.55 : 1));
       const atk = Math.round(owner.atk * (turret ? .55 : .35) *
         (faction >= 3 ? 1.9 : faction >= 2 ? 1.55 : 1));
-      const x = turret ? this.w * .27 : this.w * .39;
-      const y = Math.max(35, Math.min(this.h - 55, owner.homeY + (existing.length - 1) * 29));
+      const scale = this._canvasScale();
+      const x = turret ? Math.min(this.w * 0.45, owner.x + 28) : Math.min(this.w * 0.48, owner.x + 48);
+      const y = Math.max(35, Math.min(this.h - 55, owner.y + (existing.length - 1) * 28));
       this.allies.push({
         uid: "ally-summon-" + this.nextSummonId++, ownerId: owner.uid, side: "ally", summonKind,
         type: summonKind, artKey: turret ? "turret" : "enemy_tank", slotIdx: turret ? 3 : 0,
@@ -279,6 +397,10 @@
         evolution: turret ? owner.evolution : null, taunt: !turret && armored,
         x, y, homeX: x, homeY: y, hp, maxHp: hp, atk, shield: 0,
         level: 1, crit: .08, atkBuff: 1, atkCount: 0, atkCd: swarm ? .46 : turret ? .95 : 1.2,
+        moveSpd: turret ? 0 : 108 * scale,
+        range: (turret ? 255 : 48) * scale,
+        mass: turret ? 4.0 : armored ? 2.2 : 1.0,
+        radius: turret ? 16 : 15,
         cdTimer: .25, slowTimer: 0, stunTimer: 0, invulnerable: 0, hitFlash: 0,
         lunge: 0, alive: true, color: turret ? "#f2ba70" : "#8ce5aa"
       });
@@ -452,31 +574,82 @@
       return dealt;
     }
 
+    _isFrontZone(unit) {
+      return unit.x >= this.w * 0.28;
+    }
+
     _pickTarget(actor, foes) {
       const living = foes.filter(f => f.alive && !(f.spawnGrace > 0));
       if (living.length === 0) return null;
 
       if (actor.tactic === "backline_diver" && actor.dived) {
-        const rear = living.filter(unit => unit.slotIdx >= 3);
+        const rear = living.filter(unit => !this._isFrontZone(unit));
         return rear.find(unit => unit.type === "knight" || unit.taunt)
           ?? [...(rear.length ? rear : living)].sort((a, b) => a.hp - b.hp)[0];
       }
 
-      // Allied assassins target the opposing backline.
+      // Allied assassins dive the furthest opposing backline target!
       if (actor.type === "assassin") {
-        return [...living].sort((a, b) => (b.homeX - a.homeX) * (actor.side === "ally" ? 1 : -1) || a.hp - b.hp)[0];
+        return [...living].sort((a, b) => (b.x - a.x) * (actor.side === "ally" ? 1 : -1) || a.hp - b.hp)[0];
       }
 
-      // Prefer frontliners / tanks
+      // Distance-based targeting with tank/taunt body-blocking priority!
+      const distSq = (a, b) => {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        return dx * dx + dy * dy;
+      };
       if (actor.side === "enemy") {
-        const front = living.filter(u => u.slotIdx < 3);
-        const pool = front.length ? front : living;
-        // Prefer thorns/knight taunt
-        const taunt = pool.find(u => u.taunt) || pool.find(u => u.type === "knight");
-        return taunt || pool[0];
+        // Prefer closest ally; taunt/knight frontliners pull aggro within a generous radius
+        const sorted = [...living].sort((a, b) => {
+          const da = Math.hypot(a.x - actor.x, a.y - actor.y) - (a.taunt ? 75 : a.type === "knight" ? 38 : 0);
+          const db = Math.hypot(b.x - actor.x, b.y - actor.y) - (b.taunt ? 75 : b.type === "knight" ? 38 : 0);
+          return da - db;
+        });
+        return sorted[0];
       } else {
-        // Allies target nearest / frontmost enemy
-        return [...living].sort((a, b) => a.homeX - b.homeX)[0];
+        // Allies target the nearest living enemy in 2D space
+        return [...living].sort((a, b) => distSq(a, actor) - distSq(b, actor))[0];
+      }
+    }
+
+    _resolveCollisions() {
+      const actors = [...this.allies, ...this.enemies].filter(u => u.alive && !(u.spawnGrace > 0));
+      const minX = 24;
+      const maxX = this.w - 24;
+      const minY = 34;
+      const maxY = this.h - 32;
+      for (let iter = 0; iter < 2; iter += 1) {
+        for (let i = 0; i < actors.length; i += 1) {
+          const a = actors[i];
+          const ra = a.radius || 17;
+          const ma = a.mass || 1;
+          for (let j = i + 1; j < actors.length; j += 1) {
+            const b = actors[j];
+            const rb = b.radius || 17;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const minDist = ra + rb;
+            const d2 = dx * dx + dy * dy;
+            if (d2 >= minDist * minDist) continue;
+            const dist = Math.sqrt(d2) || 0.01;
+            const overlap = (minDist - dist) * 0.55;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const mb = b.mass || 1;
+            const invA = a.moveSpd === 0 ? 0 : 1 / ma;
+            const invB = b.moveSpd === 0 ? 0 : 1 / mb;
+            const invSum = invA + invB || 1;
+            a.x -= nx * overlap * (invA / invSum);
+            a.y -= ny * overlap * (invA / invSum);
+            b.x += nx * overlap * (invB / invSum);
+            b.y += ny * overlap * (invB / invSum);
+          }
+        }
+        for (const u of actors) {
+          u.x = Math.max(minX, Math.min(maxX, u.x));
+          u.y = Math.max(minY, Math.min(maxY, u.y));
+        }
       }
     }
 
@@ -653,7 +826,7 @@
       const dmg = e.atk * e.enrage * (isCrit ? 1.5 : 1);
 
       if (e.tactic === "shield_breaker") {
-        if (target.slotIdx < 3) target.stunTimer = Math.max(target.stunTimer, 1);
+        if (this._isFrontZone(target)) target.stunTimer = Math.max(target.stunTimer, 1);
         this._applyDamage(e, target, dmg, { isCrit, shieldMultiplier: 2 });
       } else if (e.kind === "ranged" || e.kind === "caster") {
         this.projectiles.push({
@@ -767,7 +940,7 @@
         // Ch3 Exam: Backline Protection (snipes & freezes rear-row carries + chills whole team!)
         this.rings.push({ x: boss.x, y: boss.y, r: 18, maxR: 305, color: "#6be5ff", life: 0.55 });
         this._spawnText(boss.x, boss.y - 24, "极寒穿刺 · 冻结后排!", "#6be5ff", 16);
-        const rear = livingAllies.filter(ally => ally.slotIdx >= 3);
+        const rear = livingAllies.filter(ally => !this._isFrontZone(ally));
         const snipeTarget = rear.length
           ? rear[Math.floor(Math.random() * rear.length)]
           : livingAllies[0];
@@ -784,7 +957,7 @@
         });
       } else if (boss.bossId === "balrog") {
         // Ch4 Exam: Frontline Tankiness (massive shield-breaking smash on frontline; wipes backline if frontline falls!)
-        const front = livingAllies.filter(ally => ally.slotIdx < 3);
+        const front = livingAllies.filter(ally => this._isFrontZone(ally));
         const targets = front.length ? front : livingAllies;
         this._spawnText(boss.x, boss.y - 24, front.length ? "熔岩断层 · 破盾重击!" : "防线崩塌 · 灭世火浪!", "#ff8b3d", 16);
         targets.forEach(ally => {
@@ -965,14 +1138,35 @@
         if (bannerLv > 0 && u.hp / u.maxHp < 0.55) {
           spdMult *= 1 + 0.45 + (bannerLv - 1) * 0.22;
         }
-        u.cdTimer -= dt * spdMult;
-        if (u.cdTimer <= 0) {
-          if (this.enemies.some(enemy => enemy.alive && (enemy.spawnGrace || 0) <= 0)) {
+
+        // Move toward target if outside attack range!
+        const target = this._pickTarget(u, this.enemies);
+        let inRange = false;
+        if (target) {
+          const dx = target.x - u.x;
+          const dy = target.y - u.y;
+          const dist = Math.hypot(dx, dy);
+          const reach = (u.range || 55) + (target.radius || 17);
+          if (dist <= reach) {
+            inRange = true;
+          } else if (u.moveSpd > 0) {
+            const step = Math.min(dist - reach + 4, u.moveSpd * (u.slowTimer > 0 ? 0.65 : 1) * dt);
+            if (step > 0 && dist > 0.01) {
+              u.x += (dx / dist) * step;
+              u.y += (dy / dist) * step;
+            }
+          }
+        }
+
+        if (inRange) {
+          u.cdTimer -= dt * spdMult;
+          if (u.cdTimer <= 0) {
             u.cdTimer = u.atkCd;
             this._performAllyAttack(u);
-          } else {
-            u.cdTimer = 0.14 + Math.random() * 0.18;
           }
+        } else {
+          // Keep attack ready slightly buffered while marching so first strike feels snappy on contact
+          u.cdTimer = Math.max(0.08, u.cdTimer - dt * spdMult * 0.5);
         }
       }
 
@@ -998,29 +1192,24 @@
 
         this._enemyTactic(e, dt);
 
-        // Melee enemies physically march/charge to the frontline defender before swinging!
-        const isMelee = e.kind !== "ranged" && e.kind !== "caster";
-        let inRange = true;
-        if (isMelee) {
-          const target = this._pickTarget(e, this.allies);
-          if (target) {
-            const standDist = e.isBoss ? 58 : 44;
-            const laneOffset = ((parseInt(String(e.uid).replace(/\D/g, ""), 10) || 0) % 3 - 1) * 14;
-            const engageX = Math.min(this.w - 40, target.x + standDist);
-            const engageY = Math.max(36, Math.min(this.h - 44, target.y + laneOffset));
-            const dx = engageX - e.x;
-            const dy = engageY - e.y;
-            const dist = Math.hypot(dx, dy);
-            if (dist > 18) {
-              inRange = false;
-              const moveSpd = (e.isBoss ? 420 : e.kind === "assassin" ? 680 : 540) * (e.slowTimer > 0 ? 0.65 : 1);
-              const step = Math.min(dist, moveSpd * dt);
+        // Every enemy uses explicit Move Speed + Attack Range to engage its target!
+        const target = this._pickTarget(e, this.allies);
+        let inRange = false;
+        if (target) {
+          const dx = target.x - e.x;
+          const dy = target.y - e.y;
+          const dist = Math.hypot(dx, dy);
+          const reach = (e.range || 52) + (target.radius || 17);
+          if (dist <= reach) {
+            inRange = true;
+          } else {
+            const moveSpd = (e.moveSpd || 100) * (e.slowTimer > 0 ? 0.65 : 1) * e.enrage;
+            const step = Math.min(dist - reach + 4, moveSpd * dt);
+            if (step > 0 && dist > 0.01) {
               e.x += (dx / dist) * step;
               e.y += (dy / dist) * step;
             }
           }
-        } else {
-          e.x += (e.homeX - e.x) * Math.min(1, dt * 4);
         }
 
         const affixSpeed = this.run.endlessAffixes?.includes("blood_tide") ? 1.25 : 1;
@@ -1031,6 +1220,8 @@
             e.cdTimer = e.atkCd;
             this._performEnemyAttack(e);
           }
+        } else {
+          e.cdTimer = Math.max(0.08, e.cdTimer - dt * spdMult * 0.5);
         }
         if (e.isBoss) {
           e.skillTimer -= dt;
@@ -1040,6 +1231,9 @@
           }
         }
       }
+
+      // 2D Circle-Separation Collision Physics (real melee body-blocking & concave surrounds!)
+      this._resolveCollisions();
 
       // Check win / loss
       const alliesAlive = this.allies.some(a => a.alive);
@@ -1305,27 +1499,60 @@
 
       this._drawChapterAmbience(chapter);
 
-      // Subtle golden rune rings on stone floor for ally formation
+      // Freeform left-half deployment zone & Attack Range preview in preview mode!
       if (this.mode === "preview") {
-        for (let i = 0; i < 6; i += 1) {
-          const pos = this._allySlotPos(i);
-          ctx.strokeStyle = i < 3 ? "rgba(79, 209, 165, 0.28)" : "rgba(92, 200, 255, 0.24)";
-          ctx.lineWidth = 1.4;
+        const splitX = this.w * 0.48;
+        ctx.save();
+        // Soft tinted left-half deployment zone
+        const zoneGrad = ctx.createLinearGradient(0, 0, splitX, 0);
+        zoneGrad.addColorStop(0, "rgba(79, 209, 165, 0.04)");
+        zoneGrad.addColorStop(1, "rgba(92, 200, 255, 0.11)");
+        ctx.fillStyle = zoneGrad;
+        ctx.fillRect(this.w * 0.04, 24, splitX - this.w * 0.04, this.h - 36);
+
+        // Dashed center deployment boundary line
+        ctx.strokeStyle = this.draggingAlly ? "rgba(255, 216, 107, 0.85)" : "rgba(107, 229, 255, 0.42)";
+        ctx.lineWidth = this.draggingAlly ? 2.4 : 1.6;
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath();
+        ctx.moveTo(splitX, 24);
+        ctx.lineTo(splitX, this.h - 14);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw Attack Range preview ring for active (dragged / hovered / selected) ally
+        const focusAlly = this.draggingAlly
+          || this.hoverAlly
+          || this.allies.find(a => a.alive && a.uid === this.selectedUnitId);
+        if (focusAlly) {
+          ctx.fillStyle = "rgba(92, 200, 255, 0.09)";
+          ctx.strokeStyle = "rgba(123, 231, 255, 0.65)";
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([5, 5]);
           ctx.beginPath();
-          ctx.ellipse(pos.x, pos.y + 24, 26, 10, 0, 0, Math.PI * 2);
+          ctx.arc(focusAlly.x, focusAlly.y, focusAlly.range || 60, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Selection ring under feet
+          ctx.strokeStyle = "#ffd86b";
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.ellipse(focusAlly.x, focusAlly.y + 22, 24, 9, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
-        ctx.fillStyle = "rgba(235, 224, 196, 0.58)";
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.75)";
-        ctx.lineWidth = 2.5;
+
+        ctx.fillStyle = "rgba(235, 240, 255, 0.72)";
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.82)";
+        ctx.lineWidth = 2.8;
         ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = "center";
-        ctx.strokeText("后排", this.w * 0.24, 20);
-        ctx.fillText("后排", this.w * 0.24, 20);
-        ctx.strokeText("前排", this.w * 0.40, 20);
-        ctx.fillText("前排", this.w * 0.40, 20);
-        ctx.strokeText("来袭敌军", this.w * 0.62, 20);
-        ctx.fillText("来袭敌军", this.w * 0.62, 20);
+        ctx.strokeText("自由布阵区（拖拽英雄任意摆位）", splitX * 0.5, 17);
+        ctx.fillText("自由布阵区（拖拽英雄任意摆位）", splitX * 0.5, 17);
+        ctx.strokeText("敌军来袭区", splitX + (this.w - splitX) * 0.5, 17);
+        ctx.fillText("敌军来袭区", splitX + (this.w - splitX) * 0.5, 17);
+        ctx.restore();
       }
 
       // Rings (AoE)

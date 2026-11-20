@@ -18,7 +18,8 @@
       hp: 155,
       atk: 14,
       atkCd: 1.15,
-      range: 1,
+      moveSpd: 92,
+      range: 52,
       crit: 0.08,
       skillDesc: "前排承伤，开局自带 25 点护盾。",
       evolutions: {
@@ -52,7 +53,8 @@
       hp: 92,
       atk: 21,
       atkCd: 0.85,
-      range: 4,
+      moveSpd: 108,
+      range: 310,
       crit: 0.16,
       skillDesc: "高速远程射击，精准打击敌方前排。",
       evolutions: {
@@ -86,7 +88,8 @@
       hp: 86,
       atk: 20,
       atkCd: 1.25,
-      range: 4,
+      moveSpd: 98,
+      range: 270,
       crit: 0.12,
       skillDesc: "释放连锁闪电，主目标受全额伤害并弹射 1 名敌人。",
       evolutions: {
@@ -120,7 +123,8 @@
       hp: 100,
       atk: 13,
       atkCd: 1.3,
-      range: 4,
+      moveSpd: 96,
+      range: 255,
       crit: 0.1,
       skillDesc: "发射圣光箭，同时治疗血量比例最低的友军。",
       evolutions: {
@@ -154,7 +158,8 @@
       hp: 96,
       atk: 26,
       atkCd: 0.9,
-      range: 1.3,
+      moveSpd: 165,
+      range: 54,
       crit: 0.28,
       skillDesc: "高暴击近战，优先切入敌方脆弱的后排目标。",
       evolutions: {
@@ -179,7 +184,7 @@
     berserker: {
       id: "berserker", kind: "unit", name: "狂战斧手", short: "狂战",
       role: "前排 · 吸血", color: "#ff806a", bg: "#46272b", baseWeight: 12,
-      hp: 145, atk: 23, atkCd: 1.05, range: 1.5, crit: 0.12,
+      hp: 145, atk: 23, atkCd: 1.05, moveSpd: 125, range: 58, crit: 0.12,
       skillDesc: "生命越低攻速越高，普攻恢复造成伤害的 20%。",
       evolutions: {
         bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血",
@@ -191,7 +196,7 @@
     engineer: {
       id: "engineer", kind: "unit", name: "矮人炮手", short: "炮手",
       role: "后排 · 炮台", color: "#f2ba70", bg: "#3d2c16", baseWeight: 11,
-      hp: 103, atk: 19, atkCd: 1.15, range: 4, crit: 0.11,
+      hp: 103, atk: 19, atkCd: 1.15, moveSpd: 94, range: 240, crit: 0.11,
       skillDesc: "开战时和此后每 5 秒布置一座蒸汽炮台。",
       evolutions: {
         heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围眩晕",
@@ -203,7 +208,7 @@
     necromancer: {
       id: "necromancer", kind: "unit", name: "亡灵唤师", short: "唤师",
       role: "后排 · 亡灵", color: "#8ce5aa", bg: "#193c34", baseWeight: 10,
-      hp: 102, atk: 23, atkCd: 1.25, range: 4, crit: 0.12,
+      hp: 102, atk: 23, atkCd: 1.25, moveSpd: 92, range: 265, crit: 0.12,
       skillDesc: "每阵亡一名单位，召唤骸骨战士抵挡伤害。骸骨自身阵亡不再召唤。",
       evolutions: {
         bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽",
@@ -215,7 +220,7 @@
     bard: {
       id: "bard", kind: "unit", name: "命运吟游者", short: "吟游者",
       role: "后排 · 战歌", color: "#eea7f4", bg: "#382340", baseWeight: 9,
-      hp: 94, atk: 14, atkCd: 1.7, range: 4, crit: 0.15,
+      hp: 94, atk: 14, atkCd: 1.7, moveSpd: 112, range: 235, crit: 0.15,
       skillDesc: "存活时全军攻速 +15%，每次演奏产出 3 金币。",
       evolutions: {
         gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金",
@@ -227,7 +232,7 @@
     valkyrie: {
       id: "valkyrie", kind: "unit", name: "圣枪女武神", short: "女武神",
       role: "前排 · 穿透", color: "#f8e296", bg: "#403a21", baseWeight: 9,
-      hp: 153, atk: 25, atkCd: 1.1, range: 3, crit: 0.16,
+      hp: 153, atk: 25, atkCd: 1.1, moveSpd: 138, range: 92, crit: 0.16,
       skillDesc: "长枪穿透前后排，对护盾造成双倍伤害。",
       evolutions: {
         sky_charge: evolution("sky_charge", "天穹女武神", "击退冲锋",
@@ -536,8 +541,23 @@
     ch5_star_mage: "healer_support"
   };
 
+  const ENEMY_PHYSICS_BY_KIND = {
+    boss: { moveSpd: 78, range: 76 },
+    tank: { moveSpd: 82, range: 54 },
+    melee: { moveSpd: 112, range: 50 },
+    assassin: { moveSpd: 158, range: 52 },
+    ranged: { moveSpd: 96, range: 260 },
+    caster: { moveSpd: 90, range: 245 }
+  };
+
   function campaignEnemy(name, kind, artKey, hp, atk, cd) {
-    return { name, kind, artKey, hp, atk, cd, tactic: ENEMY_TACTICS[artKey] };
+    const phys = ENEMY_PHYSICS_BY_KIND[kind] || ENEMY_PHYSICS_BY_KIND.melee;
+    return {
+      name, kind, artKey, hp, atk, cd,
+      moveSpd: phys.moveSpd,
+      range: phys.range,
+      tactic: ENEMY_TACTICS[artKey]
+    };
   }
 
   function addPhases(wave) {
@@ -857,9 +877,9 @@
     return CHAPTERS[(run?.chapter ?? getWave(run).chapter) - 1] ?? CHAPTERS[0];
   }
 
-  const FIELD_SLOTS = 6; // 0,1,2 front row; 3,4,5 back row
+  const FIELD_SLOTS = 9; // Freeform left-half arena: starts at 6 pop cap, expandable 6 -> 7 -> 8 -> 9!
   const BENCH_SLOTS = 4;
-  const START_FIELD = [0, 1, 3, 4];
+  const START_FIELD = [0, 1, 2, 3, 4, 5];
   const SHOP_ITEMS = {
     enchant: { name: "单格附魔铁砧", cost: 3, art: "shopAnvil", desc: "为指定盘面格永久设置一种符文。" },
     nudge: { name: "时间微调沙漏", cost: 2, art: "shopHourglass", desc: "补充 2 次可跨波保留的微调。" },
@@ -868,13 +888,58 @@
     spins: { name: "免费转包", cost: 2, art: "shopDice", desc: "下一场战斗前可额外免费转动 3 次。" }
   };
   const SLOT_UPGRADES = {
-    field: { name: "出战阵位", base: 4, max: FIELD_SLOTS, costs: [3, 5] },
+    field: { name: "出战人口 (+1)", base: 6, max: FIELD_SLOTS, costs: [3, 5, 7] },
     bench: { name: "备战席位", base: 2, max: BENCH_SLOTS, costs: [3, 5] },
     core: { name: "核心槽位", base: 4, max: 6, costs: [4, 5] }
   };
 
+  function defaultUnitPos(run, unit, skipId = null) {
+    const isFront = isUnitFrontline(unit.type);
+    const xCols = isFront ? [0.40, 0.34, 0.44] : [0.16, 0.23, 0.10];
+    const yRows = [0.50, 0.28, 0.72, 0.18, 0.82, 0.39, 0.61];
+    const occupied = (run?.field || [])
+      .filter(u => u && u.id !== skipId && u.pos)
+      .map(u => u.pos);
+
+    let best = { x: xCols[0], y: yRows[0] };
+    let bestScore = -1;
+    for (const x of xCols) {
+      for (const y of yRows) {
+        let minDist = 999;
+        for (const p of occupied) {
+          const d = Math.hypot((p.x - x) * 1.4, p.y - y);
+          if (d < minDist) minDist = d;
+        }
+        if (minDist > bestScore) {
+          bestScore = minDist;
+          best = { x, y };
+        }
+      }
+    }
+    return best;
+  }
+
+  function setUnitPos(run, unitId, normX, normY) {
+    const loc = findUnitLocation(run, unitId);
+    if (!loc || loc.area !== "field") return false;
+    loc.unit.pos = {
+      x: Math.max(0.06, Math.min(0.46, Number(normX.toFixed(4)))),
+      y: Math.max(0.15, Math.min(0.87, Number(normY.toFixed(4))))
+    };
+    return true;
+  }
+
   function restoreRun(run) {
-    run.unlockedFieldSlots ??= [...new Set([...START_FIELD, ...run.field.flatMap((u, i) => u ? [i] : [])])];
+    run.field ??= Array(FIELD_SLOTS).fill(null);
+    while (run.field.length < FIELD_SLOTS) run.field.push(null);
+    if (run.field.length > FIELD_SLOTS) run.field.length = FIELD_SLOTS;
+    const baseUnlocked = Array.isArray(run.unlockedFieldSlots) ? run.unlockedFieldSlots : [];
+    run.unlockedFieldSlots = [...new Set([...START_FIELD, ...baseUnlocked, ...run.field.flatMap((u, i) => u ? [i] : [])])]
+      .filter(i => i >= 0 && i < FIELD_SLOTS)
+      .sort((a, b) => a - b);
+    run.field.forEach(u => {
+      if (u && !u.pos) u.pos = defaultUnitPos(run, u, u.id);
+    });
     run.unlockedBenchSlots ??= Math.max(2, run.bench.findLastIndex(Boolean) + 1);
     run.unlockedCoreSlots ??= Math.max(4, run.cores.length);
     run.nudgeReserve ??= 0;
@@ -914,9 +979,11 @@
     const cost = slotCost(run, area);
     if (cost === null || run.crystals < cost) return false;
     if (area === "field") {
-      const index = fieldIndex ?? [2, 5].find(slot => !isSlotOpen(run, "field", slot));
-      if (![2, 5].includes(index) || isSlotOpen(run, "field", index)) return false;
+      const expandable = [6, 7, 8];
+      const index = fieldIndex ?? expandable.find(slot => !isSlotOpen(run, "field", slot));
+      if (!expandable.includes(index) || isSlotOpen(run, "field", index)) return false;
       run.unlockedFieldSlots.push(index);
+      run.unlockedFieldSlots.sort((a, b) => a - b);
     } else if (area === "bench") {
       run.unlockedBenchSlots += 1;
     } else {
@@ -1218,6 +1285,8 @@
     let atk = def.atk * unitTierMult * (1 + effXp * 0.07 + (lvl - 1) * 0.20) + unit.bonusAtk + (run?.globalBonusAtk || 0);
     let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.025;
     let atkCd = def.atkCd * (1 - (lvl - 1) * 0.035);
+    let moveSpd = def.moveSpd || 100;
+    const range = def.range || 55;
 
     if (run) {
       const fMap = Object.fromEntries(getFactionSynergies(run).map(f => [f.id, f.tier]));
@@ -1228,7 +1297,7 @@
       else if (fMap.elves >= 2) atkCd *= 0.85;
     }
 
-    if (unit.trait === "swift_soul") atkCd *= 0.84;
+    if (unit.trait === "swift_soul") { atkCd *= 0.84; moveSpd *= 1.15; }
     if (unit.trait === "iron_skin") hp *= 1.22;
     if (unit.trait === "fierce_blade") atk *= 1.18;
     if (unit.trait === "lucky_eye") crit += 0.14;
@@ -1262,14 +1331,18 @@
       const forgeLv = coreLevel(run, "iron_forge");
       if (forgeLv) { hp *= (1 + 0.18 * forgeLv); atk *= (1 + 0.1 * forgeLv); }
       const bootsLv = coreLevel(run, "swift_boots");
-      if (bootsLv) atkCd *= Math.max(0.55, 1 - 0.14 * bootsLv);
+      if (bootsLv) {
+        atkCd *= Math.max(0.55, 1 - 0.14 * bootsLv);
+        moveSpd *= (1 + 0.12 * bootsLv);
+      }
       const axeLv = coreLevel(run, "executioner_axe");
       if (axeLv) { atk *= (1 + 0.18 * axeLv); crit += 0.08 * axeLv; }
       const angelLv = coreLevel(run, "guardian_angel");
       if (angelLv) { hp *= (1 + 0.25 * angelLv); atk *= (1 + 0.15 * angelLv); }
       const fieldIdx = run.field.findIndex(u => u && u.id === unit.id);
       const vanLv = coreLevel(run, "vanguard_oath");
-      if (fieldIdx >= 0 && fieldIdx < 3 && vanLv) {
+      const inFrontZone = (unit.pos?.x ?? (isUnitFrontline(unit.type) ? 0.38 : 0.18)) >= 0.28;
+      if (fieldIdx >= 0 && inFrontZone && vanLv) {
         hp *= (1 + 0.3 + (vanLv - 1) * 0.18);
       }
     }
@@ -1279,6 +1352,8 @@
       atk: Math.round(atk),
       crit: Math.min(0.85, crit),
       atkCd: Math.max(0.35, atkCd),
+      moveSpd: Math.round(moveSpd),
+      range: Math.round(range),
       level: lvl
     };
   }
@@ -1458,10 +1533,9 @@
   }
 
   function addUnitToRoster(run, unit) {
-    const isFront = isUnitFrontline(unit.type);
-    const order = isFront ? [1, 0, 2, 4, 3, 5] : [4, 3, 5, 1, 0, 2];
-    for (const idx of order) {
+    for (let idx = 0; idx < FIELD_SLOTS; idx += 1) {
       if (isSlotOpen(run, "field", idx) && !run.field[idx]) {
+        if (!unit.pos) unit.pos = defaultUnitPos(run, unit, unit.id);
         run.field[idx] = unit;
         return { placed: "field", index: idx };
       }
@@ -1768,6 +1842,12 @@
     const temp = srcArr[fromIdx];
     srcArr[fromIdx] = dstArr[toIdx];
     dstArr[toIdx] = temp;
+    if (toArea === "field" && dstArr[toIdx] && !dstArr[toIdx].pos) {
+      dstArr[toIdx].pos = defaultUnitPos(run, dstArr[toIdx], dstArr[toIdx].id);
+    }
+    if (fromArea === "field" && srcArr[fromIdx] && !srcArr[fromIdx].pos) {
+      srcArr[fromIdx].pos = defaultUnitPos(run, srcArr[fromIdx], srcArr[fromIdx].id);
+    }
     return true;
   }
 
@@ -2193,6 +2273,8 @@
     getWinningNudgeCols,
     nudgeColumn,
     findUnitLocation,
+    defaultUnitPos,
+    setUnitPos,
     swapSlots,
     absorbUnit,
     sellUnit,

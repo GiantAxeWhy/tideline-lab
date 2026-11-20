@@ -21,8 +21,8 @@
     [50, 250], [150, 250], [250, 250]
   ];
 
-  // Visual order for 2-col x 3-row formation grid: left=back(3,4,5), right=front(0,1,2)
-  const FORMATION_ORDER = [3, 0, 4, 1, 5, 2];
+  // Freeform army roster slots: starts at 6 pop cap, expandable to 7, 8, max 9!
+  const FORMATION_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
   let run = loadRun();
   const profile = loadProfile();
@@ -36,6 +36,17 @@
   let toastTimer = null;
 
   const arena = new globalThis.BattleArena($("battle-canvas"));
+  arena.onUnitSelect = unitId => {
+    const loc = G.findUnitLocation(run, unitId);
+    if (loc && loc.area === "field") {
+      selectedSlot = { area: "field", index: loc.index };
+      renderArmy();
+    }
+  };
+  arena.onUnitMove = () => {
+    save();
+    renderArmy();
+  };
 
   // Hydrate static metallic UI icons
   $("brand-crest").innerHTML = Art.UI_ICONS.crest;
@@ -430,10 +441,17 @@
   }
 
   function renderArmy() {
-    $("formation-grid").innerHTML = FORMATION_ORDER.map(idx => {
-      const label = idx < 3 ? "+ 前排" : "+ 后排";
-      return renderUnitCard(run.field[idx], "field", idx, label);
-    }).join("");
+    const unlockedCap = run.unlockedFieldSlots.length;
+    const fieldUsed = run.field.filter(Boolean).length;
+    if ($("field-count")) $("field-count").textContent = `${fieldUsed} / ${unlockedCap} 人（上限 9）`;
+
+    // Show all unlocked field slots + the next 1 expandable pop-cap slot (up to 9) so the grid stays super clean!
+    const visibleFieldSlots = FORMATION_ORDER.filter(idx =>
+      G.isSlotOpen(run, "field", idx) || idx === unlockedCap
+    );
+    $("formation-grid").innerHTML = visibleFieldSlots.map(idx =>
+      renderUnitCard(run.field[idx], "field", idx, "+ 出战位")
+    ).join("");
 
     $("bench-grid").innerHTML = run.bench.map((u, idx) =>
       renderUnitCard(u, "bench", idx, "+ 备战位")
@@ -445,8 +463,13 @@
     $("btn-mode-swap").classList.toggle("active", armyMode === "swap");
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
     $("army-tip").textContent = armyMode === "absorb"
-      ? "吞噬模式：先点【强化目标】，再点【素材单位】（同职业双倍经验，2 级解锁分支转职！）"
-      : "换位模式：点选任意单位，再点另一格即可快速调整前后排或上下阵";
+      ? "吞噬模式：先点【强化目标】，再点【素材单位】（同职业双倍经验，3×同星自动合成升星！）"
+      : "自由布阵：直接在上方战场左半区拖拽英雄即可任意摆位！点击下方卡片可上下阵或吞噬。";
+
+    const selUnit = selectedSlot
+      ? (selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index])
+      : null;
+    arena.setSelectedUnit(selectedSlot?.area === "field" && selUnit ? selUnit.id : null);
 
     renderInspector();
   }
@@ -476,7 +499,7 @@
       <div class="ins-avatar" style="--u-color:${sym.color}">${Art.renderPortraitImg(unit.type, sym.name, "ins-sprite")}</div>
       <div class="ins-info">
         <div class="ins-title">${evo ? evo.name : sym.name} · <span class="gold-txt">${"★".repeat(st.level)}</span> ${unit.lucky ? '<span class="u-tag">幸运强化 +20%</span>' : ""}</div>
-        <div class="ins-desc">生命 ${st.hp} · 攻击 ${st.atk} · 暴击 ${Math.round(st.crit * 100)}% · 攻速 ${(1 / st.atkCd).toFixed(2)}/s · ${nextNeed}</div>
+        <div class="ins-desc">生命 ${st.hp} · 攻击 ${st.atk} · 暴击 ${Math.round(st.crit * 100)}% · 攻速 ${(1 / st.atkCd).toFixed(2)}/s · 移速 ${st.moveSpd} · 射程 ${st.range} · ${nextNeed}</div>
         <div class="ins-desc">${evo ? `【${evo.tag}】${evo.desc}` : sym.skillDesc}</div>
       </div>
     </div>

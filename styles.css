@@ -830,8 +830,8 @@ h1, h2, h3, p { margin: 0; }
 .fight-btn:hover:not(:disabled) { filter: brightness(1.08); }
 .fight-btn:active:not(:disabled) { transform: translateY(2px); }
 
-.arena-stage { width: 100%; height: 295px; position: relative; background: #0a0c14; }
-#battle-canvas { display: block; width: 100%; height: 100%; }
+.arena-stage { width: 100%; height: 310px; position: relative; background: #0a0c14; }
+#battle-canvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
 
 .synergy-bar {
   display: flex;
@@ -902,8 +902,8 @@ h1, h2, h3, p { margin: 0; }
 
 .roster-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 0.8rem;
 }
 .sub-label {
   display: flex;
@@ -913,7 +913,12 @@ h1, h2, h3, p { margin: 0; }
   margin-bottom: 0.38rem;
   padding: 0 0.15rem;
 }
-.formation-grid, .bench-grid {
+.formation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+.bench-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.48rem;
