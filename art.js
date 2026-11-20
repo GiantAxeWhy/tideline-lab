@@ -172,15 +172,30 @@
   };
 
   const IMAGE_CACHE = new Map();
-  for (const [key, url] of Object.entries(SPRITE_URLS)) {
+
+  function loadSpriteUrl(url) {
+    if (!url) return null;
+    if (IMAGE_CACHE.has(url)) return IMAGE_CACHE.get(url);
     const img = new Image();
+    img._retries = 0;
+    img.onerror = () => {
+      if (img._retries < 3) {
+        img._retries += 1;
+        const delay = img._retries * 350;
+        setTimeout(() => {
+          img.src = `${url}${url.includes("?") ? "&" : "?"}r=${img._retries}`;
+        }, delay);
+      }
+    };
     img.src = url;
-    IMAGE_CACHE.set(key, img);
     IMAGE_CACHE.set(url, img);
+    return img;
   }
 
   function getSpriteImg(keyOrUrl) {
-    return IMAGE_CACHE.get(keyOrUrl) ?? null;
+    if (!keyOrUrl) return null;
+    const url = SPRITE_URLS[keyOrUrl] || keyOrUrl;
+    return loadSpriteUrl(url);
   }
 
   function getEnemyArtKey(enemy) {
