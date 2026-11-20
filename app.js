@@ -1598,7 +1598,6 @@
     bindDragZone($("bench-grid"));
     if ($("overflow-grid")) {
       bindDragZone($("overflow-grid"));
-      $("overflow-grid").addEventListener("click", onRosterClick);
     }
 
     function openMasteryDialog() {
@@ -1771,6 +1770,7 @@
   };
   $("formation-grid").addEventListener("click", onRosterClick);
   $("bench-grid").addEventListener("click", onRosterClick);
+  if ($("overflow-grid")) $("overflow-grid").addEventListener("click", onRosterClick);
 
   document.querySelectorAll("[data-close]").forEach(btn => {
     btn.addEventListener("click", () => $(btn.dataset.close).close());
