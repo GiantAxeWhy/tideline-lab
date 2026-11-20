@@ -1292,6 +1292,45 @@
     };
   }
 
+  const TACTIC_LABELS = {
+    shield_breaker: "破盾重击：对护盾造成双倍伤害并概率眩晕前排",
+    summoner: "召唤援军：周期性召唤小怪淹没战场",
+    healer_support: "战地支援：周期性治疗并护盾前排敌军",
+    artillery_aoe: "范围炮击：锁定区域发射高伤炮火",
+    backline_diver: "暗影切后：战斗中突袭我方后排脆皮"
+  };
+
+  function getEnemyCodexCatalog() {
+    const seen = new Set();
+    const list = [];
+    for (const ch of CHAPTERS) {
+      for (const w of ch.waves) {
+        for (const e of w.enemies) {
+          const key = e.artKey || e.name;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          list.push({
+            key,
+            name: e.name.replace(/^精锐首领·/, ""),
+            chapterId: ch.id,
+            chapterName: ch.name,
+            themeColor: ch.themeColor,
+            kind: e.kind,
+            isBoss: e.kind === "boss",
+            hp: e.hp,
+            atk: e.atk,
+            cd: e.cd,
+            moveSpd: e.moveSpd || 100,
+            range: e.range || 52,
+            tactic: e.tactic ? (TACTIC_LABELS[e.tactic] || e.tactic) : "",
+            bossSkill: e.kind === "boss" ? (w.bossSkill || "") : ""
+          });
+        }
+      }
+    }
+    return list;
+  }
+
   function getChapter(run) {
     return CHAPTERS[(run?.chapter ?? getWave(run).chapter) - 1] ?? CHAPTERS[0];
   }
@@ -1671,6 +1710,8 @@
     const heroType = pool[Math.floor(Math.random() * pool.length)];
     const unit = createUnit(run.nextId++, heroType, { rarity, heroLv: 2, lucky: true });
     const placement = addUnitToRoster(run, unit);
+    const Meta = globalThis.SlotboundMeta;
+    if (Meta) Meta.unlockCodexHero(Meta.loadMeta(), heroType);
     if (getEvolutionChoices(unit) && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
       if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
         run.pendingEvolutions.push(unit.id);
@@ -2286,6 +2327,8 @@
             run.globalBonusAtk += 3 * coreLevel(run, "astral_altar");
           }
           const placement = addUnitToRoster(run, unit);
+          const Meta = globalThis.SlotboundMeta;
+          if (Meta) Meta.unlockCodexHero(Meta.loadMeta(), rolled.type);
           if (getEvolutionChoices(unit) && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
             if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
               run.pendingEvolutions.push(unit.id);
@@ -2626,6 +2669,8 @@
     } else if (choices.tier === 3) {
       unit.evolution3 = evoId;
     }
+    const Meta = globalThis.SlotboundMeta;
+    if (Meta) Meta.unlockCodexEvo(Meta.loadMeta(), unit.type, evoId);
     // Keep in pendingEvolutions if unit jumped straight from 1★ to 3★ and still needs Tier 3 choice!
     if (!getEvolutionChoices(unit)) {
       run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== unitId);
@@ -2978,6 +3023,8 @@
     CHAPTERS,
     WAVES,
     getWave,
+    getEnemyCodexCatalog,
+    TACTIC_LABELS,
     getEnemyThreatScale,
     getChapter,
     FIELD_SLOTS,

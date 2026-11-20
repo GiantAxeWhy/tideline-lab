@@ -1323,6 +1323,119 @@
   });
 
     $("btn-open-hub").addEventListener("click", openHub);
+    $("btn-open-codex").addEventListener("click", () => openCodexDialog("heroes"));
+    $("btn-hub-codex").addEventListener("click", () => openCodexDialog("heroes"));
+    $("tab-codex-heroes").addEventListener("click", () => renderCodex("heroes"));
+    $("tab-codex-enemies").addEventListener("click", () => renderCodex("enemies"));
+
+    let codexTab = "heroes";
+    function openCodexDialog(tab = "heroes") {
+      codexTab = tab;
+      renderCodex(tab);
+      if (!$("codex-dialog").open) $("codex-dialog").showModal();
+    }
+
+    function renderCodex(tab = codexTab) {
+      codexTab = tab;
+      const meta = Meta ? Meta.loadMeta() : { codex: { heroes: [], evos: [], enemies: [] } };
+      // Also sync any heroes currently owned in the active run into the codex automatically!
+      if (Meta && run) {
+        [...run.field, ...run.bench].filter(Boolean).forEach(u => {
+          Meta.unlockCodexHero(meta, u.type);
+          if (u.evolution) Meta.unlockCodexEvo(meta, u.type, u.evolution);
+          if (u.evolution3) Meta.unlockCodexEvo(meta, u.type, u.evolution3);
+        });
+      }
+      const unlockedHeroes = new Set(meta.codex?.heroes || []);
+      const unlockedEvos = new Set(meta.codex?.evos || []);
+      const unlockedEnemies = new Set(meta.codex?.enemies || []);
+
+      const allHeroes = G.ALL_HERO_IDS || G.UNIT_IDS;
+      const allEnemies = G.getEnemyCodexCatalog ? G.getEnemyCodexCatalog() : [];
+      $("codex-hero-cnt").textContent = `${unlockedHeroes.size}/${allHeroes.length}`;
+      $("codex-enemy-cnt").textContent = `${unlockedEnemies.size}/${allEnemies.length}`;
+      $("tab-codex-heroes").classList.toggle("active", tab === "heroes");
+      $("tab-codex-enemies").classList.toggle("active", tab === "enemies");
+
+      const body = $("codex-body");
+      if (tab === "heroes") {
+        body.innerHTML = allHeroes.map(id => {
+          const sym = G.SYMBOLS[id];
+          const rar = G.getUnitRarity(id);
+          const unlocked = unlockedHeroes.has(id);
+          if (!unlocked) {
+            return `<div class="codex-card locked" style="--c-col:${rar.color}">
+              <div class="codex-head">
+                <div class="codex-portrait silhouette">${Art.renderPortraitImg(sym.artKey || id, "?", "codex-sprite")}</div>
+                <div>
+                  <strong style="color:${rar.color}">??? · ${rar.label}</strong>
+                  <p class="codex-sub">尚未解锁 · 升级轮盘或在独立高级轮盘中召唤点亮（+1 局外水晶）</p>
+                </div>
+              </div>
+            </div>`;
+          }
+          const sk = G.getInnateSkill(id);
+          const evoTree = Object.values(sym.evolutions || {}).map(e2 => {
+            const e2Open = unlockedEvos.has(`${id}:${e2.id}`);
+            const t3Html = Object.values(e2.tier3 || {}).map(e3 => {
+              const e3Open = unlockedEvos.has(`${id}:${e3.id}`);
+              return `<span class="evo-node${e3Open ? " done" : ""}" title="${e3.desc}">3★ ${e3.name}${e3Open ? " ✓" : ""}</span>`;
+            }).join("");
+            return `<div class="codex-evo-branch">
+              <div class="evo-t2${e2Open ? " done" : ""}" title="${e2.desc}"><strong>2★ ${e2.name}</strong>（${e2.tag}）${e2Open ? " ✓" : ""}：${e2.desc}</div>
+              ${t3Html ? `<div class="evo-t3-row">↳ ${t3Html}</div>` : ""}
+            </div>`;
+          }).join("");
+
+          return `<div class="codex-card" style="--c-col:${rar.color}">
+            <div class="codex-head">
+              <div class="codex-portrait">${Art.renderPortraitImg(sym.artKey || id, sym.name, "codex-sprite")}</div>
+              <div class="codex-meta">
+                <div class="codex-title-row">
+                  <strong>${sym.name}</strong>
+                  <span class="u-tag" style="border:1px solid ${rar.color};color:${rar.color}">${rar.label} · ${rar.slots}技能栏</span>
+                  <span class="u-tag">${sym.role}</span>
+                </div>
+                <p class="codex-stats">血 ${sym.hp} · 攻 ${sym.atk} · 攻速 ${(1 / sym.atkCd).toFixed(2)}/s · 移速 ${sym.moveSpd} · 射程 ${sym.range} · 暴击 ${Math.round(sym.crit * 100)}%</p>
+                <p class="codex-skill">${sk.icon} <strong>先天技·${sk.name}</strong>：${sk.desc(1)}（满级 Lv.5：${sk.desc(5)}）</p>
+              </div>
+            </div>
+            <div class="codex-evo-tree">${evoTree}</div>
+          </div>`;
+        }).join("");
+      } else {
+        const kindLabel = { melee: "近战", tank: "重装坦克", ranged: "远程射手", caster: "法系施法", assassin: "后排刺客", boss: "关底 Boss" };
+        body.innerHTML = allEnemies.map(e => {
+          const unlocked = unlockedEnemies.has(e.key);
+          if (!unlocked) {
+            return `<div class="codex-card locked" style="--c-col:${e.themeColor}">
+              <div class="codex-head">
+                <div class="codex-portrait silhouette">${Art.renderPortraitImg(e.key, "?", "codex-sprite")}</div>
+                <div>
+                  <strong style="color:${e.themeColor}">??? · 第 ${e.chapterId} 章 ${e.chapterName}${e.isBoss ? " [关底 Boss]" : ""}</strong>
+                  <p class="codex-sub">尚未遭遇 · 在战斗中遭遇该敌军即可点亮图鉴（+1 局外水晶）</p>
+                </div>
+              </div>
+            </div>`;
+          }
+          return `<div class="codex-card${e.isBoss ? " boss-codex" : ""}" style="--c-col:${e.themeColor}">
+            <div class="codex-head">
+              <div class="codex-portrait">${Art.renderPortraitImg(e.key, e.name, "codex-sprite")}</div>
+              <div class="codex-meta">
+                <div class="codex-title-row">
+                  <strong>${e.name}</strong>
+                  <span class="u-tag" style="border:1px solid ${e.themeColor};color:${e.themeColor}">第 ${e.chapterId} 章 · ${e.chapterName}</span>
+                  <span class="u-tag">${kindLabel[e.kind] || e.kind}</span>
+                </div>
+                <p class="codex-stats">基准生命 ${e.hp} · 攻击 ${e.atk} · 攻速 ${(1 / e.cd).toFixed(2)}/s · 移速 ${e.moveSpd} · 射程 ${e.range}</p>
+                ${e.tactic ? `<p class="codex-skill">⚔️ 战术特性：${e.tactic}</p>` : ""}
+                ${e.bossSkill ? `<p class="codex-skill" style="color:#ff9aa8">👑 Boss 考题技能：${e.bossSkill}</p>` : ""}
+              </div>
+            </div>
+          </div>`;
+        }).join("");
+      }
+    }
     $("btn-hub-resume").addEventListener("click", closeHub);
     $("btn-hub-start").addEventListener("click", () => {
       if (busy) return;

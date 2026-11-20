@@ -1640,3 +1640,61 @@ body.pixel-theme .icon-btn {
   .hub-grid { grid-template-columns: 1fr; }
   .hub-diff-grid, .hub-chapter-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== HERO & MONSTER CODEX (图鉴) ===== */
+.codex-dialog { width: min(860px, 94vw); }
+.codex-tabs { display: flex; gap: 0.5rem; margin: 0.55rem 0 0.7rem; }
+.codex-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.codex-card {
+  padding: 0.72rem 0.85rem;
+  background: #151c2e;
+  border: 2px solid color-mix(in srgb, var(--c-col, #4b5d85) 65%, #1f2840);
+  border-radius: 4px;
+}
+.codex-card.boss-codex {
+  background: linear-gradient(145deg, #271624, #151829);
+  border-color: #ff5964;
+}
+.codex-card.locked { opacity: 0.62; border-style: dashed; }
+.codex-head { display: flex; align-items: flex-start; gap: 0.75rem; }
+.codex-portrait {
+  width: 52px; height: 52px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: #0d1220;
+  border: 2px solid var(--c-col, #3b4b70);
+  border-radius: 3px;
+}
+.codex-portrait.silhouette img { filter: brightness(0) opacity(0.75); }
+.codex-sprite { width: 44px; height: 44px; object-fit: contain; }
+.codex-meta { flex: 1; min-width: 0; }
+.codex-title-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.codex-stats { font-size: 0.74rem; color: #9fb0d0; margin: 0.22rem 0 0; }
+.codex-skill { font-size: 0.75rem; color: #dce7ff; margin: 0.24rem 0 0; line-height: 1.45; }
+.codex-sub { font-size: 0.74rem; color: var(--muted); margin: 0.2rem 0 0; }
+.codex-evo-tree {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #2d3958;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+.codex-evo-branch { font-size: 0.73rem; color: #b9c7e4; line-height: 1.45; }
+.evo-t2.done { color: #ffe599; }
+.evo-t3-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; padding-left: 0.6rem; }
+.evo-node {
+  padding: 0.12rem 0.45rem;
+  background: #0f1526;
+  border: 1px solid #35456b;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: #a4b5d8;
+}
+.evo-node.done { border-color: #ffd86b; color: #ffe599; background: #262012; }

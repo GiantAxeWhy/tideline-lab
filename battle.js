@@ -283,6 +283,9 @@
 
     _createEnemy(def, pos, uid, isReinforcement = false) {
       const isBoss = def.kind === "boss";
+      if (this.mode === "fighting" && globalThis.SlotboundMeta && (def.artKey || def.name)) {
+        globalThis.SlotboundMeta.unlockCodexEnemy(globalThis.SlotboundMeta.loadMeta(), def.artKey || def.name);
+      }
       const scale = this._canvasScale();
       const baseMove = def.moveSpd || (isBoss ? 78 : def.kind === "assassin" ? 158 : def.kind === "tank" ? 82 : 108);
       const baseRange = def.range || (isBoss ? 76 : (def.kind === "ranged" || def.kind === "caster") ? 250 : 52);

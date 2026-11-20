@@ -114,6 +114,11 @@
       clearedDiffs: [],
       selectedChapter: 1,
       selectedDifficulty: "easy",
+      codex: {
+        heroes: [],
+        evos: [],
+        enemies: []
+      },
       upgrades: {
         startGold: 0,
         popCap: 0,
@@ -134,6 +139,11 @@
         return {
           ...base,
           ...parsed,
+          codex: {
+            heroes: parsed.codex?.heroes || [],
+            evos: parsed.codex?.evos || [],
+            enemies: parsed.codex?.enemies || []
+          },
           unlockedChapters: { ...base.unlockedChapters, ...(parsed.unlockedChapters || {}) },
           upgrades: { ...base.upgrades, ...(parsed.upgrades || {}) }
         };
@@ -204,6 +214,36 @@
     return Math.min(5, lv + 2);
   }
 
+  function unlockCodexHero(meta, heroId) {
+    if (!meta || !heroId) return false;
+    meta.codex ??= { heroes: [], evos: [], enemies: [] };
+    if (meta.codex.heroes.includes(heroId)) return false;
+    meta.codex.heroes.push(heroId);
+    meta.crystals = (meta.crystals || 0) + 1;
+    saveMeta(meta);
+    return true;
+  }
+
+  function unlockCodexEvo(meta, heroId, evoId) {
+    if (!meta || !heroId || !evoId) return false;
+    meta.codex ??= { heroes: [], evos: [], enemies: [] };
+    const key = `${heroId}:${evoId}`;
+    if (meta.codex.evos.includes(key)) return false;
+    meta.codex.evos.push(key);
+    saveMeta(meta);
+    return true;
+  }
+
+  function unlockCodexEnemy(meta, enemyKey) {
+    if (!meta || !enemyKey) return false;
+    meta.codex ??= { heroes: [], evos: [], enemies: [] };
+    if (meta.codex.enemies.includes(enemyKey)) return false;
+    meta.codex.enemies.push(enemyKey);
+    meta.crystals = (meta.crystals || 0) + 1;
+    saveMeta(meta);
+    return true;
+  }
+
   globalThis.SlotboundMeta = {
     DIFFICULTIES,
     META_UPGRADES,
@@ -215,6 +255,9 @@
     recordChapterClear,
     getUpgradeCost,
     buyMetaUpgrade,
-    getMaxUnlockedRarityTier
+    getMaxUnlockedRarityTier,
+    unlockCodexHero,
+    unlockCodexEvo,
+    unlockCodexEnemy
   };
 })();

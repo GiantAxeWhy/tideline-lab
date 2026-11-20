@@ -49,6 +49,7 @@
           <div class="hub-launch-row">
             <button id="btn-hub-start" class="spin-btn compact-btn" type="button">⚔️ 开始新征程</button>
             <button id="btn-hub-resume" class="secondary-btn" type="button">返回当前战局</button>
+            <button id="btn-hub-codex" class="secondary-btn" type="button">📖 军团与怪物图鉴</button>
           </div>
         </div>
 
@@ -97,6 +98,7 @@
       </div>
       <div class="top-controls">
         <button id="btn-open-hub" class="icon-btn" type="button" title="返回战备大厅：选关卡、选难度、升级永久科技">🏰大厅</button>
+        <button id="btn-open-codex" class="icon-btn" type="button" title="查看已解锁的英雄与怪物图鉴、进化路线与属性技能">📖图鉴</button>
         <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="随时打开命运秘宝商店消耗水晶">
           <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
         </button>
@@ -401,6 +403,24 @@
         <button id="btn-elite-spin" class="spin-btn compact-btn" type="button">🎰 免费转动高级轮盘</button>
         <button class="secondary-btn" data-close="elite-wheel-dialog" type="button">关闭</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: HERO & MONSTER CODEX (图鉴) -->
+  <dialog id="codex-dialog" class="game-dialog codex-dialog" aria-labelledby="codex-title">
+    <div class="dialog-inner">
+      <div class="dialog-head-row">
+        <div>
+          <div class="dialog-tag">星陨档案室 · 每解锁 1 条奖励 +1 局外水晶</div>
+          <h2 id="codex-title">英雄与怪物图鉴</h2>
+        </div>
+        <button class="close-btn" data-close="codex-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="codex-tabs">
+        <button id="tab-codex-heroes" class="mode-pill active" type="button">⚔️ 兵种图鉴 (<span id="codex-hero-cnt">0/16</span>)</button>
+        <button id="tab-codex-enemies" class="mode-pill" type="button">👾 怪物图鉴 (<span id="codex-enemy-cnt">0/21</span>)</button>
+      </div>
+      <div class="codex-body" id="codex-body"></div>
     </div>
   </dialog>
 
