@@ -394,8 +394,9 @@
 
     const sym = G.SYMBOLS[unit.type];
     const st = G.getUnitStats(unit, run);
-    const rarity = G.getUnitRarity(unit.type);
-    const displayName = unit.evolution ? sym.evolutions[unit.evolution].name : sym.name;
+    const rarity = G.getUnitRarity(unit);
+    const evoInfo = G.getUnitEvoInfo ? G.getUnitEvoInfo(unit) : null;
+    const displayName = evoInfo ? evoInfo.name : sym.name;
     const cls = [
       "unit-slot",
       isSelected ? "selected" : "",
@@ -404,7 +405,7 @@
       unit.evolution ? "evolved" : ""
     ].filter(Boolean).join(" ");
 
-    const nextReq = G.nextStarLevel(unit.type, st.heroLv);
+    const nextReq = G.nextStarLevel(unit, st.heroLv);
     const prevReq = st.level <= 1 ? 1 : (rarity.starThresholds[st.level - 2] || 1);
     const xpPct = nextReq ? Math.min(100, Math.max(8, ((st.heroLv - prevReq) / Math.max(1, nextReq - prevReq)) * 100)) : 100;
 
@@ -493,10 +494,10 @@
 
     const sym = G.SYMBOLS[unit.type];
     const st = G.getUnitStats(unit, run);
-    const rarity = G.getUnitRarity(unit.type);
-    const evo = unit.evolution ? sym.evolutions[unit.evolution] : null;
+    const rarity = G.getUnitRarity(unit);
+    const evo = G.getUnitEvoInfo ? G.getUnitEvoInfo(unit) : (unit.evolution ? sym.evolutions[unit.evolution] : null);
     const sellVal = 15 + unit.xp * 10 + (unit.trait === "gold_donor" ? 30 : 0);
-    const nextReq = G.nextStarLevel(unit.type, st.heroLv);
+    const nextReq = G.nextStarLevel(unit, st.heroLv);
     const nextNeed = nextReq
       ? `Lv.${st.heroLv} / Lv.${nextReq} 升 ${st.level + 1}★`
       : `Lv.${st.heroLv}（已达 5★ 满星）`;
@@ -773,18 +774,18 @@
     G.ensureUnitSkillState(donor);
     const tSym = G.SYMBOLS[target.type];
     const dSym = G.SYMBOLS[donor.type];
-    const tRar = G.getUnitRarity(target.type);
-    const dRar = G.getUnitRarity(donor.type);
+    const tRar = G.getUnitRarity(target);
+    const dRar = G.getUnitRarity(donor);
     const crestBonus = G.coreLevel(run, "devour_crest") ? 1 : 0;
     const transferBonus = Math.floor(((donor.heroLv || 1) - 1) * 0.5);
     const pureGain = dRar.feedLevels + transferBonus + crestBonus;
     const inheritGain = 1 + crestBonus;
 
     const pureNextLv = (target.heroLv || 1) + pureGain;
-    const pureNextStars = G.calcUnitStars(target.type, pureNextLv);
+    const pureNextStars = G.calcUnitStars(target, pureNextLv);
     const curStars = G.unitLevel(target);
     const inheritNextLv = (target.heroLv || 1) + inheritGain;
-    const inheritNextStars = G.calcUnitStars(target.type, inheritNextLv);
+    const inheritNextStars = G.calcUnitStars(target, inheritNextLv);
 
     $("absorb-title").textContent = `${tSym.name} 吞噬 ${dSym.name}`;
     $("absorb-summary").innerHTML =
@@ -1002,16 +1003,22 @@
   function openEvoDialog() {
     const unitId = run.pendingEvolutions[0];
     const loc = G.findUnitLocation(run, unitId);
-    if (!loc) {
+    const evoData = loc ? G.getEvolutionChoices(loc.unit) : null;
+    if (!loc || !evoData) {
       run.pendingEvolutions.shift();
       checkPendingModals();
       return;
     }
     const sym = G.SYMBOLS[loc.unit.type];
+    const isTier3 = evoData.tier === 3;
     $("evo-hero-preview").innerHTML = Art.renderPortraitImg(loc.unit.type, sym.name, "evo-sprite");
-    $("evo-title").textContent = `${sym.name} · 进阶转职`;
-    $("evo-desc").textContent = "该单位已升至 2 级，请选择一项永久分支转职方向：";
-    $("evo-choices").innerHTML = Object.values(sym.evolutions).map(evo => `
+    $("evo-title").textContent = isTier3
+      ? `${evoData.parent.name} · 3★ 终极二转`
+      : `${sym.name} · 2★ 进阶转职`;
+    $("evo-desc").textContent = isTier3
+      ? "该单位已突破至 3★！请从当前分支中选择一项终极职业形态："
+      : "该单位已突破至 2★（同时觉醒阵营羁绊），请选择一项进阶转职方向：";
+    $("evo-choices").innerHTML = evoData.options.map(evo => `
       <button type="button" class="evo-card" data-evo="${evo.id}">
         <span class="evo-badge">${evo.tag}</span>
         <strong>${evo.name}</strong>

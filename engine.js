@@ -1,79 +1,63 @@
 (() => {
   "use strict";
 
-  function evolution(id, name, tag, desc, hpMult, atkMult) {
-    return { id, name, tag, desc, hpMult, atkMult };
+  function evolution(id, name, tag, desc, hpMult, atkMult, tier3 = null) {
+    return { id, name, tag, desc, hpMult, atkMult, tier3 };
   }
 
   const SYMBOLS = {
     knight: {
       id: "knight",
       kind: "unit",
-      name: "圣盾骑士",
-      short: "骑士",
+      name: "圣盾步兵",
+      short: "步兵",
       role: "前排 · 坦克",
       color: "#4fd1a5",
       bg: "#16382e",
-      baseWeight: 22,
-      hp: 155,
-      atk: 14,
+      baseWeight: 18,
+      hp: 165,
+      atk: 15,
       atkCd: 1.15,
       moveSpd: 92,
       range: 52,
       crit: 0.08,
-      skillDesc: "前排承伤，开局自带 25 点护盾。",
+      skillDesc: "前排坚实步兵，开局自带圣盾壁垒与受击反伤。",
       evolutions: {
-        thorns: {
-          id: "thorns",
-          name: "荆棘圣殿",
-          tag: "反伤嘲讽",
-          desc: "受击反弹 35% 伤害，最大生命 +45%，攻速提升。",
-          hpMult: 1.45,
-          atkMult: 1.25
-        },
-        fortress: {
-          id: "fortress",
-          name: "铁壁要塞",
-          tag: "圣盾光环",
-          desc: "开局获得 50% 最大生命护盾，每 4 秒刷新护盾。",
-          hpMult: 1.55,
-          atkMult: 1.15
-        }
+        thorns: evolution("thorns", "荆棘重盾", "反伤嘲讽", "受击反弹 35% 伤害，最大生命 +45%，攻速提升。", 1.45, 1.25, {
+          iron_maiden: evolution("iron_maiden", "血棘暴君", "极致反伤", "受击反弹提升至 65%，每次受击回复 6% 生命！", 1.55, 1.35),
+          war_colossus: evolution("war_colossus", "震地巨像", "重击震荡", "每第 3 次攻击释放震荡波，眩晕周围敌军并造成范围重伤！", 1.65, 1.4)
+        }),
+        fortress: evolution("fortress", "铁壁要塞", "圣盾刷新", "开局获得 50% 最大生命护盾，每 4 秒刷新护盾。", 1.55, 1.15, {
+          aegis_bastion: evolution("aegis_bastion", "圣域壁垒", "群体护盾", "每 3.5 秒为全体友军叠加厚重圣盾，铁桶阵核心！", 1.6, 1.25),
+          immortal_guard: evolution("immortal_guard", "不朽卫士", "锁血反盾", "每战首次受致命伤锁血无敌 3 秒并立即回满 55% 护盾！", 1.7, 1.3)
+        })
       }
     },
     archer: {
       id: "archer",
       kind: "unit",
-      name: "秘银游侠",
-      short: "游侠",
+      name: "秘银弓手",
+      short: "弓手",
       role: "后排 · 连射",
       color: "#5cc8ff",
       bg: "#142f42",
-      baseWeight: 22,
+      baseWeight: 18,
       hp: 92,
       atk: 21,
       atkCd: 0.85,
       moveSpd: 108,
       range: 310,
       crit: 0.16,
-      skillDesc: "高速远程射击，精准打击敌方前排。",
+      skillDesc: "高速远程弓手，每 3 击齐射追踪箭矢。",
       evolutions: {
-        multishot: {
-          id: "multishot",
-          name: "疾风连射",
-          tag: "双重箭矢",
-          desc: "每次普攻同时发射 2 支箭矢（副箭造成 65% 伤害）。",
-          hpMult: 1.25,
-          atkMult: 1.28
-        },
-        sniper: {
-          id: "sniper",
-          name: "破甲狙击",
-          tag: "必爆斩杀",
-          desc: "每第 3 次攻击必定暴击造成 240% 穿透伤害。",
-          hpMult: 1.2,
-          atkMult: 1.45
-        }
+        multishot: evolution("multishot", "疾风连射", "双重箭矢", "每次普攻同时发射 2 支箭矢（副箭造成 65% 伤害）。", 1.25, 1.28, {
+          arrow_tempest: evolution("arrow_tempest", "箭雨风暴", "三重齐射", "每次普攻齐射 3 支追踪箭矢，清杂效率翻倍！", 1.32, 1.45),
+          gale_ranger: evolution("gale_ranger", "飓风游侠", "极速溅射", "攻速飙升 +35%，箭矢命中引发疾风范围溅射！", 1.3, 1.4)
+        }),
+        sniper: evolution("sniper", "破甲狙击", "必爆斩杀", "每第 3 次攻击必定暴击造成 240% 穿透伤害。", 1.2, 1.45, {
+          rail_marksman: evolution("rail_marksman", "穿云神射", "双倍破盾", "每第 2 次攻击必定暴击造成 280% 穿透并双倍破盾！", 1.28, 1.6),
+          headhunter: evolution("headhunter", "赏金猎手", "斩杀爆金", "对半血以下敌军造成 320% 斩杀重伤，击杀额外 +5 金币！", 1.3, 1.52)
+        })
       }
     },
     mage: {
@@ -84,31 +68,23 @@
       role: "后排 · 群伤",
       color: "#b78bfa",
       bg: "#281c42",
-      baseWeight: 18,
+      baseWeight: 17,
       hp: 86,
       atk: 20,
       atkCd: 1.25,
       moveSpd: 98,
       range: 270,
       crit: 0.12,
-      skillDesc: "释放连锁闪电，主目标受全额伤害并弹射 1 名敌人。",
+      skillDesc: "释放连锁闪电，主目标受全额伤害并弹射额外敌人。",
       evolutions: {
-        storm: {
-          id: "storm",
-          name: "天雷唤术",
-          tag: "三重连锁",
-          desc: "连锁闪电弹射至多 3 名敌人，法术伤害大幅提升。",
-          hpMult: 1.22,
-          atkMult: 1.42
-        },
-        frost: {
-          id: "frost",
-          name: "凛冬秘术",
-          tag: "冰霜减速",
-          desc: "释放寒冰新星造成范围伤害，并降低命中目标 35% 攻速。",
-          hpMult: 1.32,
-          atkMult: 1.32
-        }
+        storm: evolution("storm", "天雷唤术", "三重连锁", "连锁闪电弹射至多 3 名敌人，法术伤害大幅提升。", 1.22, 1.42, {
+          zeus_archon: evolution("zeus_archon", "雷霆主宰", "五重天雷", "连锁闪电飙升至 5 名敌人，伤害 +45% 且暴击麻痹！", 1.3, 1.58),
+          arcane_nova: evolution("arcane_nova", "奥术崩星", "闪电爆裂", "每次连锁闪电在主目标处引爆奥术冲击，毁灭人海！", 1.32, 1.52)
+        }),
+        frost: evolution("frost", "凛冬秘术", "冰霜减速", "释放寒冰新星造成范围伤害，并降低命中目标 35% 攻速。", 1.32, 1.32, {
+          glacier_empress: evolution("glacier_empress", "极冰女巫", "群体冻结", "寒冰新星范围扩大并冻结目标 0.8 秒，强控战场！", 1.42, 1.48),
+          astral_chrono: evolution("astral_chrono", "星界时法", "时空加速", "减速敌军同时为全军赋予 +18% 攻速时空加速！", 1.4, 1.42)
+        })
       }
     },
     priest: {
@@ -119,7 +95,7 @@
       role: "后排 · 支援",
       color: "#f7cf6d",
       bg: "#3b2f16",
-      baseWeight: 16,
+      baseWeight: 15,
       hp: 100,
       atk: 13,
       atkCd: 1.3,
@@ -128,117 +104,109 @@
       crit: 0.1,
       skillDesc: "发射圣光箭，同时治疗血量比例最低的友军。",
       evolutions: {
-        seraph: {
-          id: "seraph",
-          name: "炽天使",
-          tag: "双人圣疗",
-          desc: "同时治疗 2 名友军，并赋予其 +20% 攻击力祝福。",
-          hpMult: 1.32,
-          atkMult: 1.35
-        },
-        artificer: {
-          id: "artificer",
-          name: "圣盾工匠",
-          tag: "护盾充能",
-          desc: "治疗同时为目标叠加厚重圣盾，并对敌方附加圣光灼烧。",
-          hpMult: 1.38,
-          atkMult: 1.28
-        }
+        seraph: evolution("seraph", "炽天使", "双人圣疗", "同时治疗 2 名友军，并赋予其 +20% 攻击力祝福。", 1.32, 1.35, {
+          radiant_saint: evolution("radiant_saint", "辉光圣女", "三人圣疗", "同时治疗 3 名友军，并赋予 +35% 攻击力圣光祝福！", 1.45, 1.5),
+          judgement_angel: evolution("judgement_angel", "审判炽天使", "圣光天罚", "治疗同时降下圣光天罚，对敌方最高血目标造成 220% 圣伤！", 1.4, 1.58)
+        }),
+        artificer: evolution("artificer", "圣盾工匠", "护盾充能", "治疗同时为目标叠加厚重圣盾，强化生存。", 1.38, 1.28, {
+          aegis_oracle: evolution("aegis_oracle", "圣佑先知", "群体圣盾", "治疗同时为 3 名友军叠加 130% 护盾，对抗爆发神技！", 1.5, 1.42),
+          war_chaplain: evolution("war_chaplain", "战歌牧师", "战歌赏金", "存活时全军攻速 +20%，每次施法额外产出 +3 金币！", 1.42, 1.45)
+        })
       }
     },
     assassin: {
       id: "assassin",
       kind: "unit",
-      name: "暗影决斗士",
+      name: "暗影刺客",
       short: "刺客",
-      role: "突袭 · 爆发",
+      role: "前排 · 突袭",
       color: "#ff6b7a",
       bg: "#3f1922",
-      baseWeight: 15,
-      hp: 96,
+      baseWeight: 16,
+      hp: 98,
       atk: 26,
       atkCd: 0.9,
       moveSpd: 165,
       range: 54,
       crit: 0.28,
-      skillDesc: "高暴击近战，优先切入敌方脆弱的后排目标。",
+      skillDesc: "高移速高暴击近战，优先切入敌方脆弱的后排目标。",
       evolutions: {
-        bladedancer: {
-          id: "bladedancer",
-          name: "嗜血刃舞",
-          tag: "击杀连斩",
-          desc: "暴击率 +15%，击杀敌人立即回复 25% 生命并重置攻击冷却。",
-          hpMult: 1.3,
-          atkMult: 1.4
-        },
-        shadowbomb: {
-          id: "shadowbomb",
-          name: "暗影爆破",
-          tag: "暴击爆炸",
-          desc: "每次暴击在目标周围引爆暗影冲击，造成 65% 范围溅射。",
-          hpMult: 1.25,
-          atkMult: 1.48
-        }
-      }
-    },
-    berserker: {
-      id: "berserker", kind: "unit", name: "狂战斧手", short: "狂战",
-      role: "前排 · 吸血", color: "#ff806a", bg: "#46272b", baseWeight: 12,
-      hp: 145, atk: 23, atkCd: 1.05, moveSpd: 125, range: 58, crit: 0.12,
-      skillDesc: "生命越低攻速越高，普攻恢复造成伤害的 20%。",
-      evolutions: {
-        bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血",
-          "横扫最多 2 个目标，吸血提高至 35%。", 1.34, 1.35),
-        undying: evolution("undying", "不屈狂魔", "锁血狂暴",
-          "每战首次受致命伤时保留 1 生命，无敌且狂暴 3 秒。", 1.3, 1.38)
-      }
-    },
-    engineer: {
-      id: "engineer", kind: "unit", name: "矮人炮手", short: "炮手",
-      role: "后排 · 炮台", color: "#f2ba70", bg: "#3d2c16", baseWeight: 11,
-      hp: 103, atk: 19, atkCd: 1.15, moveSpd: 94, range: 240, crit: 0.11,
-      skillDesc: "开战时和此后每 5 秒布置一座蒸汽炮台。",
-      evolutions: {
-        heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围眩晕",
-          "重炮攻击造成范围溅射并眩晕命中单位。", 1.25, 1.4),
-        swarm_turret: evolution("swarm_turret", "机械蜂群", "三座炮台",
-          "可同时维持 3 座射速更快的机枪炮台。", 1.28, 1.33)
-      }
-    },
-    necromancer: {
-      id: "necromancer", kind: "unit", name: "亡灵唤师", short: "唤师",
-      role: "后排 · 亡灵", color: "#8ce5aa", bg: "#193c34", baseWeight: 10,
-      hp: 102, atk: 23, atkCd: 1.25, moveSpd: 92, range: 265, crit: 0.12,
-      skillDesc: "每阵亡一名单位，召唤骸骨战士抵挡伤害。骸骨自身阵亡不再召唤。",
-      evolutions: {
-        bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽",
-          "召唤持盾的强化骸骨，优先替友军承伤。", 1.36, 1.25),
-        soul_mage: evolution("soul_mage", "噬魂巫师", "灵魂叠加",
-          "每有一名敌军阵亡，本场战斗永久增加 15% 法强。", 1.22, 1.37)
-      }
-    },
-    bard: {
-      id: "bard", kind: "unit", name: "命运吟游者", short: "吟游者",
-      role: "后排 · 战歌", color: "#eea7f4", bg: "#382340", baseWeight: 9,
-      hp: 94, atk: 14, atkCd: 1.7, moveSpd: 112, range: 235, crit: 0.15,
-      skillDesc: "存活时全军攻速 +15%，每次演奏产出 3 金币。",
-      evolutions: {
-        gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金",
-          "全军暴伤倍率增加 0.25，每次暴击额外获得 2 金币。", 1.28, 1.23),
-        war_song: evolution("war_song", "战歌领主", "开场战歌",
-          "开战前 5 秒，全军攻速额外 +35%。", 1.32, 1.3)
+        bladedancer: evolution("bladedancer", "嗜血刃舞", "击杀连斩", "暴击率 +15%，击杀敌人立即回复 25% 生命并重置攻击冷却。", 1.3, 1.4, {
+          crimson_reaper: evolution("crimson_reaper", "猩红收割者", "杀戮叠加", "暴击率再 +15%，每次击杀本战永久 +12% 攻击力！", 1.38, 1.58),
+          phantom_blade: evolution("phantom_blade", "幻影剑圣", "双重瞬斩", "每第 2 次攻击瞬间打出双重暴击连斩，爆发拉满！", 1.35, 1.55)
+        }),
+        shadowbomb: evolution("shadowbomb", "暗影爆破", "暴击爆炸", "每次暴击在目标周围引爆暗影冲击，造成 65% 范围溅射。", 1.25, 1.48, {
+          void_detonator: evolution("void_detonator", "虚空爆裂者", "破盾大爆", "暴击引爆超大范围 110% 暗影爆破并双倍破盾！", 1.32, 1.62),
+          venom_stalker: evolution("venom_stalker", "剧毒影魔", "影毒减速", "暴击溅射附带减速与 25% 吸血，持续收割后排！", 1.4, 1.52)
+        })
       }
     },
     valkyrie: {
-      id: "valkyrie", kind: "unit", name: "圣枪女武神", short: "女武神",
-      role: "前排 · 穿透", color: "#f8e296", bg: "#403a21", baseWeight: 9,
-      hp: 153, atk: 25, atkCd: 1.1, moveSpd: 138, range: 92, crit: 0.16,
-      skillDesc: "长枪穿透前后排，对护盾造成双倍伤害。",
+      id: "valkyrie",
+      kind: "unit",
+      name: "圣枪骑兵",
+      short: "骑兵",
+      role: "前排 · 冲锋",
+      color: "#f8e296",
+      bg: "#403a21",
+      baseWeight: 16,
+      hp: 152,
+      atk: 23,
+      atkCd: 1.08,
+      moveSpd: 142,
+      range: 92,
+      crit: 0.16,
+      skillDesc: "高速长枪骑兵，穿透前后排并对护盾造成双倍伤害。",
       evolutions: {
-        sky_charge: evolution("sky_charge", "天穹女武神", "击退冲锋",
-          "开战冲锋，击退并眩晕敌方前排。", 1.31, 1.44),
-        dawn_spear: evolution("dawn_spear", "破晓枪圣", "暴击圣盾",
-          "穿透暴击为全军叠加圣盾。", 1.35, 1.33)
+        sky_charge: evolution("sky_charge", "冲锋轻骑", "击退冲锋", "开战冲锋，击退并眩晕敌方前排。", 1.34, 1.42, {
+          thunder_lancer: evolution("thunder_lancer", "雷霆龙骑", "雷暴穿透", "长枪穿透最多 3 名敌人并附带连锁雷爆！", 1.45, 1.58),
+          storm_hussar: evolution("storm_hussar", "疾风翼骑", "极速铁蹄", "移速与攻速 +35%，持续冲散敌方阵型！", 1.42, 1.52)
+        }),
+        dawn_spear: evolution("dawn_spear", "破晓重骑", "暴击圣盾", "穿透暴击为全军叠加圣盾。", 1.42, 1.34, {
+          sun_paladin: evolution("sun_paladin", "烈阳圣骑", "破盾圣疗", "三倍破盾，每次穿透暴击为全军同时叠盾与回血！", 1.55, 1.46),
+          dread_knight: evolution("dread_knight", "暗黑铁骑", "嗜血冲阵", "穿透攻击自带 35% 生命偷取，血越低攻速越高！", 1.5, 1.54)
+        })
+      }
+    },
+    // Legacy classes kept strictly for old-save compatibility (not rolled on the 6-class wheel)
+    berserker: {
+      id: "berserker", kind: "legacy", name: "狂战斧手", short: "狂战",
+      role: "前排 · 吸血", color: "#ff806a", bg: "#46272b", baseWeight: 0,
+      hp: 145, atk: 23, atkCd: 1.05, moveSpd: 125, range: 58, crit: 0.12,
+      skillDesc: "生命越低攻速越高，普攻恢复造成伤害的 20%。",
+      evolutions: {
+        bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血", "横扫最多 2 个目标，吸血提高至 35%。", 1.34, 1.35),
+        undying: evolution("undying", "不屈狂魔", "锁血狂暴", "每战首次受致命伤时保留 1 生命，无敌且狂暴 3 秒。", 1.3, 1.38)
+      }
+    },
+    engineer: {
+      id: "engineer", kind: "legacy", name: "矮人炮手", short: "炮手",
+      role: "后排 · 炮台", color: "#f2ba70", bg: "#3d2c16", baseWeight: 0,
+      hp: 103, atk: 19, atkCd: 1.15, moveSpd: 94, range: 240, crit: 0.11,
+      skillDesc: "开战时和此后每 5 秒布置一座蒸汽炮台。",
+      evolutions: {
+        heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围眩晕", "重炮攻击造成范围溅射并眩晕命中单位。", 1.25, 1.4),
+        swarm_turret: evolution("swarm_turret", "机械蜂群", "三座炮台", "可同时维持 3 座射速更快的机枪炮台。", 1.28, 1.33)
+      }
+    },
+    necromancer: {
+      id: "necromancer", kind: "legacy", name: "亡灵唤师", short: "唤师",
+      role: "后排 · 亡灵", color: "#8ce5aa", bg: "#193c34", baseWeight: 0,
+      hp: 102, atk: 23, atkCd: 1.25, moveSpd: 92, range: 265, crit: 0.12,
+      skillDesc: "每阵亡一名单位，召唤骸骨战士抵挡伤害。",
+      evolutions: {
+        bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽", "召唤持盾的强化骸骨，优先替友军承伤。", 1.36, 1.25),
+        soul_mage: evolution("soul_mage", "噬魂巫师", "灵魂叠加", "每有一名敌军阵亡，本场战斗永久增加 15% 法强。", 1.22, 1.37)
+      }
+    },
+    bard: {
+      id: "bard", kind: "legacy", name: "命运吟游者", short: "吟游者",
+      role: "后排 · 战歌", color: "#eea7f4", bg: "#382340", baseWeight: 0,
+      hp: 94, atk: 14, atkCd: 1.7, moveSpd: 112, range: 235, crit: 0.15,
+      skillDesc: "存活时全军攻速 +15%，每次演奏产出 3 金币。",
+      evolutions: {
+        gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金", "全军暴伤倍率增加 0.25，每次暴击额外获得 2 金币。", 1.28, 1.23),
+        war_song: evolution("war_song", "战歌领主", "开场战歌", "开战前 5 秒，全军攻速额外 +35%。", 1.32, 1.3)
       }
     },
     joker: {
@@ -255,12 +223,12 @@
   };
 
   const UNIT_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit");
-  const FRONTLINE = new Set(["knight", "assassin", "berserker", "valkyrie"]);
+  const FRONTLINE = new Set(["knight", "assassin", "valkyrie", "berserker"]);
 
   function isUnitFrontline(type) {
     return FRONTLINE.has(type);
   }
-  const SYMBOL_IDS = Object.keys(SYMBOLS);
+  const SYMBOL_IDS = [...UNIT_IDS, "joker"];
 
   const PAYLINES = [
     { id: "row0", cells: [0, 1, 2], label: "上排横线" },
@@ -274,49 +242,48 @@
   ];
 
   const SYNERGIES = {
-    knight: { name: "钢铁防线", req: 2, desc: "2+ 骑士：全军开局获得 +35 护盾" },
-    archer: { name: "箭雨齐发", req: 2, desc: "2+ 游侠：全军攻击速度 +18%" },
+    knight: { name: "钢铁防线", req: 2, desc: "2+ 步兵：全军开局获得 +35 护盾" },
+    archer: { name: "箭雨齐发", req: 2, desc: "2+ 弓手：全军攻击速度 +18%" },
     mage: { name: "奥术共鸣", req: 2, desc: "2+ 法师：全军技能与法术伤害 +25%" },
     priest: { name: "圣光庇护", req: 2, desc: "2+ 祭司：全军每 2 秒回复 4% 最大生命" },
-    assassin: { name: "致命突袭", req: 2, desc: "2+ 刺客：全军暴击率 +18%" }
+    assassin: { name: "致命突袭", req: 2, desc: "2+ 刺客：全军暴击率 +18%" },
+    valkyrie: { name: "铁骑冲锋", req: 2, desc: "2+ 骑兵：全军移速 +18%，对护盾伤害 +40%" }
   };
 
   const FACTION_SYNERGIES = {
     alliance: {
       name: "圣辉联盟", short: "联盟",
-      types: ["knight", "priest", "engineer", "valkyrie"],
+      types: ["knight", "priest", "valkyrie"],
       color: "#f8e296",
       desc: "2名 2★+：护盾 +35% 且破盾反弹圣伤",
       enhanced: "3名 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
     },
     elves: {
       name: "银月精灵", short: "精灵",
-      types: ["archer", "mage", "bard"],
+      types: ["archer", "mage", "priest"],
       color: "#7be7ff",
       desc: "2名 2★+：全军攻速 +18%，每 4 击触发星落爆裂",
-      enhanced: "3名 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币（需升 3 级轮盘解锁吟游者）"
+      enhanced: "3名 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币"
     },
     horde: {
       name: "赤血部落", short: "部落",
-      types: ["assassin", "berserker", "engineer"],
+      types: ["assassin", "valkyrie", "archer"],
       color: "#ff7a6b",
       desc: "2名 2★+：全军暴击吸血 22%，暴击率 +12%",
-      enhanced: "3名 2★+：全军暴击吸血 38%，全军攻击 +25%（需升 2 级轮盘解锁狂战与炮手）"
+      enhanced: "3名 2★+：全军暴击吸血 38%，全军攻击 +25%"
     },
     undead: {
       name: "幽冥议会", short: "幽冥",
-      types: ["mage", "assassin", "necromancer"],
+      types: ["mage", "assassin", "knight"],
       color: "#a8ffcf",
-      desc: "2名 2★+：召唤物生命/攻击 +55%，全军技能伤害 +20%",
-      enhanced: "3名 2★+：召唤物属性 +90%，每击杀敌军全军回血 8%（需升 3 级轮盘解锁亡灵唤师）"
+      desc: "2名 2★+：全军技能伤害 +20%，受击反伤 +15%",
+      enhanced: "3名 2★+：技能伤害 +40%，每击杀敌军全军回血 8%"
     }
   };
 
   const UNIT_UNLOCK_TIER = {
-    knight: 1, archer: 1, mage: 1, priest: 1, assassin: 1,
-    berserker: 2, engineer: 2,
-    necromancer: 3, bard: 3,
-    valkyrie: 4
+    knight: 1, archer: 1, mage: 1, priest: 1, assassin: 1, valkyrie: 1,
+    berserker: 2, engineer: 2, necromancer: 3, bard: 3
   };
 
   const UNIT_RARITIES = {
@@ -387,16 +354,19 @@
     Object.values(INNATE_SKILLS).map(sk => [sk.owner, sk.id])
   );
 
-  function getUnitRarity(type) {
-    return UNIT_RARITIES[UNIT_RARITY_MAP[type] || "white"];
+  function getUnitRarity(unitOrType) {
+    if (unitOrType && typeof unitOrType === "object") {
+      return UNIT_RARITIES[unitOrType.rarity || UNIT_RARITY_MAP[unitOrType.type] || "white"] || UNIT_RARITIES.white;
+    }
+    return UNIT_RARITIES[UNIT_RARITY_MAP[unitOrType] || "white"] || UNIT_RARITIES.white;
   }
 
   function getInnateSkill(type) {
     return INNATE_SKILLS[UNIT_INNATE_SKILL_ID[type] || "aegis_wall"];
   }
 
-  function calcUnitStars(type, heroLv = 1) {
-    const thresholds = getUnitRarity(type).starThresholds;
+  function calcUnitStars(unitOrType, heroLv = 1) {
+    const thresholds = getUnitRarity(unitOrType).starThresholds;
     let stars = 1;
     for (const req of thresholds) {
       if (heroLv >= req) stars += 1;
@@ -404,9 +374,32 @@
     return Math.min(5, stars);
   }
 
-  function nextStarLevel(type, heroLv = 1) {
-    const thresholds = getUnitRarity(type).starThresholds;
+  function nextStarLevel(unitOrType, heroLv = 1) {
+    const thresholds = getUnitRarity(unitOrType).starThresholds;
     return thresholds.find(req => heroLv < req) ?? null;
+  }
+
+  function getEvolutionChoices(unit) {
+    if (!unit) return null;
+    const def = SYMBOLS[unit.type];
+    if (!def?.evolutions) return null;
+    const stars = unitLevel(unit);
+    if (stars >= 2 && !unit.evolution) {
+      return { tier: 2, options: Object.values(def.evolutions) };
+    }
+    if (stars >= 3 && unit.evolution && !unit.evolution3) {
+      const t2 = def.evolutions[unit.evolution];
+      if (t2?.tier3) return { tier: 3, parent: t2, options: Object.values(t2.tier3) };
+    }
+    return null;
+  }
+
+  function getUnitEvoInfo(unit) {
+    if (!unit) return null;
+    const def = SYMBOLS[unit.type];
+    const t2 = unit.evolution ? def?.evolutions?.[unit.evolution] : null;
+    const t3 = (t2 && unit.evolution3) ? t2.tier3?.[unit.evolution3] : null;
+    return t3 || t2 || null;
   }
 
   function getUnitFactions(type) {
@@ -666,41 +659,41 @@
     if (boss.length > 0) {
       const boostedBoss = boss.map(b => ({ ...b, cd: Math.max(0.62, Number((b.cd * 0.76).toFixed(2))) }));
       const bossPatterns = [
-        [3, 4, 3],
-        [3, 5, 4],
-        [4, 4, 4],
-        [4, 5, 4],
-        [5, 5, 5]
+        [5, 6, 5],
+        [5, 7, 6],
+        [6, 7, 6],
+        [6, 8, 6],
+        [7, 8, 7]
       ];
       const [p1, p2, p3] = bossPatterns[(wave.chapter - 1) % bossPatterns.length];
       return {
         ...wave,
         phases: [
           { delay: 0, enemies: makeSquad(p1, 1.08, 1.05, 0) },
-          { delay: 4.8, enemies: makeSquad(p2, 1.32, 1.20, 1) },
-          { delay: 9.5, enemies: [...boostedBoss, ...makeSquad(p3, 1.48, 1.28, 2)] }
+          { delay: 4.2, enemies: makeSquad(p2, 1.32, 1.20, 1) },
+          { delay: 8.4, enemies: [...boostedBoss, ...makeSquad(p3, 1.48, 1.28, 2)] }
         ]
       };
     }
 
-    // Distinct asymmetric squad counts per wave so every wave feels different!
+    // Dense, asymmetric enemy swarms per wave!
     const idxInCh = ((wave.wave - 1) % 6);
     const wavePatterns = [
-      [2, 3, 2], // W1: light probe -> push -> tail
-      [3, 2, 4], // W2: front clash -> brief breather -> heavy wave
-      [3, 4, 2], // W3 Mini-Boss: vanguard -> main horde -> elite lead
-      [2, 4, 5], // W4: escalating swarm
-      [4, 3, 5]  // W5: intense assault
+      [4, 5, 4], // W1: 13 enemies
+      [5, 5, 6], // W2: 16 enemies
+      [5, 6, 5], // W3 Mini-Boss: 16 enemies
+      [5, 7, 7], // W4: 19 enemies
+      [6, 7, 8]  // W5: 21 enemies
     ];
-    const pat = wavePatterns[idxInCh] || [3, 3, 4];
-    const chExtra = wave.chapter >= 4 ? 1 : 0;
-    const w1Scale = (!wave.endless && wave.wave === 1) ? 0.78 : 1;
+    const pat = wavePatterns[idxInCh] || [5, 6, 6];
+    const chExtra = wave.chapter >= 5 ? 2 : wave.chapter >= 3 ? 1 : 0;
+    const w1Scale = (!wave.endless && wave.wave === 1) ? 0.76 : 1;
     return {
       ...wave,
       phases: [
         { delay: 0, enemies: makeSquad(pat[0], 1.0 * w1Scale, 1.0 * w1Scale, 0) },
-        { delay: 5.8, enemies: makeSquad(pat[1] + chExtra, 1.15 * w1Scale, 1.1 * w1Scale, 1) },
-        { delay: 11.6, enemies: makeSquad(pat[2] + chExtra, 1.32 * w1Scale, 1.2 * w1Scale, 2) }
+        { delay: 4.5, enemies: makeSquad(pat[1] + chExtra, 1.15 * w1Scale, 1.1 * w1Scale, 1) },
+        { delay: 9.0, enemies: makeSquad(pat[2] + chExtra, 1.32 * w1Scale, 1.2 * w1Scale, 2) }
       ]
     };
   }
@@ -710,7 +703,7 @@
 
   function chapterWaves(chapter, enemies, encounters, boss) {
     const firstWave = (chapter.id - 1) * (encounters.length + 1) + 1;
-    const reward = 34 + (chapter.id - 1) * 14;
+    const reward = 20 + (chapter.id - 1) * 8;
     const hpMult = CHAPTER_HP_MULT[chapter.id - 1] || 1;
     const atkMult = CHAPTER_ATK_MULT[chapter.id - 1] || 1;
     const normalWaves = encounters.map(([name, roster], index) => {
@@ -723,7 +716,7 @@
         name: isMiniBoss ? `精英小首领 · ${name}` : name,
         boss: false,
         miniBoss: isMiniBoss,
-        reward: reward + index * 4 + (isMiniBoss ? 14 : 0),
+        reward: reward + index * 2 + (isMiniBoss ? 8 : 0),
         enemies: roster.map((key, eIdx) => {
           const enemy = enemies[key];
           const isLead = isMiniBoss && eIdx === 0;
@@ -748,7 +741,7 @@
       boss: true,
       bossTitle: chapter.bossName,
       bossSkill: skill,
-      reward: reward + 60,
+      reward: reward + 32,
       enemies: [
         {
           ...bossEnemy,
@@ -1051,12 +1044,12 @@
     run.pendingEncounter ??= null;
     run.mode ??= "campaign";
     run.maxLines ??= Math.min(8, run.lastLines?.length ?? 0);
-    // Sanitize legacy saves that had removed resource symbols (gold/iron/ember) on the reel
+    // Sanitize legacy saves that had removed symbols on the reel
     if (Array.isArray(run.board)) {
-      run.board = run.board.map(s => SYMBOLS[s] ? s : "knight");
+      run.board = run.board.map(s => (SYMBOLS[s] && SYMBOLS[s].kind !== "legacy") ? s : "knight");
     }
     if (Array.isArray(run.nudgePreview)) {
-      run.nudgePreview = run.nudgePreview.map(s => SYMBOLS[s] ? s : "archer");
+      run.nudgePreview = run.nudgePreview.map(s => (SYMBOLS[s] && SYMBOLS[s].kind !== "legacy") ? s : "archer");
     }
     return run;
   }
@@ -1179,56 +1172,62 @@
       enchant === "lock" ? [index] : [])])];
   }
 
+  const CORE_SIX_POOL = ["knight", "assassin", "valkyrie", "archer", "mage", "priest", "joker"];
+
   const REEL_TIERS = [
     {
       level: 1,
       name: "铁制初机",
-      upgradeCost: 60,
+      upgradeCost: 55,
       maxLocks: 1,
       jokerBonus: 0,
       statBonus: 0,
       bonusSpins: 0,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "priest", "assassin", "joker"],
-      desc: "5 大基础兵种 + 万能百搭，1 锁格位"
+      rarityOdds: { white: 0.85, green: 0.15, blue: 0, purple: 0, gold: 0 },
+      unlocked: CORE_SIX_POOL,
+      desc: "6 大核心兵种（三前排+三后排）· 主出白兵(1技)，15% 绿兵(2技)"
     },
     {
       level: 2,
       name: "秘银轮盘",
-      upgradeCost: 110,
+      upgradeCost: 105,
       maxLocks: 2,
       jokerBonus: 2,
       statBonus: 0.08,
       bonusSpins: 0,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "joker"],
-      desc: "解锁狂战/矮人炮手 + 全军属性 +8% + 锁格 +1"
+      rarityOdds: { white: 0.25, green: 0.55, blue: 0.20, purple: 0, gold: 0 },
+      unlocked: CORE_SIX_POOL,
+      desc: "主出绿兵(2技) + 20% 蓝兵(3技) · 锁格 +1 · 属性 +8%"
     },
     {
       level: 3,
       name: "符文机台",
-      upgradeCost: 180,
+      upgradeCost: 170,
       maxLocks: 2,
       jokerBonus: 4,
       statBonus: 0.16,
       bonusSpins: 1,
       bonusXp: 0,
-      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "necromancer", "bard", "joker"],
+      rarityOdds: { white: 0, green: 0.35, blue: 0.45, purple: 0.20, gold: 0 },
+      unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double" },
-      desc: "解锁唤师/吟游者 + 中心【×2 双倍格】+ 免费转 +1 + 属性 +16%"
+      desc: "主出蓝兵(3技) + 20% 紫兵(4技) · 中心【×2 双倍格】+ 免费转 +1"
     },
     {
       level: 4,
       name: "鎏金圣轮",
-      upgradeCost: 275,
+      upgradeCost: 260,
       maxLocks: 3,
       jokerBonus: 6,
       statBonus: 0.26,
       bonusSpins: 1,
       bonusXp: 1,
-      unlocked: [...UNIT_IDS, "joker"],
+      rarityOdds: { white: 0, green: 0, blue: 0.28, purple: 0.48, gold: 0.24 },
+      unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold" },
-      desc: "解锁女武神 + 对角【+25G 鎏金】+ 新召 +1 经验 + 属性 +26%"
+      desc: "主出紫兵(4技) + 24% 金兵(5技) · 对角【+25G】+ 新召 +1 级"
     },
     {
       level: 5,
@@ -1239,11 +1238,27 @@
       statBonus: 0.38,
       bonusSpins: 2,
       bonusXp: 2,
-      unlocked: [...UNIT_IDS, "joker"],
+      rarityOdds: { white: 0, green: 0, blue: 0, purple: 0.45, gold: 0.55 },
+      unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold", 2: "lucky", 6: "lucky" },
-      desc: "副对角【★2 赐福】+ 新召直出 2 星 + 免费转 +2 + 属性 +38%！"
+      desc: "55% 金兵(5技) + 45% 紫兵(4技) · 副对角【★2 赐福】+ 属性 +38%！"
     }
   ];
+
+  function rollRarityForTier(run, lucky = false) {
+    const tier = getReelTier(run);
+    const odds = tier.rarityOdds || { white: 1 };
+    const entries = Object.entries(odds).filter(([, p]) => p > 0);
+    // Lucky spin shifts odds slightly upward toward rarer quality!
+    let r = Math.random();
+    if (lucky) r = Math.min(0.999, r + 0.14);
+    let acc = 0;
+    for (const [id, p] of entries) {
+      acc += p;
+      if (r <= acc) return id;
+    }
+    return entries.at(-1)?.[0] || "white";
+  }
 
   const CELL_ENCHANT_INFO = {
     double: { badge: "×2", name: "双倍符文格", desc: "连线经过此格时，金币与召唤效果翻倍！" },
@@ -1290,32 +1305,38 @@
 
   function ensureUnitSkillState(unit) {
     if (!unit) return unit;
+    if (!unit.rarity || !UNIT_RARITIES[unit.rarity]) {
+      unit.rarity = UNIT_RARITY_MAP[unit.type] || "white";
+    }
     if (!Number.isFinite(unit.heroLv) || unit.heroLv < 1) {
-      // Migrate legacy units cleanly based on stars/xp
       const legacyStars = Math.max(1, unit.stars || 1);
-      const th = getUnitRarity(unit.type).starThresholds;
+      const th = getUnitRarity(unit).starThresholds;
       unit.heroLv = legacyStars >= 2 ? (th[legacyStars - 2] || 1) : Math.max(1, 1 + Math.floor((unit.xp || 0) / 2));
     }
     if (!Array.isArray(unit.skills) || unit.skills.length === 0) {
       const innate = getInnateSkill(unit.type);
       unit.skills = [{ id: innate.id, level: 1 }];
     }
-    unit.stars = calcUnitStars(unit.type, unit.heroLv);
+    unit.evolution3 ??= null;
+    unit.stars = calcUnitStars(unit, unit.heroLv);
     return unit;
   }
 
   function createUnit(id, type, opts = {}) {
     const innate = getInnateSkill(type);
+    const rarity = opts.rarity && UNIT_RARITIES[opts.rarity] ? opts.rarity : (UNIT_RARITY_MAP[type] || "white");
     const startLv = Math.max(1, opts.heroLv || (1 + Math.floor((opts.xp || 0) / 2)));
     return {
       id,
       type,
+      rarity,
       heroLv: startLv,
-      stars: calcUnitStars(type, startLv),
+      stars: calcUnitStars({ type, rarity }, startLv),
       xp: opts.xp || 0,
       skills: opts.skills ? opts.skills.map(s => ({ ...s })) : [{ id: innate.id, level: 1 }],
       trait: opts.trait === undefined ? rollUnitTrait() : opts.trait,
       evolution: opts.evolution || null,
+      evolution3: opts.evolution3 || null,
       lucky: !!opts.lucky,
       bonusHp: opts.bonusHp || 0,
       bonusAtk: opts.bonusAtk || 0,
@@ -1328,11 +1349,11 @@
   function unitLevel(unit) {
     if (!unit) return 1;
     const lv = unit.heroLv || 1;
-    return calcUnitStars(unit.type, lv);
+    return calcUnitStars(unit, lv);
   }
 
   function nextStarXp(lvl, unit) {
-    if (unit) return nextStarLevel(unit.type, unit.heroLv || 1);
+    if (unit) return nextStarLevel(unit, unit.heroLv || 1);
     return STAR_THRESHOLDS[lvl - 1] ?? null;
   }
 
@@ -1402,7 +1423,8 @@
     const heroLv = unit.heroLv || 1;
     const effLv = heroLv <= 24 ? (heroLv - 1) : 23 + (heroLv - 24) * 0.6;
     // Higher-rarity slot units have higher base quality (White 1.0, Green 1.08, Blue 1.18, Purple 1.30, Gold 1.46)
-    const rarityMult = { white: 1, green: 1.08, blue: 1.18, purple: 1.30, gold: 1.46 }[UNIT_RARITY_MAP[unit.type] || "white"] || 1;
+    const rarityId = getUnitRarity(unit).id;
+    const rarityMult = { white: 1, green: 1.08, blue: 1.18, purple: 1.30, gold: 1.46 }[rarityId] || 1;
     // Strong per-level growth (+12% HP / +10% ATK per heroLv) + unmistakable star-up jump (+25% HP / +22% ATK per star)!
     let hp = def.hp * rarityMult * (1 + effLv * 0.12 + (lvl - 1) * 0.25) + unit.bonusHp + (run?.globalBonusHp || 0);
     let atk = def.atk * rarityMult * (1 + effLv * 0.10 + (lvl - 1) * 0.22) + unit.bonusAtk + (run?.globalBonusAtk || 0);
@@ -1437,11 +1459,20 @@
     }
     if (unit.evolution && def.evolutions[unit.evolution]) {
       const evo = def.evolutions[unit.evolution];
-      // Softened evolution multiplier so ★2 isn't an unbreakable spike, leaving room for ★3-★5 growth!
       const softHp = 1 + (evo.hpMult - 1) * 0.52;
       const softAtk = 1 + (evo.atkMult - 1) * 0.55;
       hp *= softHp;
       atk *= softAtk;
+      if (unit.evolution3 && evo.tier3?.[unit.evolution3]) {
+        const evo3 = evo.tier3[unit.evolution3];
+        hp *= 1 + (evo3.hpMult - 1) * 0.55;
+        atk *= 1 + (evo3.atkMult - 1) * 0.58;
+        if (unit.evolution3 === "gale_ranger" || unit.evolution3 === "storm_hussar") {
+          atkCd *= 0.74;
+          moveSpd *= 1.35;
+        }
+        if (unit.evolution3 === "crimson_reaper") crit += 0.15;
+      }
     }
     if (run) {
       const tier = getReelTier(run);
@@ -1706,16 +1737,16 @@
     }
 
     if (hits.length >= 2) {
-      const comboGold = 25 * (hits.length - 1) * (isFever ? 2 : 1);
+      const comboGold = 14 * (hits.length - 1) * (isFever ? 2 : 1);
       run.gold += comboGold;
       summary.goldGained += comboGold;
       summary.notes.push(`${hits.length} 重连线暴击！额外 +${comboGold} 金币`);
 
       if (hasCore(run, "blast_cart")) {
-        run.gold += 50;
+        run.gold += 35;
         run.globalBonusAtk += 2;
-        summary.goldGained += 50;
-        summary.notes.push("连爆矿车：+50 金币，全军永久 +2 攻击！");
+        summary.goldGained += 35;
+        summary.notes.push("连爆矿车：+35 金币，全军永久 +2 攻击！");
       }
     }
 
@@ -1771,13 +1802,16 @@
         if (hasLuckyCell) summary.notes.push("命运赐福格：直出高阶经验！");
 
         for (let s = 0; s < spawnCount; s += 1) {
+          const isLucky = hit.hasWild || isFever || hasLuckyCell;
+          const rolledRarity = rollRarityForTier(run, isLucky);
           const unit = createUnit(run.nextId++, hit.symbol, {
+            rarity: rolledRarity,
             heroLv: 1 + (hasLuckyCell ? 2 : 0) + (tier.bonusXp || 0),
             xp: extraXp,
-            lucky: hit.hasWild || isFever || hasLuckyCell
+            lucky: isLucky
           });
           const placement = addUnitToRoster(run, unit);
-          if (unitLevel(unit) >= 2 && !unit.evolution && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
+          if (getEvolutionChoices(unit) && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
             if (findUnitLocation(run, unit.id) && !run.pendingEvolutions.includes(unit.id)) {
               run.pendingEvolutions.push(unit.id);
             }
@@ -1985,8 +2019,8 @@
 
     const target = ensureUnitSkillState(tLoc.unit);
     const donor = ensureUnitSkillState(dLoc.unit);
-    const targetRarity = getUnitRarity(target.type);
-    const donorRarity = getUnitRarity(donor.type);
+    const targetRarity = getUnitRarity(target);
+    const donorRarity = getUnitRarity(donor);
     const beforeStars = unitLevel(target);
 
     const mode = options.mode === "inherit" ? "inherit" : "feed";
@@ -2031,7 +2065,7 @@
     target.heroLv = (target.heroLv || 1) + lvGain;
     target.xp = (target.xp || 0) + lvGain;
     if (donor.lucky) target.lucky = true;
-    target.stars = calcUnitStars(target.type, target.heroLv);
+    target.stars = calcUnitStars(target, target.heroLv);
 
     const traitBonus = triggerConsumedTrait(run, donor, target);
     const inherited = [skillSummary, traitBonus].filter(Boolean).join(" · ");
@@ -2044,7 +2078,7 @@
 
     const afterStars = unitLevel(target);
     let triggeredEvo = false;
-    if (beforeStars < 2 && afterStars >= 2 && !target.evolution) {
+    if (getEvolutionChoices(target)) {
       if (!run.pendingEvolutions.includes(target.id)) {
         run.pendingEvolutions.push(target.id);
       }
@@ -2081,10 +2115,18 @@
   function applyEvolution(run, unitId, evoId) {
     const loc = findUnitLocation(run, unitId);
     if (!loc) return false;
-    const def = SYMBOLS[loc.unit.type];
-    if (!def.evolutions[evoId]) return false;
-    loc.unit.evolution = evoId;
-    run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== unitId);
+    const unit = loc.unit;
+    const choices = getEvolutionChoices(unit);
+    if (!choices || !choices.options.some(o => o.id === evoId)) return false;
+    if (choices.tier === 2) {
+      unit.evolution = evoId;
+    } else if (choices.tier === 3) {
+      unit.evolution3 = evoId;
+    }
+    // Keep in pendingEvolutions if unit jumped straight from 1★ to 3★ and still needs Tier 3 choice!
+    if (!getEvolutionChoices(unit)) {
+      run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== unitId);
+    }
     return true;
   }
 
@@ -2282,7 +2324,7 @@
     const gearLv = coreLevel(run, "free_spin_gear");
     const angelLv = coreLevel(run, "guardian_angel");
     const nudgeLv = coreLevel(run, "twin_nudge");
-    run.freeSpins = 2 + (tier.bonusSpins || 0) + (gearLv ? gearLv + 1 : 0) + (angelLv ? 1 : 0);
+    run.freeSpins = 1 + (tier.bonusSpins || 0) + (gearLv ? gearLv + 1 : 0) + (angelLv ? 1 : 0);
     run.paidSpinsThisWave = 0;
     run.spinsThisWave = 0;
     run.nudgesLeft = 2 + nudgeLv + run.nudgeReserve;
@@ -2395,6 +2437,9 @@
     INNATE_SKILLS,
     getUnitRarity,
     getInnateSkill,
+    getEvolutionChoices,
+    getUnitEvoInfo,
+    rollRarityForTier,
     calcUnitStars,
     nextStarLevel,
     ensureUnitSkillState,

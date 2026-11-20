@@ -217,6 +217,7 @@
         if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
 
         const turretLv = (u.skills || []).find(s => s.id === "auto_turret")?.level || 0;
+        const evoInfo = G.getUnitEvoInfo ? G.getUnitEvoInfo(u) : null;
         this.allies.push({
           uid: u.id,
           side: "ally",
@@ -225,10 +226,11 @@
           skills: (u.skills || []).map(s => ({ ...s })),
           trait: u.trait || null,
           evolution: u.evolution,
+          evolution3: u.evolution3 || null,
           lucky: u.lucky,
           level: st.level,
           heroLv: st.heroLv || 1,
-          name: u.evolution ? G.SYMBOLS[u.type].evolutions[u.evolution].name : G.SYMBOLS[u.type].short,
+          name: evoInfo ? evoInfo.name : G.SYMBOLS[u.type].short,
           color: G.SYMBOLS[u.type].color,
           x: pos.x,
           y: pos.y,
@@ -454,6 +456,11 @@
       if (attacker?.alive && attacker.side === "ally" && attacker.evolution === "bladedancer") {
         attacker.cdTimer = 0.08;
         this._heal(attacker, attacker.maxHp * .25);
+        if (attacker.evolution3 === "crimson_reaper") attacker.atkBuff += 0.12;
+      }
+      if (attacker?.alive && attacker.side === "ally" && attacker.evolution3 === "headhunter") {
+        this.battleGold += 5;
+        this._spawnText(attacker.x, attacker.y - 20, "+5G", "#ffd86b", 13);
       }
     }
 
@@ -536,11 +543,12 @@
         target.poisonTimer = 2.5;
       }
       target.hp = Math.max(0, target.hp - dmg);
-      if (!target.hp && target.evolution === "undying" && !target.usedUndying) {
+      if (!target.hp && (target.evolution === "undying" || target.evolution3 === "immortal_guard") && !target.usedUndying) {
         target.hp = 1;
         target.usedUndying = true;
         target.invulnerable = 3;
-        this._spawnText(target.x, target.y - 20, "不屈", "#ff806a", 16);
+        if (target.evolution3 === "immortal_guard") this._grantShield(target, target.maxHp * 0.55);
+        this._spawnText(target.x, target.y - 20, "不朽", "#ff806a", 16);
       }
       if (target.side === "ally" && !target.summonKind && target.hp < oldHp) this.flawless = false;
       target.hitFlash = 0.16;
@@ -585,7 +593,9 @@
           this._applyDamage(target, attacker, Math.max(2, rawDmg * refPct), { color: "#4fd1a5", isReflect: true });
         }
         if (target.evolution === "thorns") {
-          this._applyDamage(target, attacker, Math.max(3, rawDmg * .35), { color: "#4fd1a5", isReflect: true });
+          const tRef = target.evolution3 === "iron_maiden" ? 0.65 : 0.35;
+          this._applyDamage(target, attacker, Math.max(3, rawDmg * tRef), { color: "#4fd1a5", isReflect: true });
+          if (target.evolution3 === "iron_maiden") this._heal(target, target.maxHp * 0.06);
         }
         if (this.factions.alliance >= 2 && oldShield > 0 && target.shield === 0) {
           const holyDamage = oldShield * (this.factions.alliance >= 3 ? .65 : .4);
@@ -694,7 +704,13 @@
         dmg *= 1.45;
       }
 
-      if (u.evolution === "sniper" && u.atkCount % 3 === 0) {
+      if (u.evolution3 === "rail_marksman" && u.atkCount % 2 === 0) {
+        isCrit = true;
+        dmg *= 2.8;
+      } else if (u.evolution3 === "headhunter" && target.hp <= target.maxHp * 0.5) {
+        isCrit = true;
+        dmg *= 3.2;
+      } else if (u.evolution === "sniper" && u.atkCount % 3 === 0) {
         isCrit = true;
         dmg *= 2.4;
       } else if (isCrit) {
@@ -733,19 +749,28 @@
         this.rings.push({ x: u.x, y: u.y, r: 8, maxR: 85, color: "#e8a1f5", life: .4 });
         this._applyDamage(u, target, dmg, { isCrit, color: "#e8a1f5" });
       } else if (u.type === "valkyrie") {
-        const rear = this.enemies.filter(enemy => enemy !== target && enemy.alive).sort((a, b) =>
-          b.homeX - a.homeX || Math.abs(a.y - target.y) - Math.abs(b.y - target.y))[0];
-        this.beams.push({ x1: u.x, y1: u.y, x2: (rear ?? target).x, y2: (rear ?? target).y,
-          color: "#ffe598", life: .24, jagged: false });
-        this._applyDamage(u, target, dmg, { isCrit, shieldMultiplier: 2 });
-        if (rear) this._applyDamage(u, rear, dmg * .8, { isCrit, shieldMultiplier: 2 });
+        const pierceCount = u.evolution3 === "thunder_lancer" ? 3 : 2;
+        const shMult = u.evolution3 === "sun_paladin" ? 3 : 2;
+        const others = this.enemies.filter(enemy => enemy !== target && enemy.alive)
+          .sort((a, b) => b.x - a.x).slice(0, pierceCount - 1);
+        const last = others.at(-1) ?? target;
+        this.beams.push({ x1: u.x, y1: u.y, x2: last.x, y2: last.y, color: "#ffe598", life: .24, jagged: u.evolution3 === "thunder_lancer" });
+        let dealtTotal = this._applyDamage(u, target, dmg, { isCrit, shieldMultiplier: shMult });
+        for (const extra of others) {
+          dealtTotal += this._applyDamage(u, extra, dmg * .82, { isCrit, shieldMultiplier: shMult });
+        }
+        if (u.evolution3 === "dread_knight" && dealtTotal > 0) this._heal(u, dealtTotal * 0.35);
         if (isCrit && u.evolution === "dawn_spear") {
-          this.allies.filter(ally => ally.alive).forEach(ally => this._grantShield(ally, u.atk * .26));
+          this.allies.filter(ally => ally.alive).forEach(ally => {
+            this._grantShield(ally, u.atk * (u.evolution3 === "sun_paladin" ? 0.42 : 0.26));
+            if (u.evolution3 === "sun_paladin") this._heal(ally, u.atk * 0.45);
+          });
         }
       } else if (u.type === "necromancer" || u.type === "engineer") {
         this.beams.push({ x1: u.x, y1: u.y, x2: target.x, y2: target.y, color: u.color, life: .19, jagged: true });
         this._applyDamage(u, target, dmg * (1 + u.soulStacks * .15), { isCrit });
       } else if (u.type === "archer") {
+        const shMult = u.evolution3 === "rail_marksman" ? 2 : 1;
         const fireArrow = (t, mult, offsetY = 0) => {
           this.projectiles.push({
             x: u.x + 12,
@@ -753,92 +778,130 @@
             tx: t.x,
             ty: t.y,
             color: u.color,
-            speed: 520,
-            onHit: () => this._applyDamage(u, t, dmg * mult, { isCrit })
+            speed: 540,
+            onHit: () => {
+              this._applyDamage(u, t, dmg * mult, { isCrit, shieldMultiplier: shMult });
+              if (u.evolution3 === "gale_ranger") {
+                this.enemies.filter(e => e.alive && e !== t && Math.hypot(e.x - t.x, e.y - t.y) <= 72)
+                  .forEach(e => this._applyDamage(u, e, dmg * 0.45, { color: "#7be7ff" }));
+              }
+            }
           });
         };
         fireArrow(target, 1, 0);
         if (u.evolution === "multishot") {
-          const second = this.enemies.find(e => e.alive && e !== target) || target;
-          fireArrow(second, 0.65, -7);
+          const extraCnt = u.evolution3 === "arrow_tempest" ? 2 : 1;
+          const pool = this.enemies.filter(e => e.alive && e !== target);
+          for (let i = 0; i < extraCnt; i += 1) {
+            fireArrow(pool[i] || target, 0.7, (i % 2 === 0 ? -7 : 7));
+          }
         }
       } else if (u.type === "mage") {
-        const magicMult = (this.synergies.mage ? 1.25 : 1) * (G.hasCore(this.run, "arcane_echo") ? 1.25 : 1);
+        const magicMult = (this.synergies.mage ? 1.25 : 1) * (G.hasCore(this.run, "arcane_echo") ? 1.25 : 1)
+          * (u.evolution3 === "zeus_archon" ? 1.45 : 1);
         const finalDmg = dmg * magicMult;
         if (globalThis.SFX) globalThis.SFX.magic();
 
         if (u.evolution === "frost") {
-          this.rings.push({ x: target.x, y: target.y, r: 8, maxR: 78, color: "#6be5ff", life: 0.35 });
+          const rMax = u.evolution3 === "glacier_empress" ? 112 : 78;
+          this.rings.push({ x: target.x, y: target.y, r: 8, maxR: rMax, color: "#6be5ff", life: 0.35 });
           this.enemies.filter(e => e.alive).forEach(e => {
             const d = Math.hypot(e.x - target.x, e.y - target.y);
-            if (d <= 95 || e === target) {
-              e.slowTimer = 2.6;
-              this._applyDamage(u, e, e === target ? finalDmg : finalDmg * 0.65, {
+            if (d <= rMax + 18 || e === target) {
+              e.slowTimer = 2.8;
+              if (u.evolution3 === "glacier_empress") e.stunTimer = Math.max(e.stunTimer || 0, 0.8);
+              this._applyDamage(u, e, e === target ? finalDmg : finalDmg * 0.72, {
                 isCrit: e === target && isCrit,
                 color: "#7be7ff"
               });
             }
           });
         } else {
-          const maxChains = u.evolution === "storm" ? 3 : 2;
+          const maxChains = u.evolution3 === "zeus_archon" ? 5 : u.evolution === "storm" ? 3 : 2;
           const living = this.enemies.filter(e => e.alive);
           const chainTargets = [target, ...living.filter(e => e !== target).slice(0, maxChains - 1)];
           let prev = u;
           chainTargets.forEach((ct, idx) => {
             this.beams.push({ x1: prev.x, y1: prev.y, x2: ct.x, y2: ct.y, color: "#c59bff", life: 0.24, jagged: true });
-            this._applyDamage(u, ct, finalDmg * (idx === 0 ? 1 : 0.65), {
+            if (u.evolution3 === "zeus_archon" && isCrit) ct.stunTimer = Math.max(ct.stunTimer || 0, 0.5);
+            this._applyDamage(u, ct, finalDmg * (idx === 0 ? 1 : 0.7), {
               isCrit: idx === 0 && isCrit,
               color: "#d4b5ff"
             });
             prev = ct;
           });
+          if (u.evolution3 === "arcane_nova") {
+            this.rings.push({ x: target.x, y: target.y, r: 10, maxR: 92, color: "#c59bff", life: 0.35 });
+            this.enemies.filter(e => e.alive && e !== target && Math.hypot(e.x - target.x, e.y - target.y) <= 95)
+              .forEach(e => this._applyDamage(u, e, finalDmg * 0.65, { color: "#e0aaff" }));
+          }
         }
       } else if (u.type === "priest") {
         const healMult = (this.synergies.mage ? 1.15 : 1) * (G.hasCore(this.run, "arcane_echo") ? 1.25 : 1);
         const healAmt = Math.round((u.atk * 1.35 + 14) * healMult);
         if (globalThis.SFX) globalThis.SFX.heal();
 
-        // Damage enemy
         this.projectiles.push({
-          x: u.x + 10,
-          y: u.y,
-          tx: target.x,
-          ty: target.y,
-          color: "#ffe082",
-          speed: 440,
+          x: u.x + 10, y: u.y, tx: target.x, ty: target.y, color: "#ffe082", speed: 440,
           onHit: () => this._applyDamage(u, target, dmg, { isCrit, color: "#ffe082" })
         });
 
-        // Heal lowest HP ally (or 2 for Seraph)
-        const injured = this.allies
-          .filter(a => a.alive)
-          .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-        const count = u.evolution === "seraph" ? 2 : 1;
+        if (u.evolution3 === "judgement_angel") {
+          const bossOrTank = this.enemies.filter(e => e.alive).sort((a, b) => b.hp - a.hp)[0];
+          if (bossOrTank) {
+            this.beams.push({ x1: bossOrTank.x, y1: 10, x2: bossOrTank.x, y2: bossOrTank.y, color: "#ffd86b", life: 0.3, jagged: false });
+            this._applyDamage(u, bossOrTank, u.atk * 2.2, { color: "#ffd86b", isCrit: true });
+          }
+        }
+        if (u.evolution3 === "war_chaplain") {
+          this.battleGold += 3;
+          this._spawnText(u.x, u.y - 18, "+3G", "#ffd86b", 12);
+        }
+
+        const injured = this.allies.filter(a => a.alive).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+        const count = (u.evolution3 === "radiant_saint" || u.evolution3 === "aegis_oracle") ? 3 : u.evolution === "seraph" ? 2 : 1;
         injured.slice(0, count).forEach(ally => {
           this._heal(ally, healAmt);
           this.beams.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, color: "#57e39c", life: 0.26, jagged: false });
-            if (u.evolution === "seraph") {
-            ally.atkBuff = Math.max(ally.atkBuff, 1.2);
+          if (u.evolution === "seraph") {
+            ally.atkBuff = Math.max(ally.atkBuff, u.evolution3 === "radiant_saint" ? 1.35 : 1.2);
           }
           if (u.evolution === "artificer") {
-            const sh = this._grantShield(ally, healAmt * .9);
+            const sh = this._grantShield(ally, healAmt * (u.evolution3 === "aegis_oracle" ? 1.35 : 0.9));
             this._spawnText(ally.x, ally.y - 20, `+${sh}盾`, "#6be5ff", 12);
           }
         });
       } else if (u.type === "assassin") {
         this.beams.push({ x1: u.x, y1: u.y, x2: target.x, y2: target.y, color: "#ff6b7a", life: 0.16, jagged: false });
-        this._applyDamage(u, target, dmg, { isCrit });
+        let dealt = this._applyDamage(u, target, dmg, { isCrit });
+        if (u.evolution3 === "phantom_blade" && u.atkCount % 2 === 0 && target.alive) {
+          dealt += this._applyDamage(u, target, dmg * 0.85, { isCrit: true, color: "#ff9bb0" });
+        }
         if (isCrit && u.evolution === "shadowbomb") {
-          this.rings.push({ x: target.x, y: target.y, r: 8, maxR: 75, color: "#ff4d6d", life: 0.3 });
+          const rad = u.evolution3 === "void_detonator" ? 115 : 85;
+          const mult = u.evolution3 === "void_detonator" ? 1.1 : 0.65;
+          this.rings.push({ x: target.x, y: target.y, r: 8, maxR: rad, color: "#ff4d6d", life: 0.3 });
           this.enemies.filter(e => e.alive && e !== target).forEach(e => {
-            if (Math.hypot(e.x - target.x, e.y - target.y) <= 95) {
-              this._applyDamage(u, e, dmg * 0.65, { color: "#ff6b7a" });
+            if (Math.hypot(e.x - target.x, e.y - target.y) <= rad) {
+              dealt += this._applyDamage(u, e, dmg * mult, {
+                color: "#ff6b7a",
+                shieldMultiplier: u.evolution3 === "void_detonator" ? 2 : 1
+              });
+              if (u.evolution3 === "venom_stalker") e.slowTimer = Math.max(e.slowTimer || 0, 2.2);
             }
           });
+          if (u.evolution3 === "venom_stalker" && dealt > 0) this._heal(u, dealt * 0.25);
         }
       } else {
         // Knight melee
         this._applyDamage(u, target, dmg, { isCrit });
+        if (u.evolution3 === "war_colossus" && u.atkCount % 3 === 0) {
+          this.rings.push({ x: u.x, y: u.y, r: 10, maxR: 105, color: "#4fd1a5", life: 0.35 });
+          this.enemies.filter(e => e.alive && Math.hypot(e.x - u.x, e.y - u.y) <= 110).forEach(e => {
+            e.stunTimer = Math.max(e.stunTimer || 0, 0.9);
+            this._applyDamage(u, e, dmg * 0.9, { color: "#4fd1a5" });
+          });
+        }
       }
 
       // Trigger ALL equipped cross-class/upgraded skills (Lv.1~Lv.5) on every attack!
@@ -1180,7 +1243,10 @@
       const maxHymnLv = this.allies.reduce((best, unit) =>
         unit.alive ? Math.max(best, this._skillLv(unit, "war_hymn")) : best, 0);
       this.goldPoet = this.allies.some(unit => unit.alive && unit.evolution === "gold_poet");
-      const hymnSpeed = maxHymnLv > 0 ? (1 + ([0.08, 0.13, 0.19, 0.26, 0.35][maxHymnLv - 1] || 0.08)) : 1;
+      const chronoActive = this.allies.some(unit => unit.alive && unit.evolution3 === "astral_chrono");
+      const chaplainActive = this.allies.some(unit => unit.alive && unit.evolution3 === "war_chaplain");
+      const hymnSpeed = (maxHymnLv > 0 ? (1 + ([0.08, 0.13, 0.19, 0.26, 0.35][maxHymnLv - 1] || 0.08)) : 1)
+        * (chronoActive ? 1.18 : 1) * (chaplainActive ? 1.20 : 1);
       const songSpeed = hymnSpeed * (this.warSong && this.battleTime < 5 ? 1.35 : 1);
 
       // Allies tick
@@ -1208,9 +1274,14 @@
         if (u.evolution === "fortress") {
           u.fortressTimer -= dt;
           if (u.fortressTimer <= 0) {
-            u.fortressTimer = 4.5;
-            const sh = this._grantShield(u, u.maxHp * .10);
-            this._spawnText(u.x, u.y - 16, `+${sh}盾`, "#6be5ff", 12);
+            u.fortressTimer = u.evolution3 === "aegis_bastion" ? 3.5 : 4.5;
+            if (u.evolution3 === "aegis_bastion") {
+              this.allies.filter(a => a.alive).forEach(a => this._grantShield(a, u.maxHp * 0.14));
+              this._spawnText(u.x, u.y - 16, "全军圣盾!", "#6be5ff", 13);
+            } else {
+              const sh = this._grantShield(u, u.maxHp * .12);
+              this._spawnText(u.x, u.y - 16, `+${sh}盾`, "#6be5ff", 12);
+            }
           }
         }
 
