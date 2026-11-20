@@ -26,8 +26,16 @@
     <div class="hub-shell">
       <header class="hub-header">
         <div class="hub-brand">
-          <div class="hub-crest">⚔️</div>
+          <div class="hub-crest" aria-hidden="true">
+            <svg viewBox="0 0 16 16" shape-rendering="crispEdges" class="ui-ico-lg">
+              <rect x="2" y="2" width="3" height="3" fill="#ffd86b"/><rect x="11" y="2" width="3" height="3" fill="#ffd86b"/>
+              <rect x="6" y="1" width="4" height="3" fill="#fff3b0"/><rect x="3" y="5" width="10" height="5" fill="#f5c451"/>
+              <rect x="4" y="10" width="8" height="3" fill="#c98821"/><rect x="6" y="13" width="4" height="2" fill="#8c5811"/>
+              <rect x="7" y="6" width="2" height="4" fill="#ff4d6d"/><rect x="5" y="7" width="6" height="2" fill="#ff4d6d"/>
+            </svg>
+          </div>
           <div>
+            <div class="hub-kicker">SLOTBOUND · PIXEL LEGION</div>
             <h1>星陨像素 · 命运军团</h1>
             <p class="hub-lore">星陨降世，像素城塞危在旦夕！在战备大厅永久强化军团科技，挑战四阶难度与五章像素魔潮。</p>
           </div>
@@ -40,21 +48,21 @@
 
       <div class="hub-grid">
         <div class="hub-panel">
-          <h2>① 选择难度（以波数区分 · 通关解锁）</h2>
+          <h2 class="hub-sec-title">① 选择难度（以波数区分 · 通关解锁）</h2>
           <div class="hub-diff-grid" id="hub-diff-grid"></div>
 
-          <h2 style="margin-top:0.9rem">② 选择出征章节（通关上一章解锁）</h2>
+          <h2 class="hub-sec-title hub-sec-gap">② 选择出征章节（通关上一章解锁）</h2>
           <div class="hub-chapter-grid" id="hub-chapter-grid"></div>
 
           <div class="hub-launch-row">
-            <button id="btn-hub-start" class="spin-btn compact-btn" type="button">⚔️ 开始新征程</button>
+            <button id="btn-hub-start" class="spin-btn compact-btn" type="button">⚔ 开始新征程</button>
             <button id="btn-hub-resume" class="secondary-btn" type="button">返回当前战局</button>
-            <button id="btn-hub-codex" class="secondary-btn" type="button">📖 军团与怪物图鉴</button>
+            <button id="btn-hub-codex" class="secondary-btn" type="button">▣ 军团与怪物图鉴</button>
           </div>
         </div>
 
         <div class="hub-panel">
-          <h2>③ 永久军团科技（切换关卡与难度永久带入）</h2>
+          <h2 class="hub-sec-title">③ 永久军团科技（切换关卡与难度永久带入）</h2>
           <div class="hub-upgrades-grid" id="hub-upgrades-grid"></div>
         </div>
       </div>
@@ -97,8 +105,8 @@
         <strong id="hud-power">0</strong>
       </div>
       <div class="top-controls">
-        <button id="btn-open-hub" class="icon-btn" type="button" title="返回战备大厅：选关卡、选难度、升级永久科技">🏰大厅</button>
-        <button id="btn-open-codex" class="icon-btn" type="button" title="查看已解锁的英雄与怪物图鉴、进化路线与属性技能">📖图鉴</button>
+        <button id="btn-open-hub" class="icon-btn hall-btn" type="button" title="返回战备大厅：选关卡、选难度、升级永久科技">▲大厅</button>
+        <button id="btn-open-codex" class="icon-btn codex-btn" type="button" title="查看已解锁的英雄与怪物图鉴、进化路线与属性技能">▣图鉴</button>
         <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="随时打开命运秘宝商店消耗水晶">
           <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
         </button>
@@ -185,8 +193,10 @@
       <div class="cores-panel">
         <div class="panel-head">
           <h3>转运核心</h3>
-          <span class="badge-count" id="core-milestone-pill">距下枚核心 5 转</span>
-          <span class="badge-count" id="core-count">0 / 6</span>
+          <div class="panel-badges">
+            <span class="badge-count milestone" id="core-milestone-pill">距下枚核心 5 转</span>
+            <span class="badge-count" id="core-count">0 / 6</span>
+          </div>
         </div>
         <div class="cores-grid" id="cores-grid"></div>
       </div>
@@ -417,8 +427,8 @@
         <button class="close-btn" data-close="codex-dialog" aria-label="关闭">×</button>
       </div>
       <div class="codex-tabs">
-        <button id="tab-codex-heroes" class="mode-pill active" type="button">⚔️ 兵种图鉴 (<span id="codex-hero-cnt">0/16</span>)</button>
-        <button id="tab-codex-enemies" class="mode-pill" type="button">👾 怪物图鉴 (<span id="codex-enemy-cnt">0/21</span>)</button>
+        <button id="tab-codex-heroes" class="mode-pill active" type="button">⚔ 兵种图鉴 (<span id="codex-hero-cnt">0/16</span>)</button>
+        <button id="tab-codex-enemies" class="mode-pill" type="button">☠ 怪物图鉴 (<span id="codex-enemy-cnt">0/21</span>)</button>
       </div>
       <div class="codex-body" id="codex-body"></div>
     </div>

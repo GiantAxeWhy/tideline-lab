@@ -1,6 +1,6 @@
 {
-  "version": "2.0",
-  "artStyle": "Dark Fantasy Chibi RPG (bold #0d0a12 ink outlines, cel-shaded metallic gradients, glowing runes)",
+  "version": "3.0",
+  "artStyle": "32x32 Crisp Pixel-Art Dark Fantasy (1px #0b0914 ink outlines, multi-tone pixel shading, 1-5 cost rarity progression)",
   "maps": [
     {
       "chapter": 1,
@@ -34,36 +34,22 @@
     }
   ],
   "newHeroes": [
-    {
-      "id": "berserker",
-      "name": "狂战斧手",
-      "role": "前排 · 吸血狂暴",
-      "path": "assets/heroes/hero-berserker.svg"
-    },
-    {
-      "id": "engineer",
-      "name": "矮人炮手",
-      "role": "后排 · 炮台轰炸",
-      "path": "assets/heroes/hero-engineer.svg"
-    },
-    {
-      "id": "necromancer",
-      "name": "亡灵唤师",
-      "role": "后排 · 召唤死灵",
-      "path": "assets/heroes/hero-necromancer.svg"
-    },
-    {
-      "id": "bard",
-      "name": "命运吟游者",
-      "role": "支援 · 产金加速",
-      "path": "assets/heroes/hero-bard.svg"
-    },
-    {
-      "id": "valkyrie",
-      "name": "圣枪女武神",
-      "role": "前排 · 穿透破盾",
-      "path": "assets/heroes/hero-valkyrie.svg"
-    }
+    { "id": "knight", "name": "圣盾步兵", "role": "1费·白 前排坦克", "path": "assets/heroes/hero-knight.svg" },
+    { "id": "assassin", "name": "暗影刺客", "role": "1费·白 前排切后", "path": "assets/heroes/hero-assassin.svg" },
+    { "id": "valkyrie", "name": "圣枪骑兵", "role": "1费·白 前排冲锋", "path": "assets/heroes/hero-valkyrie.svg" },
+    { "id": "archer", "name": "秘银弓手", "role": "1费·白 后排连射", "path": "assets/heroes/hero-archer.svg" },
+    { "id": "mage", "name": "雷鸣法师", "role": "1费·白 后排连锁", "path": "assets/heroes/hero-mage.svg" },
+    { "id": "priest", "name": "圣光祭司", "role": "1费·白 后排治疗", "path": "assets/heroes/hero-priest.svg" },
+    { "id": "berserker", "name": "狂战斧手", "role": "2费·绿 前排吸血", "path": "assets/heroes/hero-berserker.svg" },
+    { "id": "engineer", "name": "蒸汽炮手", "role": "2费·绿 后排炮台", "path": "assets/heroes/hero-engineer.svg" },
+    { "id": "frost_warden", "name": "霜刃守卫", "role": "2费·绿 前排冰甲", "path": "assets/heroes/hero-frost-warden.svg" },
+    { "id": "necromancer", "name": "亡灵唤师", "role": "3费·蓝 后排亡灵", "path": "assets/heroes/hero-necromancer.svg" },
+    { "id": "bard", "name": "命运吟游者", "role": "3费·蓝 后排战歌", "path": "assets/heroes/hero-bard.svg" },
+    { "id": "shadow_blade", "name": "夜刃影舞", "role": "3费·蓝 刺客切后", "path": "assets/heroes/hero-shadow-blade.svg" },
+    { "id": "sun_templar", "name": "烈阳圣殿骑", "role": "4费·紫 前排圣域", "path": "assets/heroes/hero-sun-templar.svg" },
+    { "id": "chrono_mage", "name": "星界时法师", "role": "4费·紫 后排时空", "path": "assets/heroes/hero-chrono-mage.svg" },
+    { "id": "astral_valkyrie", "name": "天穹女武神", "role": "5费·金 前排神枪", "path": "assets/heroes/hero-astral-valkyrie.svg" },
+    { "id": "void_emperor", "name": "虚空星主", "role": "5费·金 后排黑洞", "path": "assets/heroes/hero-void-emperor.svg" }
   ],
   "enemiesByChapter": {
     "ch1": [

@@ -9,6 +9,7 @@
     knight: {
       id: "knight",
       kind: "unit",
+      artKey: "knight",
       name: "圣盾步兵",
       short: "步兵",
       role: "前排 · 坦克",
@@ -36,6 +37,7 @@
     archer: {
       id: "archer",
       kind: "unit",
+      artKey: "archer",
       name: "秘银弓手",
       short: "弓手",
       role: "后排 · 连射",
@@ -63,6 +65,7 @@
     mage: {
       id: "mage",
       kind: "unit",
+      artKey: "mage",
       name: "雷鸣法师",
       short: "法师",
       role: "后排 · 群伤",
@@ -90,6 +93,7 @@
     priest: {
       id: "priest",
       kind: "unit",
+      artKey: "priest",
       name: "圣光祭司",
       short: "祭司",
       role: "后排 · 支援",
@@ -117,6 +121,7 @@
     assassin: {
       id: "assassin",
       kind: "unit",
+      artKey: "assassin",
       name: "暗影刺客",
       short: "刺客",
       role: "前排 · 突袭",
@@ -144,6 +149,7 @@
     valkyrie: {
       id: "valkyrie",
       kind: "unit",
+      artKey: "valkyrie",
       name: "圣枪骑兵",
       short: "骑兵",
       role: "前排 · 冲锋",
@@ -202,7 +208,7 @@
       }
     },
     frost_warden: {
-      id: "frost_warden", kind: "pool", rarity: "green", artKey: "knight", name: "霜刃守卫", short: "霜卫",
+      id: "frost_warden", kind: "pool", rarity: "green", artKey: "frost_warden", name: "霜刃守卫", short: "霜卫",
       role: "前排 · 2费绿", color: "#4fd1a5", bg: "#17333a", baseWeight: 0,
       hp: 195, atk: 20, atkCd: 1.15, moveSpd: 96, range: 56, crit: 0.1,
       skillDesc: "【2费绿卡】凛冬要塞的寒冰卫士，受击与攻击均冻结减速敌军。",
@@ -251,7 +257,7 @@
       }
     },
     shadow_blade: {
-      id: "shadow_blade", kind: "pool", rarity: "blue", artKey: "assassin", name: "夜刃影舞", short: "夜刃",
+      id: "shadow_blade", kind: "pool", rarity: "blue", artKey: "shadow_blade", name: "夜刃影舞", short: "夜刃",
       role: "刺客 · 3费蓝", color: "#5cc8ff", bg: "#221a3c", baseWeight: 0,
       hp: 142, atk: 34, atkCd: 0.84, moveSpd: 180, range: 56, crit: 0.34,
       skillDesc: "【3费蓝卡】暗影议会的高阶刺客，开局跃迁敌方后排精准斩杀。",
@@ -268,7 +274,7 @@
     },
     // ===== 4费 · 紫色独立卡池（4 技能栏 · 独立史诗职业与 2★/3★ 转职树） =====
     sun_templar: {
-      id: "sun_templar", kind: "pool", rarity: "purple", artKey: "knight", name: "烈阳圣殿骑", short: "烈阳骑",
+      id: "sun_templar", kind: "pool", rarity: "purple", artKey: "sun_templar", name: "烈阳圣殿骑", short: "烈阳骑",
       role: "前排 · 4费紫", color: "#c084fc", bg: "#2c1a40", baseWeight: 0,
       hp: 265, atk: 34, atkCd: 1.05, moveSpd: 112, range: 72, crit: 0.16,
       skillDesc: "【4费紫卡】星陨圣殿的紫金统帅，群体圣盾 + 烈阳范围灼烧。",
@@ -284,7 +290,7 @@
       }
     },
     chrono_mage: {
-      id: "chrono_mage", kind: "pool", rarity: "purple", artKey: "mage", name: "星界时法师", short: "时法",
+      id: "chrono_mage", kind: "pool", rarity: "purple", artKey: "chrono_mage", name: "星界时法师", short: "时法",
       role: "后排 · 4费紫", color: "#c084fc", bg: "#26183d", baseWeight: 0,
       hp: 168, atk: 42, atkCd: 1.12, moveSpd: 102, range: 295, crit: 0.2,
       skillDesc: "【4费紫卡】掌控像素星轨的时空大魔导，扭曲敌我攻速并降下星爆。",
@@ -301,7 +307,7 @@
     },
     // ===== 5费 · 金色传说独立卡池（5 技能栏 · 独立神级职业与 2★/3★ 转职树） =====
     astral_valkyrie: {
-      id: "astral_valkyrie", kind: "pool", rarity: "gold", artKey: "valkyrie", name: "天穹女武神", short: "女武神",
+      id: "astral_valkyrie", kind: "pool", rarity: "gold", artKey: "astral_valkyrie", name: "天穹女武神", short: "女武神",
       role: "前排 · 5费金", color: "#ffd86b", bg: "#3f3314", baseWeight: 0,
       hp: 340, atk: 52, atkCd: 0.94, moveSpd: 162, range: 110, crit: 0.25,
       skillDesc: "【5费金卡】星陨神殿的传说英灵，5 技能栏！贯通全场的终极圣枪。",
@@ -317,7 +323,7 @@
       }
     },
     void_emperor: {
-      id: "void_emperor", kind: "pool", rarity: "gold", artKey: "mage", name: "虚空星主", short: "星主",
+      id: "void_emperor", kind: "pool", rarity: "gold", artKey: "void_emperor", name: "虚空星主", short: "星主",
       role: "后排 · 5费金", color: "#ffd86b", bg: "#3a2518", baseWeight: 0,
       hp: 245, atk: 62, atkCd: 1.02, moveSpd: 112, range: 325, crit: 0.28,
       skillDesc: "【5费金卡】掌控命运轮盘的虚空之主，5 技能栏！全图星界黑洞斩杀。",
