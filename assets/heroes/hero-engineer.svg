@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="eBrass" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffe08a"/><stop offset="55%" stop-color="#cc8a2b"/><stop offset="100%" stop-color="#693e0e"/></linearGradient>
+    <linearGradient id="eSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c8ea6"/><stop offset="100%" stop-color="#252e3d"/></linearGradient>
+  </defs>
+  <path d="M54 118 L48 142 L68 142 L72 118 Z M82 118 L86 142 L106 142 L100 118 Z" fill="#3a281d" stroke="#0d0a12" stroke-width="5"/>
+  <path d="M46 76 L102 76 L98 120 L50 120 Z" fill="url(#eBrass)" stroke="#0d0a12" stroke-width="5"/>
+  <circle cx="74" cy="56" r="24" fill="#f0c7a8" stroke="#0d0a12" stroke-width="5"/>
+  <path d="M52 70 Q74 96 96 70 Q84 82 74 82 Q64 82 52 70 Z" fill="#d9752b" stroke="#0d0a12" stroke-width="4"/>
+  <path d="M48 48 C52 24 98 24 100 48 Z" fill="url(#eBrass)" stroke="#0d0a12" stroke-width="5"/>
+  <circle cx="64" cy="46" r="9" fill="#5ce1ff" stroke="#0d0a12" stroke-width="4"/>
+  <circle cx="84" cy="46" r="9" fill="#5ce1ff" stroke="#0d0a12" stroke-width="4"/>
+  <!-- Steam Cannon -->
+  <rect x="86" y="72" width="58" height="26" rx="8" fill="url(#eSteel)" stroke="#0d0a12" stroke-width="5"/>
+  <rect x="134" y="68" width="14" height="34" rx="4" fill="url(#eBrass)" stroke="#0d0a12" stroke-width="4.5"/>
+  <circle cx="110" cy="85" r="7" fill="#ff9f1c" stroke="#0d0a12" stroke-width="3"/>
+</svg>

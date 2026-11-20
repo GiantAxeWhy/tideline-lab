@@ -2,6 +2,13 @@
   "use strict";
 
   const G = globalThis.Slotbound;
+  const CHAPTER_AMBIENCE = {
+    ch1: { count: 16, speed: -0.035, drift: 0.009, radius: 1.5 },
+    ch2: { count: 20, speed: -0.024, drift: 0.007, radius: 2.6 },
+    ch3: { count: 28, speed: 0.052, drift: 0.018, radius: 1.8 },
+    ch4: { count: 24, speed: -0.13, drift: 0.011, radius: 1.6 },
+    ch5: { count: 28, speed: -0.01, drift: 0.004, radius: 2.2 }
+  };
 
   class BattleArena {
     constructor(canvas) {
@@ -49,10 +56,10 @@
     }
 
     _allySlotPos(slotIdx) {
-      // 0,1,2 front col (closer to center); 3,4,5 back col (closer to left)
+      // 0,1,2 front col (closer to center); 3,4,5 back col
       const isFront = slotIdx < 3;
       const row = slotIdx % 3;
-      const x = isFront ? this.w * 0.34 : this.w * 0.16;
+      const x = isFront ? this.w * 0.40 : this.w * 0.24;
       const y = this.h * (0.24 + row * 0.26);
       return { x, y };
     }
@@ -62,7 +69,7 @@
       const col = idx < Math.ceil(total / cols) ? 0 : 1;
       const perCol = col === 0 ? Math.ceil(total / cols) : total - Math.ceil(total / cols);
       const rowIdx = col === 0 ? idx : idx - Math.ceil(total / cols);
-      const x = cols === 1 ? this.w * 0.75 : (col === 0 ? this.w * 0.68 : this.w * 0.85);
+      const x = cols === 1 ? this.w * 0.60 : (col === 0 ? this.w * 0.56 : this.w * 0.68);
       const y = perCol === 1
         ? this.h * 0.5
         : this.h * (0.22 + (rowIdx / Math.max(1, perCol - 1)) * 0.56);
@@ -82,16 +89,17 @@
 
       const syns = G.getActiveSynergies(run);
       const knightSyn = syns.find(s => s.type === "knight")?.active;
+      this.factions = Object.fromEntries(G.getFactionSynergies(run).map(f => [f.id, f.tier]));
 
       this.allies = [];
       run.field.forEach((u, idx) => {
         if (!u) return;
         const pos = this._allySlotPos(idx);
         const st = G.getUnitStats(u, run);
-        let shield = u.type === "knight" ? 25 : 0;
-        if (knightSyn) shield += 35;
-        if (idx < 3 && G.hasCore(run, "vanguard_oath")) shield += 30;
-        if (u.evolution === "fortress") shield += Math.round(st.hp * 0.5);
+        let shield = u.type === "knight" ? 18 : 0;
+        if (knightSyn) shield += 22;
+        if (idx < 3 && G.hasCore(run, "vanguard_oath")) shield += 24;
+        if (u.evolution === "fortress") shield += Math.round(st.hp * 0.28);
 
         this.allies.push({
           uid: u.id,
@@ -109,7 +117,7 @@
           homeY: pos.y,
           hp: st.hp,
           maxHp: st.hp,
-          shield,
+          shield: Math.round(shield * this._holyShieldMultiplier()),
           atk: st.atk,
           crit: st.crit,
           atkCd: st.atkCd,
@@ -119,51 +127,93 @@
           lunge: 0,
           hitFlash: 0,
           slowTimer: 0,
+          stunTimer: 0,
+          invulnerable: 0,
+          usedUndying: false,
+          summonTimer: 5,
+          soulStacks: 0,
           atkBuff: 1,
           alive: true,
           radius: st.level >= 3 ? 23 : st.level === 2 ? 20 : 18
         });
       });
 
-      const waveDef = G.WAVES[Math.min(run.wave - 1, G.WAVES.length - 1)];
-      this.enemies = waveDef.enemies.map((e, idx) => {
-        const pos = this._enemySlotPos(idx, waveDef.enemies.length);
-        const isBoss = e.kind === "boss";
-        return {
-          uid: "e-" + idx,
-          side: "enemy",
-          kind: e.kind,
-          bossId: e.bossId || null,
-          name: e.name,
-          color: e.color,
-          x: pos.x,
-          y: pos.y,
-          homeX: pos.x,
-          homeY: pos.y,
-          hp: e.hp,
-          maxHp: e.hp,
-          shield: isBoss ? Math.round(e.hp * 0.08) : 0,
-          atk: e.atk,
-          crit: isBoss ? 0.15 : 0.08,
-          atkCd: e.cd,
-          cdTimer: e.cd * (0.4 + Math.random() * 0.4),
-          skillTimer: isBoss ? 4.2 : 999,
-          enrage: 1,
-          lunge: 0,
-          hitFlash: 0,
-          slowTimer: 0,
-          alive: true,
-          isBoss,
-          radius: isBoss ? 29 : e.kind === "tank" ? 21 : 17
-        };
-      });
+      const waveDef = G.getWave(run);
+      this.enemies = waveDef.enemies.map((def, index) =>
+        this._createEnemy(def, this._enemySlotPos(index, waveDef.enemies.length), "preview-" + index));
     }
 
-    startBattle(run, onFinish) {
+    _createEnemy(def, pos, uid, isReinforcement = false) {
+      const isBoss = def.kind === "boss";
+      return {
+        uid, side: "enemy", kind: def.kind, artKey: def.artKey, tactic: def.tactic,
+        definition: def, bossId: def.bossId, name: def.name, lv: def.lv,
+        color: G.getChapter(this.run).themeColor,
+        x: isReinforcement ? Math.min(this.w - 28, pos.x + 110) : pos.x, y: pos.y, homeX: pos.x, homeY: pos.y,
+        hp: def.hp, maxHp: def.hp, shield: isBoss ? Math.round(def.hp * .22) : 0,
+        atk: def.atk, crit: isBoss ? .15 : .08, atkCd: def.cd,
+        cdTimer: def.cd * (.45 + Math.random() * .4),
+        skillInterval: def.skillInterval, skillTimer: def.skillInterval,
+        tacticTimer: 0, enrage: 1, lunge: 0, hitFlash: 0, slowTimer: 0,
+        stunTimer: 0, spawnGrace: isReinforcement ? 0.22 : 0,
+        alive: true, isBoss,
+        radius: isBoss ? 29 : def.kind === "tank" ? 21 : 17
+      };
+    }
+
+    _spawnPhase() {
+      const phase = this.phases[this.phaseIndex];
+      const isReinforcement = this.phaseIndex > 0;
+      const occupied = this.enemies.filter(enemy => enemy.alive);
+      const positions = Array.from({ length: 6 }, (_, index) => this._enemySlotPos(index, 6));
+      for (const def of phase.enemies) {
+        const pos = positions.find(candidate => !occupied.some(enemy =>
+          Math.abs(enemy.homeX - candidate.x) < 12 && Math.abs(enemy.homeY - candidate.y) < 18))
+          ?? this._enemySlotPos(occupied.length % 6, 6);
+        const enemy = this._createEnemy(def, pos, "enemy-" + this.nextEnemyId++, isReinforcement);
+        this.enemies.push(enemy);
+        occupied.push(enemy);
+        this._spawnParticles(pos.x, pos.y, enemy.color, enemy.isBoss ? 24 : 9);
+        if (enemy.isBoss) {
+          this.shake = Math.max(this.shake, 11);
+          this.rings.push({ x: pos.x, y: pos.y, r: 18, maxR: 160, color: "#ff3b5c", life: 0.55 });
+          this._spawnText(this.w * 0.5, 62, `⚠️ 审判降临：${enemy.name}`, "#ff5964", 19);
+        }
+      }
+      if (isReinforcement) {
+        this._spawnText(this.w * 0.72, 46, `第 ${this.phaseIndex + 1} 批援军抵达！`, "#ffd86b", 14);
+      }
+      this.phaseIndex += 1;
+      this.phaseClearDelay = 0;
+    }
+
+    _updatePhaseProgress(force = false) {
+      if (!this.onProgress) return;
+      if (!force && this.battleTime - (this._lastProgTs || 0) < 0.15) return;
+      this._lastProgTs = this.battleTime;
+      const nextDelay = this.phases[this.phaseIndex]?.delay;
+      this.onProgress(this.phaseIndex, this.phases.length, this.battleTime,
+        this.phases.at(-1).delay, nextDelay);
+    }
+
+    startBattle(run, onFinish, onProgress) {
       this.syncPreview(run);
       this.mode = "fighting";
       this.onFinish = onFinish;
+      this.onProgress = onProgress;
+      this.phases = G.getWave(run).phases;
+      this.phaseIndex = 0;
+      this.nextEnemyId = 0;
+      this.blasts = [];
+      this.enemies = [];
       this.healTick = 0;
+      this.battleTime = 0;
+      this.flawless = true;
+      this.battleGold = 0;
+      this.battleCrystals = 0;
+      this.kills = 0;
+      this.nextSummonId = 0;
+      this.warSong = this.allies.some(unit => unit.evolution === "war_song");
 
       const syns = G.getActiveSynergies(run);
       this.synergies = {
@@ -173,8 +223,89 @@
         assassin: syns.find(s => s.type === "assassin")?.active
       };
 
-      if (this.allies.length === 0) {
-        this._endBattle(false);
+      this._spawnPhase();
+      this._updatePhaseProgress();
+      for (const unit of [...this.allies]) {
+        if (unit.type === "engineer") this._summonAlly(unit, "turret");
+        if (unit.evolution === "sky_charge") this._openSkyCharge(unit);
+      }
+      if (this.allies.length === 0) this._endBattle(false);
+    }
+
+    _holyShieldMultiplier() {
+      return this.factions?.holy === 4 ? 1.55 : this.factions?.holy ? 1.35 : 1;
+    }
+
+    _grantShield(unit, amount) {
+      const shield = Math.round(amount * (unit.side === "ally" ? this._holyShieldMultiplier() : 1));
+      unit.shield += shield;
+      return shield;
+    }
+
+    _heal(unit, amount) {
+      const healed = Math.min(unit.maxHp - unit.hp, Math.round(amount));
+      if (healed <= 0) return;
+      unit.hp += healed;
+      this._spawnText(unit.x, unit.y - 6, `+${healed}`, "#57e39c", 12);
+    }
+
+    _summonAlly(owner, summonKind) {
+      const turret = summonKind === "turret";
+      const swarm = owner.evolution === "swarm_turret";
+      const armored = owner.evolution === "bone_lord";
+      const existing = this.allies.filter(unit => unit.alive && unit.ownerId === owner.uid && unit.summonKind === summonKind);
+      if (existing.length >= (turret ? (swarm ? 3 : 1) : 4)) return;
+      const faction = this.factions.summons;
+      const hp = Math.round(owner.maxHp * (turret ? .35 : armored ? .56 : .42) *
+        (faction === 4 ? 1.8 : faction ? 1.5 : 1));
+      const atk = Math.round(owner.atk * (turret ? .55 : .35) *
+        (faction === 4 ? 1.65 : faction ? 1.4 : 1));
+      const x = turret ? this.w * .27 : this.w * .39;
+      const y = Math.max(35, Math.min(this.h - 55, owner.homeY + (existing.length - 1) * 29));
+      this.allies.push({
+        uid: "ally-summon-" + this.nextSummonId++, ownerId: owner.uid, side: "ally", summonKind,
+        type: summonKind, artKey: turret ? "turret" : "enemy_tank", slotIdx: turret ? 3 : 0,
+        name: turret ? "蒸汽炮台" : armored ? "持盾骸骨" : "骸骨战士",
+        evolution: turret ? owner.evolution : null, taunt: !turret && armored,
+        x, y, homeX: x, homeY: y, hp, maxHp: hp, atk, shield: 0,
+        level: 1, crit: .08, atkBuff: 1, atkCount: 0, atkCd: swarm ? .46 : turret ? .95 : 1.2,
+        cdTimer: .25, slowTimer: 0, stunTimer: 0, invulnerable: 0, hitFlash: 0,
+        lunge: 0, alive: true, color: turret ? "#f2ba70" : "#8ce5aa"
+      });
+      if (armored && !turret) this._grantShield(this.allies.at(-1), hp * .35);
+      this._spawnParticles(x, y, owner.color, 9);
+    }
+
+    _openSkyCharge(unit) {
+      const first = this.enemies.filter(enemy => enemy.alive).sort((a, b) => a.homeX - b.homeX)[0];
+      if (!first) return;
+      const column = this.enemies.filter(enemy => enemy.alive && enemy.homeX === first.homeX);
+      column.forEach(enemy => {
+        enemy.x = Math.min(this.w - 24, enemy.x + 32);
+        enemy.stunTimer = Math.max(enemy.stunTimer, 1.45);
+        this._applyDamage(unit, enemy, unit.atk * 1.1, { color: "#ffe598", shieldMultiplier: 2 });
+      });
+    }
+
+    _onDeath(attacker, target) {
+      if (target.side === "enemy") {
+        this.kills += 1;
+        if (this.run.mode === "endless" && !target.summonKind) {
+          const dropMultiplier = this.run.endlessAffixes.includes("gold_tide") ? 2 : 1;
+          this.battleGold += 4 * dropMultiplier;
+          this.battleCrystals += dropMultiplier;
+        }
+        this.battleGold += (this.factions.gold === 4 ? 7 : this.factions.gold ? 4 : 0);
+      }
+      if (!target.summonKind) {
+        for (const unit of this.allies.filter(ally => ally.alive && ally.type === "necromancer")) {
+          this._summonAlly(unit, "skeleton");
+          if (target.side === "enemy" && unit.evolution === "soul_mage") unit.soulStacks += 1;
+        }
+      }
+      if (attacker?.alive && attacker.side === "ally" && attacker.evolution === "bladedancer") {
+        attacker.cdTimer = 0.08;
+        this._heal(attacker, attacker.maxHp * .25);
       }
     }
 
@@ -194,7 +325,8 @@
         if (this.onFinish) {
           const cb = this.onFinish;
           this.onFinish = null;
-          cb(won);
+          cb(won, { flawless: this.flawless, gold: this.battleGold,
+            crystals: this.battleCrystals, kills: this.kills, duration: this.battleTime });
         }
       }, 950);
     }
@@ -230,21 +362,29 @@
     }
 
     _applyDamage(attacker, target, rawDmg, opts = {}) {
-      if (!target || !target.alive) return 0;
+      if (!target?.alive || target.invulnerable > 0) return 0;
       let dmg = Math.max(1, Math.round(rawDmg));
       const isCrit = !!opts.isCrit;
-
-      if (target.shield > 0) {
-        const absorbed = Math.min(target.shield, dmg);
+      const oldHp = target.hp;
+      const oldShield = target.shield;
+      if (oldShield > 0) {
+        const mult = opts.shieldMultiplier ?? 1;
+        const absorbed = Math.min(oldShield, Math.round(dmg * mult));
         target.shield -= absorbed;
-        dmg -= absorbed;
+        dmg = Math.max(0, Math.round(dmg - absorbed / mult));
       }
-      if (dmg > 0) {
-        target.hp = Math.max(0, target.hp - dmg);
+      target.hp = Math.max(0, target.hp - dmg);
+      if (!target.hp && target.evolution === "undying" && !target.usedUndying) {
+        target.hp = 1;
+        target.usedUndying = true;
+        target.invulnerable = 3;
+        this._spawnText(target.x, target.y - 20, "不屈", "#ff806a", 16);
       }
+      if (target.side === "ally" && !target.summonKind && target.hp < oldHp) this.flawless = false;
       target.hitFlash = 0.16;
 
-      const txt = isCrit ? `${Math.round(rawDmg)}!` : `${Math.round(rawDmg)}`;
+      const dealt = oldHp - target.hp + oldShield - target.shield;
+      const txt = isCrit ? `${dealt}!` : String(dealt);
       const col = opts.color || (isCrit ? "#ffd86b" : "#f5f7ff");
       this._spawnText(target.x, target.y, txt, col, isCrit ? 18 : 13);
       this._spawnParticles(target.x, target.y, opts.particleColor || target.color, isCrit ? 10 : 5);
@@ -252,38 +392,47 @@
       if (isCrit) {
         this.shake = Math.max(this.shake, 4);
         if (globalThis.SFX) globalThis.SFX.crit();
+        if (attacker?.alive && attacker.side === "ally") {
+          const blood = this.factions.blood;
+          if (blood) this._heal(attacker, dealt * (blood === 4 ? .25 : .15));
+          if (this.goldPoet) this.battleGold += 2;
+        }
       } else if (globalThis.SFX) {
         globalThis.SFX.hit();
       }
 
-      // Thorns reflection
-      if (target.side === "ally" && target.evolution === "thorns" && attacker && attacker.alive && !opts.isReflect) {
-        const refDmg = Math.max(3, Math.round(rawDmg * 0.35));
-        this._applyDamage(target, attacker, refDmg, { color: "#4fd1a5", isReflect: true });
-      }
-
-      if (target.hp <= 0 && target.alive) {
+      if (target.hp <= 0) {
         target.alive = false;
         this._spawnParticles(target.x, target.y, target.color, target.isBoss ? 26 : 14);
         if (target.isBoss) this.shake = 10;
+        this._onDeath(attacker, target);
+      }
 
-        // Bladedancer kill reset
-        if (attacker && attacker.side === "ally" && attacker.evolution === "bladedancer" && attacker.alive) {
-          attacker.cdTimer = 0.08;
-          const heal = Math.round(attacker.maxHp * 0.25);
-          attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
-          this._spawnText(attacker.x, attacker.y - 10, `+${heal}`, "#4fd1a5", 13);
+      if (target.side === "ally" && !opts.isReflect && attacker?.alive) {
+        if (target.evolution === "thorns") {
+          this._applyDamage(target, attacker, Math.max(3, rawDmg * .35), { color: "#4fd1a5", isReflect: true });
+        }
+        if (this.factions.holy && oldShield > 0 && target.shield === 0) {
+          const holyDamage = oldShield * (this.factions.holy === 4 ? .65 : .4);
+          this.enemies.filter(enemy => enemy.alive && Math.hypot(enemy.x - attacker.x, enemy.y - attacker.y) <= 105)
+            .forEach(enemy => this._applyDamage(target, enemy, holyDamage, { color: "#ffe29a", isReflect: true }));
         }
       }
-      return rawDmg;
+      return dealt;
     }
 
     _pickTarget(actor, foes) {
-      const living = foes.filter(f => f.alive);
+      const living = foes.filter(f => f.alive && !(f.spawnGrace > 0));
       if (living.length === 0) return null;
 
-      // Assassins target backline / lowest HP
-      if (actor.type === "assassin" || actor.kind === "assassin") {
+      if (actor.tactic === "backline_diver" && actor.dived) {
+        const rear = living.filter(unit => unit.slotIdx >= 3);
+        return rear.find(unit => unit.type === "knight" || unit.taunt)
+          ?? [...(rear.length ? rear : living)].sort((a, b) => a.hp - b.hp)[0];
+      }
+
+      // Allied assassins target the opposing backline.
+      if (actor.type === "assassin") {
         return [...living].sort((a, b) => (b.homeX - a.homeX) * (actor.side === "ally" ? 1 : -1) || a.hp - b.hp)[0];
       }
 
@@ -292,7 +441,7 @@
         const front = living.filter(u => u.slotIdx < 3);
         const pool = front.length ? front : living;
         // Prefer thorns/knight taunt
-        const taunt = pool.find(u => u.type === "knight");
+        const taunt = pool.find(u => u.taunt) || pool.find(u => u.type === "knight");
         return taunt || pool[0];
       } else {
         // Allies target nearest / frontmost enemy
@@ -308,7 +457,7 @@
       u.lunge = 1;
 
       const hasCritDice = G.hasCore(this.run, "crit_dice");
-      const critMult = hasCritDice ? 2.1 : 1.65;
+      const critMult = (hasCritDice ? 2.1 : 1.65) + (this.goldPoet ? .25 : 0);
       let critChance = u.crit + (this.synergies.assassin ? 0.18 : 0) + (u.evolution === "bladedancer" ? 0.15 : 0);
       let isCrit = Math.random() < critChance;
       let dmg = u.atk * u.atkBuff;
@@ -324,7 +473,51 @@
         dmg *= critMult;
       }
 
-      if (u.type === "archer") {
+      if (this.factions.elements && u.atkCount % (this.factions.elements === 4 ? 3 : 4) === 0) {
+        const extra = this.enemies.filter(enemy => enemy.alive && enemy !== target).slice(0, 2);
+        for (const enemy of [target, ...extra]) {
+          this.beams.push({ x1: u.x, y1: u.y, x2: enemy.x, y2: enemy.y, color: "#aa99ff", life: .25, jagged: true });
+          this._applyDamage(u, enemy, u.atk * .42, { color: "#cbbdff" });
+        }
+      }
+
+      if (u.type === "berserker") {
+        const sweep = u.evolution === "bloodaxe";
+        const targets = sweep ? this.enemies.filter(enemy => enemy.alive)
+          .sort((a, b) => a.homeX - b.homeX).slice(0, 2) : [target];
+        const dealt = targets.reduce((sum, enemy) => sum + this._applyDamage(u, enemy, dmg, { isCrit }), 0);
+        this._heal(u, dealt * (sweep ? .35 : .2));
+      } else if (u.type === "turret") {
+        const heavy = u.evolution === "heavy_turret";
+        this.rings.push({ x: target.x, y: target.y, r: 8, maxR: heavy ? 86 : 28, color: "#f7b86a", life: .26 });
+        this._applyDamage(u, target, dmg, { isCrit });
+        if (heavy) {
+          target.stunTimer = Math.max(target.stunTimer ?? 0, .8);
+          this.enemies.filter(e => e !== target && e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 103)
+            .forEach(enemy => {
+              enemy.stunTimer = Math.max(enemy.stunTimer ?? 0, .8);
+              this._applyDamage(u, enemy, dmg * .6, { color: "#f7b86a" });
+            });
+        }
+      } else if (u.type === "bard") {
+        this.battleGold += 3;
+        this._spawnText(u.x, u.y - 16, "+3 金币", "#f5c869", 13);
+        this.rings.push({ x: u.x, y: u.y, r: 8, maxR: 85, color: "#e8a1f5", life: .4 });
+        this._applyDamage(u, target, dmg, { isCrit, color: "#e8a1f5" });
+      } else if (u.type === "valkyrie") {
+        const rear = this.enemies.filter(enemy => enemy !== target && enemy.alive).sort((a, b) =>
+          b.homeX - a.homeX || Math.abs(a.y - target.y) - Math.abs(b.y - target.y))[0];
+        this.beams.push({ x1: u.x, y1: u.y, x2: (rear ?? target).x, y2: (rear ?? target).y,
+          color: "#ffe598", life: .24, jagged: false });
+        this._applyDamage(u, target, dmg, { isCrit, shieldMultiplier: 2 });
+        if (rear) this._applyDamage(u, rear, dmg * .8, { isCrit, shieldMultiplier: 2 });
+        if (isCrit && u.evolution === "dawn_spear") {
+          this.allies.filter(ally => ally.alive).forEach(ally => this._grantShield(ally, u.atk * .26));
+        }
+      } else if (u.type === "necromancer" || u.type === "engineer") {
+        this.beams.push({ x1: u.x, y1: u.y, x2: target.x, y2: target.y, color: u.color, life: .19, jagged: true });
+        this._applyDamage(u, target, dmg * (1 + u.soulStacks * .15), { isCrit });
+      } else if (u.type === "archer") {
         const fireArrow = (t, mult, offsetY = 0) => {
           this.projectiles.push({
             x: u.x + 12,
@@ -394,15 +587,13 @@
           .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
         const count = u.evolution === "seraph" ? 2 : 1;
         injured.slice(0, count).forEach(ally => {
-          ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+          this._heal(ally, healAmt);
           this.beams.push({ x1: u.x, y1: u.y, x2: ally.x, y2: ally.y, color: "#57e39c", life: 0.26, jagged: false });
-          this._spawnText(ally.x, ally.y - 6, `+${healAmt}`, "#57e39c", 13);
-          if (u.evolution === "seraph") {
+            if (u.evolution === "seraph") {
             ally.atkBuff = Math.max(ally.atkBuff, 1.2);
           }
           if (u.evolution === "artificer") {
-            const sh = Math.round(healAmt * 0.9);
-            ally.shield += sh;
+            const sh = this._grantShield(ally, healAmt * .9);
             this._spawnText(ally.x, ally.y - 20, `+${sh}盾`, "#6be5ff", 12);
           }
         });
@@ -430,7 +621,10 @@
       const isCrit = Math.random() < e.crit;
       const dmg = e.atk * e.enrage * (isCrit ? 1.5 : 1);
 
-      if (e.kind === "ranged" || e.kind === "caster") {
+      if (e.tactic === "shield_breaker") {
+        if (target.slotIdx < 3) target.stunTimer = Math.max(target.stunTimer, 1);
+        this._applyDamage(e, target, dmg, { isCrit, shieldMultiplier: 2 });
+      } else if (e.kind === "ranged" || e.kind === "caster") {
         this.projectiles.push({
           x: e.x - 12,
           y: e.y,
@@ -442,6 +636,64 @@
         });
       } else {
         this._applyDamage(e, target, dmg, { isCrit });
+      }
+    }
+
+    _enemyTactic(enemy, dt) {
+      enemy.tacticTimer += dt;
+      if (enemy.tactic === "backline_diver" && !enemy.dived && enemy.tacticTimer >= 1.2) {
+        enemy.dived = true;
+        const target = this._pickTarget(enemy, this.allies);
+        if (target) {
+          enemy.homeX = Math.max(30, target.homeX - 30);
+          enemy.x = enemy.homeX;
+          enemy.homeY = target.homeY;
+          enemy.y = target.homeY;
+          this._spawnParticles(enemy.x, enemy.y, enemy.color, 15);
+          this._spawnText(enemy.x, enemy.y - 25, "后排突袭", "#ff7084", 14);
+        }
+      } else if (enemy.tactic === "summoner" && enemy.tacticTimer >= 5) {
+        enemy.tacticTimer -= 5;
+        const ownSummons = this.enemies.filter(unit => unit.alive && unit.ownerId === enemy.uid);
+        for (let i = ownSummons.length; i < 2; i += 1) {
+          const pos = { x: Math.max(this.w * .52, enemy.homeX - 52), y: Math.min(this.h - 55, Math.max(32, enemy.homeY + (i ? 38 : -38))) };
+          const inferno = enemy.bossId === "balrog";
+          const minion = this._createEnemy({
+            name: inferno ? "熔岩小鬼" : "召唤食尸鬼", kind: "melee",
+            artKey: inferno ? "ch4_lava_imp" : "ch2_crypt_ghoul",
+            hp: Math.round(enemy.maxHp * .16), atk: Math.round(enemy.atk * .42), cd: 1.25
+          }, pos, "enemy-" + this.nextEnemyId++);
+          minion.ownerId = enemy.uid;
+          minion.summonKind = "enemy_minion";
+          this.enemies.push(minion);
+          this._spawnParticles(pos.x, pos.y, enemy.color, 10);
+        }
+      } else if (enemy.tactic === "healer_support" && enemy.tacticTimer >= 3.2) {
+        enemy.tacticTimer -= 3.2;
+        const living = this.enemies.filter(unit => unit.alive);
+        const frontX = Math.min(...living.map(unit => unit.homeX));
+        const target = living.filter(unit => unit.homeX === frontX).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        if (target) {
+          this._heal(target, enemy.atk * 1.3);
+          this._grantShield(target, enemy.atk * .8);
+          this.beams.push({ x1: enemy.x, y1: enemy.y, x2: target.x, y2: target.y, color: "#72f6ac", life: .28 });
+        }
+      } else if (enemy.tactic === "artillery_aoe" && enemy.tacticTimer >= 3.8) {
+        enemy.tacticTimer -= 3.8;
+        const target = this._pickTarget(enemy, this.allies);
+        if (target) this.blasts.push({ enemy, x: target.x, y: target.y, radius: 83, time: 1.5 });
+      }
+    }
+
+    _updateArtillery(dt) {
+      for (let index = this.blasts.length - 1; index >= 0; index -= 1) {
+        const blast = this.blasts[index];
+        blast.time -= dt;
+        if (blast.time > 0) continue;
+        this.blasts.splice(index, 1);
+        this.rings.push({ x: blast.x, y: blast.y, r: 10, maxR: blast.radius, color: "#ff5167", life: .48 });
+        this.allies.filter(unit => unit.alive && Math.hypot(unit.x - blast.x, unit.y - blast.y) <= blast.radius)
+          .forEach(unit => this._applyDamage(blast.enemy, unit, blast.enemy.atk * 1.2, { color: "#ff7855" }));
       }
     }
 
@@ -466,8 +718,22 @@
         const heal = Math.round(drained * 0.35);
         boss.hp = Math.min(boss.maxHp, boss.hp + heal);
         this._spawnText(boss.x, boss.y - 6, `+${heal}`, "#c77dff", 14);
-      } else {
-        // Dragon
+      } else if (boss.bossId === "icequeen") {
+        this.rings.push({ x: boss.x, y: boss.y, r: 18, maxR: 305, color: "#6be5ff", life: 0.55 });
+        this._spawnText(boss.x, boss.y - 24, "霜狱新星!", "#6be5ff", 16);
+        livingAllies.forEach(ally => {
+          this._applyDamage(boss, ally, boss.atk * 0.68, { color: "#a5f1ff" });
+          ally.slowTimer = Math.max(ally.slowTimer, 2);
+        });
+      } else if (boss.bossId === "balrog") {
+        const front = livingAllies.filter(ally => ally.slotIdx < 3);
+        const targets = front.length ? front : livingAllies;
+        this._spawnText(boss.x, boss.y - 24, "熔岩断层!", "#ff8b3d", 16);
+        targets.forEach(ally => {
+          this.rings.push({ x: ally.x, y: ally.y, r: 12, maxR: 55, color: "#ff6d24", life: 0.45 });
+          this._applyDamage(boss, ally, boss.atk * 1.45, { color: "#ff9a57" });
+        });
+      } else if (boss.bossId === "dragon") {
         this.rings.push({ x: boss.x, y: boss.y, r: 20, maxR: 340, color: "#ff2a55", life: 0.5 });
         boss.enrage = Math.min(1.6, boss.enrage + 0.14);
         this._spawnText(boss.x, boss.y - 26, "毁灭龙息!", "#ff4d6d", 17);
@@ -530,6 +796,24 @@
       }
 
       if (this.mode !== "fighting") return;
+      this.battleTime += dt;
+      const livingEnemiesNow = this.enemies.some(e => e.alive);
+      if (this.phaseIndex < this.phases.length) {
+        if (this.phases[this.phaseIndex].delay <= this.battleTime) {
+          this._spawnPhase();
+          this._updatePhaseProgress(true);
+        } else if (!livingEnemiesNow) {
+          // Pull forward next reinforcement smoothly instead of stalling on an empty arena!
+          this.phaseClearDelay = (this.phaseClearDelay || 0) + dt;
+          if (this.phaseClearDelay >= 0.42) {
+            this.battleTime = Math.max(this.battleTime, this.phases[this.phaseIndex].delay);
+            this._spawnPhase();
+            this._updatePhaseProgress(true);
+          }
+        }
+      }
+      this._updatePhaseProgress();
+      this._updateArtillery(dt);
 
       // Priest synergy HoT
       if (this.synergies.priest) {
@@ -544,50 +828,117 @@
         }
       }
 
+      const bardActive = this.allies.some(unit => unit.alive && unit.type === "bard");
+      this.goldPoet = this.allies.some(unit => unit.alive && unit.evolution === "gold_poet");
+      const songSpeed = (bardActive ? 1.15 : 1) * (this.warSong && this.battleTime < 5 ? 1.35 : 1);
+
       // Allies tick
-      for (const u of this.allies) {
+      for (const u of [...this.allies]) {
         if (!u.alive) continue;
         if (u.hitFlash > 0) u.hitFlash -= dt;
         if (u.lunge > 0) u.lunge = Math.max(0, u.lunge - dt * 5);
+        u.slowTimer = Math.max(0, u.slowTimer - dt);
+        u.invulnerable = Math.max(0, u.invulnerable - dt);
+        u.stunTimer = Math.max(0, u.stunTimer - dt);
+        if (u.stunTimer > 0) continue;
+        if (u.type === "engineer") {
+          u.summonTimer -= dt;
+          if (u.summonTimer <= 0) {
+            const turrets = this.allies.filter(ally =>
+              ally.alive && ally.ownerId === u.uid && ally.summonKind === "turret");
+            if (turrets.length >= (u.evolution === "swarm_turret" ? 3 : 1)) turrets[0].alive = false;
+            this._summonAlly(u, "turret");
+            u.summonTimer += 5;
+          }
+        }
 
         if (u.evolution === "fortress") {
           u.fortressTimer -= dt;
           if (u.fortressTimer <= 0) {
-            u.fortressTimer = 4.0;
-            const sh = Math.round(u.maxHp * 0.18);
-            u.shield += sh;
+            u.fortressTimer = 4.5;
+            const sh = this._grantShield(u, u.maxHp * .10);
             this._spawnText(u.x, u.y - 16, `+${sh}盾`, "#6be5ff", 12);
           }
         }
 
-        let spdMult = this.synergies.archer ? 1.18 : 1;
-        if (G.hasCore(this.run, "berserk_banner") && u.hp / u.maxHp < 0.55) {
-          spdMult *= 1.45;
+        let spdMult = songSpeed * (this.synergies.archer ? 1.18 : 1) * (u.slowTimer > 0 ? 0.65 : 1);
+        if (u.type === "berserker") spdMult *= 1 + (1 - u.hp / u.maxHp) * .65;
+        if (u.invulnerable > 0) spdMult *= 1.45;
+        const bannerLv = G.coreLevel ? G.coreLevel(this.run, "berserk_banner") : (G.hasCore(this.run, "berserk_banner") ? 1 : 0);
+        if (bannerLv > 0 && u.hp / u.maxHp < 0.55) {
+          spdMult *= 1 + 0.45 + (bannerLv - 1) * 0.22;
         }
         u.cdTimer -= dt * spdMult;
         if (u.cdTimer <= 0) {
-          u.cdTimer = u.atkCd;
-          this._performAllyAttack(u);
+          if (this.enemies.some(enemy => enemy.alive && (enemy.spawnGrace || 0) <= 0)) {
+            u.cdTimer = u.atkCd;
+            this._performAllyAttack(u);
+          } else {
+            u.cdTimer = 0.14 + Math.random() * 0.18;
+          }
         }
       }
 
       // Enemies tick
-      for (const e of this.enemies) {
+      for (const e of [...this.enemies]) {
         if (!e.alive) continue;
+        if (e.spawnGrace > 0) {
+          e.spawnGrace = Math.max(0, e.spawnGrace - dt);
+          e.x += (e.homeX - e.x) * Math.min(1, dt * 11);
+          continue;
+        }
+        if (e.isBoss && !e.phaseTwo && e.hp <= e.maxHp * .5) {
+          e.phaseTwo = true;
+          e.skillTimer = Math.min(e.skillTimer, e.skillInterval * .7);
+          this.shake = Math.max(this.shake, 15);
+          e.rageBubbleUntil = this.time + 2.2;
+        }
         if (e.hitFlash > 0) e.hitFlash -= dt;
         if (e.lunge < 0) e.lunge = Math.min(0, e.lunge + dt * 5);
         if (e.slowTimer > 0) e.slowTimer -= dt;
+        e.stunTimer = Math.max(0, (e.stunTimer ?? 0) - dt);
+        if (e.stunTimer > 0) continue;
 
-        const spdMult = (e.slowTimer > 0 ? 0.65 : 1) * e.enrage;
-        e.cdTimer -= dt * spdMult;
-        if (e.cdTimer <= 0) {
-          e.cdTimer = e.atkCd;
-          this._performEnemyAttack(e);
+        this._enemyTactic(e, dt);
+
+        // Melee enemies physically march/charge to the frontline defender before swinging!
+        const isMelee = e.kind !== "ranged" && e.kind !== "caster";
+        let inRange = true;
+        if (isMelee) {
+          const target = this._pickTarget(e, this.allies);
+          if (target) {
+            const standDist = e.isBoss ? 58 : 44;
+            const laneOffset = ((parseInt(String(e.uid).replace(/\D/g, ""), 10) || 0) % 3 - 1) * 14;
+            const engageX = Math.min(this.w - 40, target.x + standDist);
+            const engageY = Math.max(36, Math.min(this.h - 44, target.y + laneOffset));
+            const dx = engageX - e.x;
+            const dy = engageY - e.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 18) {
+              inRange = false;
+              const moveSpd = (e.isBoss ? 420 : e.kind === "assassin" ? 680 : 540) * (e.slowTimer > 0 ? 0.65 : 1);
+              const step = Math.min(dist, moveSpd * dt);
+              e.x += (dx / dist) * step;
+              e.y += (dy / dist) * step;
+            }
+          }
+        } else {
+          e.x += (e.homeX - e.x) * Math.min(1, dt * 4);
+        }
+
+        const affixSpeed = this.run.endlessAffixes?.includes("blood_tide") ? 1.25 : 1;
+        const spdMult = (e.slowTimer > 0 ? 0.65 : 1) * e.enrage * affixSpeed;
+        if (inRange) {
+          e.cdTimer -= dt * spdMult;
+          if (e.cdTimer <= 0) {
+            e.cdTimer = e.atkCd;
+            this._performEnemyAttack(e);
+          }
         }
         if (e.isBoss) {
           e.skillTimer -= dt;
           if (e.skillTimer <= 0) {
-            e.skillTimer = e.bossId === "dragon" ? 4.0 : 4.4;
+            e.skillTimer = e.skillInterval * (e.phaseTwo ? .7 : 1);
             this._performBossSkill(e);
           }
         }
@@ -596,7 +947,7 @@
       // Check win / loss
       const alliesAlive = this.allies.some(a => a.alive);
       const enemiesAlive = this.enemies.some(e => e.alive);
-      if (!enemiesAlive) {
+      if (!enemiesAlive && this.phaseIndex === this.phases.length && this.blasts.length === 0) {
         this._endBattle(true);
       } else if (!alliesAlive) {
         this._endBattle(false);
@@ -611,7 +962,7 @@
       const breath = 1 + Math.sin(phase) * 0.025;
       const x = u.x + u.lunge * 18;
       const y = u.y + bob;
-      const size = u.isBoss ? 86 : (isAlly && u.level >= 3 ? 68 : isAlly && u.level === 2 ? 62 : 56);
+      const size = u.isBoss ? 116 : (isAlly ? 52 + (u.level - 1) * 5.5 : 56);
       const footY = y + size * 0.42;
 
       // Ground contact shadow on flagstones
@@ -624,7 +975,7 @@
       if (u.lucky || u.isBoss || u.evolution) {
         ctx.save();
         ctx.strokeStyle = u.isBoss
-          ? "rgba(255, 70, 95, 0.75)"
+          ? (u.phaseTwo ? "#ff9ce5" : "rgba(255, 70, 95, 0.75)")
           : u.lucky
             ? "rgba(255, 216, 107, 0.8)"
             : "rgba(92, 200, 255, 0.65)";
@@ -649,9 +1000,50 @@
         ctx.restore();
       }
 
+      // High Attack Power (ATK) blazing crimson-gold battle aura
+      const atkTier = isAlly ? (u.atk >= 85 ? 2 : u.atk >= 40 ? 1 : 0) : (u.isBoss ? 2 : 0);
+      if (atkTier > 0) {
+        ctx.save();
+        const auraR = size * (atkTier === 2 ? 0.52 : 0.44);
+        const ag = ctx.createRadialGradient(x, y + 4, 4, x, y + 4, auraR);
+        ag.addColorStop(0, atkTier === 2 ? "rgba(255, 90, 60, 0.34)" : "rgba(255, 196, 80, 0.24)");
+        ag.addColorStop(1, "rgba(255, 80, 40, 0)");
+        ctx.fillStyle = ag;
+        ctx.beginPath();
+        ctx.arc(x, y + 4, auraR + Math.sin(this.time * 8) * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // High Attack Speed (ASPD) orbiting cyan-gold wind streaks
+      const isFast = isAlly && (u.atkCd <= 0.86 || (this.synergies && this.synergies.archer));
+      if (isFast) {
+        ctx.save();
+        const spin = this.time * (u.atkCd <= 0.65 ? 9.5 : 6.2);
+        ctx.strokeStyle = "rgba(120, 238, 255, 0.68)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y + 2, size * 0.43, spin, spin + 1.15);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(255, 230, 140, 0.55)";
+        ctx.beginPath();
+        ctx.arc(x, y + 2, size * 0.46, spin + Math.PI, spin + Math.PI + 0.9);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Draw full-body character sprite!
-      const artKey = isAlly ? u.type : (Art ? Art.getEnemyArtKey(u) : "enemy_melee");
+      const artKey = isAlly ? (u.artKey ?? u.type) : (Art ? Art.getEnemyArtKey(u) : "enemy_melee");
       const img = Art ? Art.getSpriteImg(artKey) : null;
+
+      // Speed afterimage ghost during lunge
+      if (isFast && Math.abs(u.lunge) > 0.18 && img && img.complete && img.naturalWidth > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.32;
+        ctx.translate(x - u.lunge * 14, footY);
+        ctx.drawImage(img, -size / 2, -size * 0.92, size, size);
+        ctx.restore();
+      }
 
       ctx.save();
       ctx.translate(x, footY);
@@ -660,15 +1052,29 @@
         ctx.filter = "brightness(2.4) saturate(0.4)";
       }
       if (img && img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, -size / 2, -size * 0.92, size, size);
+        const drawSize = u.summonKind === "turret" ? 54 : size;
+        ctx.drawImage(img, -drawSize / 2, -drawSize * 0.92, drawSize, drawSize);
       } else {
-        // Minimal fallback if image still loading
         ctx.fillStyle = u.color;
         ctx.beginPath();
         ctx.arc(0, -size * 0.45, size * 0.32, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
+
+      // Power crescent slash arc on attack lunge
+      if (Math.abs(u.lunge) > 0.35) {
+        ctx.save();
+        const dir = isAlly ? 1 : -1;
+        const arcR = size * (atkTier === 2 ? 0.56 : atkTier === 1 ? 0.46 : 0.36);
+        ctx.strokeStyle = atkTier === 2 ? "#ff6b4a" : atkTier === 1 ? "#ffd86b" : u.color;
+        ctx.lineWidth = atkTier === 2 ? 4.5 : 3;
+        ctx.globalAlpha = Math.min(1, Math.abs(u.lunge));
+        ctx.beginPath();
+        ctx.arc(x + dir * 10, y, arcR, dir > 0 ? -0.9 : Math.PI - 0.9, dir > 0 ? 0.9 : Math.PI + 0.9);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // Stars / Boss crown above head
       const headY = y - size * 0.5;
@@ -717,16 +1123,45 @@
       ctx.fillText(u.name, x, by + 15);
     }
 
+    _drawChapterAmbience(chapter) {
+      const ctx = this.ctx;
+      const { count, speed, drift, radius } = CHAPTER_AMBIENCE[chapter.key];
+      const color = chapter.themeColor;
+      const flicker = 0.08 + Math.sin(this.time * 9) * 0.025;
+      ctx.save();
+      for (const x of [this.w * 0.08, this.w * 0.92]) {
+        const glow = ctx.createRadialGradient(x, this.h * 0.46, 4, x, this.h * 0.46, 115);
+        glow.addColorStop(0, color);
+        glow.addColorStop(1, color + "00");
+        ctx.globalAlpha = flicker * 2.1;
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, this.w, this.h);
+      }
+
+      ctx.fillStyle = color;
+      for (let i = 0; i < count; i += 1) {
+        const phase = this.time * (1 + i % 3 * 0.18) + i * 1.7;
+        const x = i * 0.618 + this.time * drift + Math.sin(phase) * 0.028;
+        const y = i * 0.414 + this.time * speed * (1 + i % 4 * 0.15);
+        ctx.globalAlpha = 0.28 + 0.18 * Math.sin(phase);
+        ctx.beginPath();
+        ctx.arc((x - Math.floor(x)) * this.w, (y - Math.floor(y)) * this.h,
+          radius * (0.6 + i % 5 * 0.13), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     _render() {
       const ctx = this.ctx;
       const Art = globalThis.GameArt;
+      const chapter = G.getChapter(this.run);
       ctx.save();
       if (this.shake > 0.2) {
         ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
       }
 
-      // Painted dark-fantasy castle courtyard arena backdrop
-      const bgImg = Art ? Art.getSpriteImg("arenaBg") : null;
+      const bgImg = Art?.getSpriteImg(chapter.mapAsset);
       if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
         const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
         const canRatio = this.w / this.h;
@@ -753,15 +1188,7 @@
         ctx.fillRect(0, 0, this.w, this.h);
       }
 
-      // Ambient warm flickering torchlight & floating embers
-      const flicker = 0.08 + Math.sin(this.time * 9) * 0.025 + Math.cos(this.time * 15) * 0.015;
-      for (const tx of [this.w * 0.08, this.w * 0.92]) {
-        const tg = ctx.createRadialGradient(tx, this.h * 0.46, 4, tx, this.h * 0.46, 115);
-        tg.addColorStop(0, `rgba(255, 168, 64, ${flicker * 2.1})`);
-        tg.addColorStop(1, "rgba(255, 120, 30, 0)");
-        ctx.fillStyle = tg;
-        ctx.fillRect(0, 0, this.w, this.h);
-      }
+      this._drawChapterAmbience(chapter);
 
       // Subtle golden rune rings on stone floor for ally formation
       if (this.mode === "preview") {
@@ -778,15 +1205,27 @@
         ctx.lineWidth = 2.5;
         ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
         ctx.textAlign = "center";
-        ctx.strokeText("后排", this.w * 0.16, 20);
-        ctx.fillText("后排", this.w * 0.16, 20);
-        ctx.strokeText("前排", this.w * 0.34, 20);
-        ctx.fillText("前排", this.w * 0.34, 20);
-        ctx.strokeText("来袭敌军", this.w * 0.76, 20);
-        ctx.fillText("来袭敌军", this.w * 0.76, 20);
+        ctx.strokeText("后排", this.w * 0.24, 20);
+        ctx.fillText("后排", this.w * 0.24, 20);
+        ctx.strokeText("前排", this.w * 0.40, 20);
+        ctx.fillText("前排", this.w * 0.40, 20);
+        ctx.strokeText("来袭敌军", this.w * 0.62, 20);
+        ctx.fillText("来袭敌军", this.w * 0.62, 20);
       }
 
       // Rings (AoE)
+      for (const blast of this.mode === "fighting" ? this.blasts : []) {
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, blast.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 51, 78, .15)";
+        ctx.fill();
+        ctx.strokeStyle = "#ff536c";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(blast.x, blast.y, blast.radius * (1 - blast.time / 1.5), 0, Math.PI * 2);
+        ctx.stroke();
+      }
       for (const r of this.rings) {
         ctx.save();
         ctx.globalAlpha = Math.max(0, r.life * 2.2);
@@ -824,6 +1263,25 @@
       for (const item of allLiving) {
         this._drawUnit(item.u, item.isAlly);
       }
+      for (const boss of this.enemies) {
+        if (!boss.alive || !(boss.rageBubbleUntil > this.time)) continue;
+        const text = "第二阶段 · 狂暴觉醒";
+        ctx.save();
+        ctx.font = '800 13px sans-serif';
+        ctx.textAlign = "center";
+        const width = ctx.measureText(text).width + 24;
+        const x = Math.min(this.w - width / 2 - 4, Math.max(width / 2 + 4, boss.x));
+        const y = Math.max(10, boss.y - 64);
+        ctx.beginPath();
+        ctx.roundRect(x - width / 2, y, width, 23, 7);
+        ctx.fillStyle = "#431d37";
+        ctx.fill();
+        ctx.strokeStyle = "#ff86ae";
+        ctx.stroke();
+        ctx.fillStyle = "#ffe0ed";
+        ctx.fillText(text, x, y + 16);
+        ctx.restore();
+      }
 
       // Projectiles
       for (const p of this.projectiles) {
@@ -858,6 +1316,47 @@
         ctx.strokeText(t.text, t.x, t.y);
         ctx.fillStyle = t.color;
         ctx.fillText(t.text, t.x, t.y);
+        ctx.restore();
+      }
+
+      // Dedicated Top-of-Arena Raid Boss Health Bar when a Boss is active!
+      const activeBoss = this.enemies.find(e => e.alive && e.isBoss);
+      if (activeBoss) {
+        const bw = Math.min(460, this.w - 80);
+        const bx = (this.w - bw) / 2;
+        const by = 12;
+        ctx.save();
+        ctx.fillStyle = "rgba(10, 8, 16, 0.86)";
+        ctx.strokeStyle = activeBoss.phaseTwo ? "#ff9ce5" : "#ff4d6d";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.roundRect(bx - 10, by - 4, bw + 20, 34, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffe6a3";
+        ctx.font = '800 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.textAlign = "left";
+        ctx.fillText(`☠️ ${activeBoss.name}${activeBoss.phaseTwo ? " · 狂暴 P2" : ""}`, bx, by + 10);
+
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffb3be";
+        ctx.font = '700 11.5px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        ctx.fillText(`${Math.ceil(activeBoss.hp)} / ${activeBoss.maxHp}${activeBoss.shield > 0 ? ` (+${Math.ceil(activeBoss.shield)}盾)` : ""}`, bx + bw, by + 10);
+
+        // Bar track
+        ctx.fillStyle = "#1c121b";
+        ctx.fillRect(bx, by + 16, bw, 9);
+        const ratio = Math.max(0, activeBoss.hp / activeBoss.maxHp);
+        const bgGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+        bgGrad.addColorStop(0, "#c9184a");
+        bgGrad.addColorStop(1, "#ff4d6d");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(bx, by + 16, bw * ratio, 9);
+        if (activeBoss.shield > 0) {
+          ctx.fillStyle = "#6be5ff";
+          ctx.fillRect(bx, by + 13, bw * Math.min(1, activeBoss.shield / activeBoss.maxHp), 2.5);
+        }
         ctx.restore();
       }
 

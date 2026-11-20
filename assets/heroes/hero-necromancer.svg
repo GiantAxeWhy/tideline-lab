@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="nRobe" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#225e52"/><stop offset="55%" stop-color="#112e2b"/><stop offset="100%" stop-color="#071214"/></linearGradient>
+    <radialGradient id="nSoul" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#ffffff"/><stop offset="45%" stop-color="#57ffb8"/><stop offset="100%" stop-color="#0d8559"/></radialGradient>
+  </defs>
+  <path d="M44 74 L98 74 L110 144 L34 144 Z" fill="url(#nRobe)" stroke="#0d0a12" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M44 58 C44 22 100 22 102 58 L96 78 L48 78 Z" fill="url(#nRobe)" stroke="#0d0a12" stroke-width="5"/>
+  <circle cx="72" cy="58" r="18" fill="#091214" stroke="#0d0a12" stroke-width="4"/>
+  <ellipse cx="66" cy="58" rx="4.5" ry="3" fill="#57ffb8"/>
+  <ellipse cx="82" cy="58" rx="4.5" ry="3" fill="#57ffb8"/>
+  <path d="M56 32 L50 14 L66 26 L74 10 L82 26 L98 14 L92 32 Z" fill="#e6decb" stroke="#0d0a12" stroke-width="4"/>
+  <!-- Soul Lantern Staff -->
+  <line x1="122" y1="144" x2="122" y2="42" stroke="#0d0a12" stroke-width="10" stroke-linecap="round"/>
+  <line x1="122" y1="144" x2="122" y2="42" stroke="#576966" stroke-width="5" stroke-linecap="round"/>
+  <path d="M122 42 L138 42 L138 56" fill="none" stroke="#0d0a12" stroke-width="6" stroke-linecap="round"/>
+  <polygon points="138,54 150,70 138,88 126,70" fill="url(#nSoul)" stroke="#0d0a12" stroke-width="4"/>
+</svg>

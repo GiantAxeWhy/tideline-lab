@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  function evolution(id, name, tag, desc, hpMult, atkMult) {
+    return { id, name, tag, desc, hpMult, atkMult };
+  }
+
   const SYMBOLS = {
     knight: {
       id: "knight",
@@ -172,6 +176,66 @@
         }
       }
     },
+    berserker: {
+      id: "berserker", kind: "unit", name: "狂战斧手", short: "狂战",
+      role: "前排 · 吸血", color: "#ff806a", bg: "#46272b", baseWeight: 12,
+      hp: 145, atk: 23, atkCd: 1.05, range: 1.5, crit: 0.12,
+      skillDesc: "生命越低攻速越高，普攻恢复造成伤害的 20%。",
+      evolutions: {
+        bloodaxe: evolution("bloodaxe", "血斧战神", "横扫吸血",
+          "横扫最多 2 个目标，吸血提高至 35%。", 1.34, 1.35),
+        undying: evolution("undying", "不屈狂魔", "锁血狂暴",
+          "每战首次受致命伤时保留 1 生命，无敌且狂暴 3 秒。", 1.3, 1.38)
+      }
+    },
+    engineer: {
+      id: "engineer", kind: "unit", name: "矮人炮手", short: "炮手",
+      role: "后排 · 炮台", color: "#f2ba70", bg: "#3d2c16", baseWeight: 11,
+      hp: 103, atk: 19, atkCd: 1.15, range: 4, crit: 0.11,
+      skillDesc: "开战时和此后每 5 秒布置一座蒸汽炮台。",
+      evolutions: {
+        heavy_turret: evolution("heavy_turret", "重炮堡垒", "范围眩晕",
+          "重炮攻击造成范围溅射并眩晕命中单位。", 1.25, 1.4),
+        swarm_turret: evolution("swarm_turret", "机械蜂群", "三座炮台",
+          "可同时维持 3 座射速更快的机枪炮台。", 1.28, 1.33)
+      }
+    },
+    necromancer: {
+      id: "necromancer", kind: "unit", name: "亡灵唤师", short: "唤师",
+      role: "后排 · 亡灵", color: "#8ce5aa", bg: "#193c34", baseWeight: 10,
+      hp: 102, atk: 23, atkCd: 1.25, range: 4, crit: 0.12,
+      skillDesc: "每阵亡一名单位，召唤骸骨战士抵挡伤害。骸骨自身阵亡不再召唤。",
+      evolutions: {
+        bone_lord: evolution("bone_lord", "骸骨君主", "持盾嘲讽",
+          "召唤持盾的强化骸骨，优先替友军承伤。", 1.36, 1.25),
+        soul_mage: evolution("soul_mage", "噬魂巫师", "灵魂叠加",
+          "每有一名敌军阵亡，本场战斗永久增加 15% 法强。", 1.22, 1.37)
+      }
+    },
+    bard: {
+      id: "bard", kind: "unit", name: "命运吟游者", short: "吟游者",
+      role: "后排 · 战歌", color: "#eea7f4", bg: "#382340", baseWeight: 9,
+      hp: 94, atk: 14, atkCd: 1.7, range: 4, crit: 0.15,
+      skillDesc: "存活时全军攻速 +15%，每次演奏产出 3 金币。",
+      evolutions: {
+        gold_poet: evolution("gold_poet", "黄金诗人", "暴击赏金",
+          "全军暴伤倍率增加 0.25，每次暴击额外获得 2 金币。", 1.28, 1.23),
+        war_song: evolution("war_song", "战歌领主", "开场战歌",
+          "开战前 5 秒，全军攻速额外 +35%。", 1.32, 1.3)
+      }
+    },
+    valkyrie: {
+      id: "valkyrie", kind: "unit", name: "圣枪女武神", short: "女武神",
+      role: "前排 · 穿透", color: "#f8e296", bg: "#403a21", baseWeight: 9,
+      hp: 153, atk: 25, atkCd: 1.1, range: 3, crit: 0.16,
+      skillDesc: "长枪穿透前后排，对护盾造成双倍伤害。",
+      evolutions: {
+        sky_charge: evolution("sky_charge", "天穹女武神", "击退冲锋",
+          "开战冲锋，击退并眩晕敌方前排。", 1.31, 1.44),
+        dawn_spear: evolution("dawn_spear", "破晓枪圣", "暴击圣盾",
+          "穿透暴击为全军叠加圣盾。", 1.35, 1.33)
+      }
+    },
     gold: {
       id: "gold",
       kind: "resource",
@@ -180,7 +244,7 @@
       role: "经济 · 爆发",
       color: "#ffd86b",
       bg: "#3d2f12",
-      baseWeight: 13,
+      baseWeight: 11,
       skillDesc: "三连立即获得 +55 金币与 +1 次免费转动！"
     },
     joker: {
@@ -191,12 +255,39 @@
       role: "万能 · 幸运",
       color: "#ff99e5",
       bg: "#3c1a38",
-      baseWeight: 6,
+      baseWeight: 2,
       skillDesc: "可替代任意符号连线！参与召唤的单位获得【幸运强化】+20%全属性。"
+    },
+    iron: {
+      id: "iron",
+      kind: "resource",
+      name: "锻造精铁",
+      short: "精铁",
+      role: "锻造 · 强化",
+      color: "#9aa8bf",
+      bg: "#1f2430",
+      baseWeight: 14,
+      skillDesc: "三连锻造装备：全军永久 +14 生命、+3 攻击，并获得 +15 金币！"
+    },
+    ember: {
+      id: "ember",
+      kind: "resource",
+      name: "星火源晶",
+      short: "星火",
+      role: "充能 · 经验",
+      color: "#ff8c38",
+      bg: "#361c14",
+      baseWeight: 12,
+      skillDesc: "三连充能：狂热槽 +40%，并使随机 1 名出战主力获得 +1 经验！"
     }
   };
 
-  const UNIT_IDS = ["knight", "archer", "mage", "priest", "assassin"];
+  const UNIT_IDS = Object.keys(SYMBOLS).filter(id => SYMBOLS[id].kind === "unit");
+  const FRONTLINE = new Set(["knight", "assassin", "berserker", "valkyrie"]);
+
+  function isUnitFrontline(type) {
+    return FRONTLINE.has(type);
+  }
   const SYMBOL_IDS = Object.keys(SYMBOLS);
 
   const PAYLINES = [
@@ -217,6 +308,30 @@
     priest: { name: "圣光庇护", req: 2, desc: "2+ 祭司：全军每 2 秒回复 4% 最大生命" },
     assassin: { name: "致命突袭", req: 2, desc: "2+ 刺客：全军暴击率 +18%" }
   };
+
+  const FACTION_SYNERGIES = {
+    summons: { name: "召唤军团", types: ["engineer", "necromancer"], color: "#8ce5aa",
+      desc: "召唤物生命 +50%、攻击 +40%", enhanced: "召唤物生命 +80%、攻击 +65%" },
+    blood: { name: "狂暴嗜血", types: ["berserker", "assassin"], color: "#ff806a",
+      desc: "全军暴击吸血 15%", enhanced: "全军暴击吸血 25%" },
+    gold: { name: "黄金商队", types: ["bard"], cores: ["coin_sack", "midas_reel", "interest_ledger", "blast_cart"],
+      color: "#ffd86b", desc: "击杀敌人 +4 金币", enhanced: "击杀敌人 +7 金币" },
+    holy: { name: "圣光铁壁", types: ["knight", "priest", "valkyrie"], color: "#f8e296",
+      desc: "护盾 +35%，破盾时反弹圣伤", enhanced: "护盾 +55%，破盾反伤加强" },
+    elements: { name: "元素过载", types: ["mage", "archer"], color: "#b78bfa",
+      desc: "全军每 4 次攻击触发连锁爆裂", enhanced: "每 3 次攻击触发连锁爆裂" }
+  };
+
+  function getFactionSynergies(run) {
+    const types = run.field.filter(Boolean).map(unit => unit.type);
+    return Object.entries(FACTION_SYNERGIES).map(([id, info]) => {
+      const members = types.filter(type => info.types.includes(type));
+      const hasGoldCore = !!info.cores?.some(core => run.cores.includes(core));
+      const count = members.length + Number(hasGoldCore);
+      const qualifies = info.cores ? members.length > 0 && hasGoldCore : new Set(members).size >= 2;
+      return { id, ...info, count, tier: qualifies ? (count >= 4 ? 4 : 2) : 0 };
+    });
+  }
 
   const CORES = [
     {
@@ -323,139 +438,616 @@
       rarity: "legendary",
       icon: "🏰",
       desc: "每次兵种连线有 40% 概率额外召唤 1 名同职业单位，且全军攻击 +12%。"
+    },
+    {
+      id: "iron_forge",
+      name: "秘银锻炉",
+      rarity: "common",
+      icon: "⚒️",
+      desc: "全军单位最大生命 +18%、基础攻击 +10%。"
+    },
+    {
+      id: "swift_boots",
+      name: "疾风战靴",
+      rarity: "common",
+      icon: "🥾",
+      desc: "全军攻击速度提升 14%，更容易触发高速残影压制。"
+    },
+    {
+      id: "fever_catalyst",
+      name: "狂热催化器",
+      rarity: "rare",
+      icon: "🔥",
+      desc: "轮盘狂热槽充能速度 +40%，更快触发免费百搭双倍狂热！"
+    },
+    {
+      id: "crystal_prism",
+      name: "源晶棱镜",
+      rarity: "rare",
+      icon: "💎",
+      desc: "每波战斗胜利额外获得 +1 命运水晶，助力商店与改命。"
+    },
+    {
+      id: "twin_nudge",
+      name: "齿轮校准仪",
+      rarity: "common",
+      icon: "🧭",
+      desc: "每波额外获得 +1 次免费单列微调机会。"
+    },
+    {
+      id: "executioner_axe",
+      name: "斩首巨斧",
+      rarity: "rare",
+      icon: "🪓",
+      desc: "全军攻击力 +18%，暴击率额外 +8%。"
+    },
+    {
+      id: "guardian_angel",
+      name: "辉光圣佑",
+      rarity: "legendary",
+      icon: "🪽",
+      desc: "全军最大生命 +25%、攻击力 +15%，每波开局额外 +1 免费转动。"
     }
   ];
 
-  const WAVES = [
-    {
-      wave: 1,
-      name: "斥候试探",
-      boss: false,
-      reward: 55,
-      enemies: [
-        { name: "哥布林刀手", kind: "melee", hp: 105, atk: 10, cd: 1.15, color: "#90be6d" },
-        { name: "哥布林刀手", kind: "melee", hp: 105, atk: 10, cd: 1.15, color: "#90be6d" },
-        { name: "短弓斥候", kind: "ranged", hp: 70, atk: 11, cd: 1.1, color: "#f9c74f" }
-      ]
-    },
-    {
-      wave: 2,
-      name: "骸骨前哨",
-      boss: false,
-      reward: 65,
-      enemies: [
-        { name: "骸骨盾兵", kind: "tank", hp: 175, atk: 11, cd: 1.25, color: "#adb5bd" },
-        { name: "骸骨射手", kind: "ranged", hp: 90, atk: 15, cd: 1.0, color: "#f9c74f" },
-        { name: "骸骨射手", kind: "ranged", hp: 90, atk: 15, cd: 1.0, color: "#f9c74f" }
-      ]
-    },
-    {
-      wave: 3,
-      name: "兽人突击队",
-      boss: false,
-      reward: 75,
-      enemies: [
-        { name: "兽人重斧", kind: "tank", hp: 235, atk: 17, cd: 1.2, color: "#f8961e" },
-        { name: "兽人狂战", kind: "melee", hp: 165, atk: 20, cd: 0.95, color: "#f3722c" },
-        { name: "萨满祭司", kind: "caster", hp: 120, atk: 18, cd: 1.25, color: "#c77dff" },
-        { name: "短弓斥候", kind: "ranged", hp: 105, atk: 16, cd: 1.0, color: "#f9c74f" }
-      ]
-    },
-    {
-      wave: 4,
-      name: "审判波次 · 赤甲战神",
-      boss: true,
-      bossTitle: "赤甲战神 · 格罗姆",
-      bossSkill: "每 4.5 秒释放【裂地重击】对全体造成范围伤害并获得护盾",
-      reward: 110,
-      enemies: [
-        { name: "赤甲战神", kind: "boss", bossId: "grom", hp: 680, atk: 30, cd: 1.35, color: "#ff595e" },
-        { name: "兽人狂战", kind: "melee", hp: 180, atk: 18, cd: 1.0, color: "#f3722c" },
-        { name: "兽人弩手", kind: "ranged", hp: 135, atk: 19, cd: 1.05, color: "#f9c74f" }
-      ]
-    },
-    {
-      wave: 5,
-      name: "暗影伏击",
-      boss: false,
-      reward: 85,
-      enemies: [
-        { name: "黑铁重甲", kind: "tank", hp: 330, atk: 20, cd: 1.2, color: "#6c757d" },
-        { name: "暗影刺客", kind: "assassin", hp: 195, atk: 30, cd: 0.88, color: "#ff4d6d" },
-        { name: "暗影刺客", kind: "assassin", hp: 195, atk: 30, cd: 0.88, color: "#ff4d6d" },
-        { name: "毒箭手", kind: "ranged", hp: 165, atk: 24, cd: 0.95, color: "#80ed99" }
-      ]
-    },
-    {
-      wave: 6,
-      name: "冰霜死灵阵",
-      boss: false,
-      reward: 95,
-      enemies: [
-        { name: "霜甲骑士", kind: "tank", hp: 420, atk: 24, cd: 1.2, color: "#4cc9f0" },
-        { name: "霜甲骑士", kind: "tank", hp: 380, atk: 22, cd: 1.2, color: "#4cc9f0" },
-        { name: "死灵法师", kind: "caster", hp: 230, atk: 31, cd: 1.15, color: "#b5179e" },
-        { name: "死灵法师", kind: "caster", hp: 230, atk: 31, cd: 1.15, color: "#b5179e" }
-      ]
-    },
-    {
-      wave: 7,
-      name: "审判波次 · 深渊巫妖",
-      boss: true,
-      bossTitle: "深渊巫妖 · 玛尔扎",
-      bossSkill: "每 4.2 秒释放【幽冥连锁】打击 3 名目标并汲取生命",
-      reward: 130,
-      enemies: [
-        { name: "深渊巫妖", kind: "boss", bossId: "lich", hp: 1220, atk: 40, cd: 1.25, color: "#9d4edd" },
-        { name: "骸骨重卫", kind: "tank", hp: 440, atk: 24, cd: 1.2, color: "#adb5bd" },
-        { name: "暗影刺客", kind: "assassin", hp: 240, atk: 34, cd: 0.9, color: "#ff4d6d" },
-        { name: "死灵法师", kind: "caster", hp: 260, atk: 32, cd: 1.15, color: "#c77dff" }
-      ]
-    },
-    {
-      wave: 8,
-      name: "堕落圣殿团",
-      boss: false,
-      reward: 110,
-      enemies: [
-        { name: "堕落圣骑", kind: "tank", hp: 600, atk: 32, cd: 1.15, color: "#e63946" },
-        { name: "堕落圣骑", kind: "tank", hp: 600, atk: 32, cd: 1.15, color: "#e63946" },
-        { name: "猩红游侠", kind: "ranged", hp: 310, atk: 40, cd: 0.88, color: "#ff758f" },
-        { name: "猩红游侠", kind: "ranged", hp: 310, atk: 40, cd: 0.88, color: "#ff758f" },
-        { name: "鲜血祭司", kind: "caster", hp: 290, atk: 34, cd: 1.1, color: "#c9184a" }
-      ]
-    },
-    {
-      wave: 9,
-      name: "炼狱双子卫队",
-      boss: false,
-      reward: 125,
-      enemies: [
-        { name: "熔岩巨像", kind: "tank", hp: 820, atk: 42, cd: 1.25, color: "#ff6d00" },
-        { name: "熔岩巨像", kind: "tank", hp: 820, atk: 42, cd: 1.25, color: "#ff6d00" },
-        { name: "炼狱魔导", kind: "caster", hp: 390, atk: 48, cd: 1.05, color: "#ff006e" },
-        { name: "暗影处刑官", kind: "assassin", hp: 380, atk: 52, cd: 0.82, color: "#ff4d6d" },
-        { name: "炼狱魔导", kind: "caster", hp: 390, atk: 48, cd: 1.05, color: "#ff006e" }
-      ]
-    },
-    {
-      wave: 10,
-      name: "终极审判 · 厄运魔龙",
-      boss: true,
-      bossTitle: "命运吞噬者 · 厄运魔龙",
-      bossSkill: "每 4.0 秒喷吐【毁灭龙息】灼烧全军并叠加狂暴攻速",
-      reward: 200,
-      enemies: [
-        { name: "厄运魔龙", kind: "boss", bossId: "dragon", hp: 2450, atk: 62, cd: 1.2, color: "#ff2a55" },
-        { name: "熔岩巨像", kind: "tank", hp: 780, atk: 38, cd: 1.25, color: "#ff6d00" },
-        { name: "暗影处刑官", kind: "assassin", hp: 420, atk: 54, cd: 0.85, color: "#ff4d6d" },
-        { name: "炼狱魔导", kind: "caster", hp: 420, atk: 50, cd: 1.05, color: "#ff006e" }
-      ]
+  function coreLevel(run, coreId) {
+    if (!run || !run.cores.includes(coreId)) return 0;
+    return run.coreLevels?.[coreId] || 1;
+  }
+
+  function coreUpgradeDesc(coreId, nextLv) {
+    const core = CORES.find(c => c.id === coreId);
+    const mult = nextLv === 2 ? "1.5×" : "2.1×";
+    const map = {
+      lucky_bell: `升至 Lv.${nextLv}：首转落空返还 +${nextLv} 次免费转动，且全军生命 +${nextLv * 15}。`,
+      black_note: `升至 Lv.${nextLv}：每波前 ${nextLv} 次转动中心必出【命运百搭】！`,
+      coin_sack: `升至 Lv.${nextLv}：落空安慰奖提升至 +${14 + (nextLv - 1) * 10}G，连线额外 +${10 + (nextLv - 1) * 8}G。`,
+      blast_cart: `升至 Lv.${nextLv}：多重连线奖励提升至 +${50 + (nextLv - 1) * 30}G 且全军永久 +${2 * nextLv} 攻击！`,
+      devour_crest: `升至 Lv.${nextLv}：吞噬额外 +${nextLv} 经验并返还 ${18 + (nextLv - 1) * 12}G。`,
+      extra_lock: `升至 Lv.${nextLv}：锁格上限再 +1，且全军基础攻速 +${nextLv * 5}%。`,
+      wild_surge: `升至 Lv.${nextLv}：百搭权重大幅提升，百搭召唤单位自带 +${nextLv + 1} 经验！`,
+      vanguard_oath: `升至 Lv.${nextLv}：前排生命加成提升至 +${30 + (nextLv - 1) * 18}%，护盾 +${30 * nextLv}。`,
+      arcane_echo: `升至 Lv.${nextLv}：法师与祭司攻速提升至 +${22 + (nextLv - 1) * 12}%，技能效果大幅强化。`,
+      crit_dice: `升至 Lv.${nextLv}：全军暴击率提升至 +${20 + (nextLv - 1) * 12}%，暴击伤害提升！`,
+      interest_ledger: `升至 Lv.${nextLv}：每波利息上限提升至 +${45 + (nextLv - 1) * 25}G。`,
+      berserk_banner: `升至 Lv.${nextLv}：低血量狂暴加成飙升至 +${45 + (nextLv - 1) * 22}% 攻速与攻击！`,
+      midas_reel: `升至 Lv.${nextLv}：每次金币连线全军永久 +${16 * nextLv} 生命、+${3 * nextLv} 攻击！`,
+      free_spin_gear: `升至 Lv.${nextLv}：每波免费转动提升至 +${1 + nextLv} 次！`,
+      royal_decree: `升至 Lv.${nextLv}：双倍召唤概率提升至 ${Math.min(85, 40 + (nextLv - 1) * 20)}%，全军攻击 +${12 * nextLv}%！`,
+      iron_forge: `升至 Lv.${nextLv}：全军生命 +${18 * nextLv}%、攻击 +${10 * nextLv}%。`,
+      swift_boots: `升至 Lv.${nextLv}：全军攻速提升至 +${14 * nextLv}%！`,
+      fever_catalyst: `升至 Lv.${nextLv}：狂热充能速度提升至 +${40 * nextLv}%！`,
+      crystal_prism: `升至 Lv.${nextLv}：每波胜利额外掉落 +${nextLv} 命运水晶！`,
+      twin_nudge: `升至 Lv.${nextLv}：每波免费微调提升至 +${nextLv} 次！`,
+      executioner_axe: `升至 Lv.${nextLv}：全军攻击 +${18 * nextLv}%，暴击率 +${8 * nextLv}%！`,
+      guardian_angel: `升至 Lv.${nextLv}：全军生命 +${25 * nextLv}%、攻击 +${15 * nextLv}%！`
+    };
+    return map[coreId] || `${core?.desc || ""}（Lv.${nextLv} 效果强化至 ${mult}）`;
+  }
+
+  const ENEMY_TACTICS = {
+    ch1_orc_brute: "shield_breaker",
+    ch2_necro_acolyte: "summoner",
+    ch2_bone_priest: "healer_support",
+    ch3_blizzard_yeti: "artillery_aoe",
+    ch3_ice_assassin: "backline_diver",
+    ch4_lava_imp: "artillery_aoe",
+    ch4_obsidian_golem: "shield_breaker",
+    ch4_boss_balrog: "summoner",
+    ch5_void_stalker: "backline_diver",
+    ch5_star_mage: "healer_support"
+  };
+
+  function campaignEnemy(name, kind, artKey, hp, atk, cd) {
+    return { name, kind, artKey, hp, atk, cd, tactic: ENEMY_TACTICS[artKey] };
+  }
+
+  function addPhases(wave) {
+    const boss = wave.enemies.filter(unit => unit.kind === "boss");
+    const regular = wave.enemies.filter(unit => unit.kind !== "boss");
+    const scaleUnit = (u, hpM, atkM = hpM) => ({
+      ...u,
+      hp: Math.round(u.hp * hpM),
+      atk: Math.round(u.atk * atkM),
+      cd: Math.max(0.65, Number((u.cd * 0.88).toFixed(2)))
+    });
+
+    const makeSquad = (size, hpM, atkM) =>
+      Array.from({ length: size }, (_, i) => scaleUnit(regular[i % regular.length], hpM, atkM));
+
+    if (boss.length > 0) {
+      // Boss wave: 3 full squads! Vanguard (3) -> Elite Guard (4) -> Boss + Royal Escorts (3)
+      const boostedBoss = boss.map(b => ({ ...b, cd: Math.max(0.75, Number((b.cd * 0.88).toFixed(2))) }));
+      return {
+        ...wave,
+        phases: [
+          { delay: 0, enemies: makeSquad(3, 1.0, 1.0) },
+          { delay: 5.0, enemies: makeSquad(4, 1.25, 1.15) },
+          { delay: 10.0, enemies: [...boostedBoss, ...makeSquad(3, 1.35, 1.2)] }
+        ]
+      };
     }
-  ];
+
+    // Normal wave: ALWAYS 3 tactical squads that stack if not cleared in time!
+    // Gentle 2-2-3 opener on Wave 1-2, full 3-3-4 / 4-4-5 squads from Wave 3 onward
+    const early = !wave.endless && wave.wave <= 2;
+    const baseSize = early ? 2 : Math.max(3, Math.min(4, regular.length));
+    return {
+      ...wave,
+      phases: [
+        { delay: 0, enemies: makeSquad(baseSize, 1.0, 1.0) },
+        { delay: 6.0, enemies: makeSquad(baseSize, 1.15, 1.1) },
+        { delay: 12.0, enemies: makeSquad(Math.min(5, baseSize + 1), 1.3, 1.2) }
+      ]
+    };
+  }
+
+  const CHAPTER_HP_MULT = [0.72, 2.2, 4.8, 9.0, 16.0];
+  const CHAPTER_ATK_MULT = [0.75, 1.75, 3.2, 5.2, 8.2];
+
+  function chapterWaves(chapter, enemies, encounters, boss) {
+    const firstWave = (chapter.id - 1) * (encounters.length + 1) + 1;
+    const reward = 34 + (chapter.id - 1) * 14;
+    const hpMult = CHAPTER_HP_MULT[chapter.id - 1] || 1;
+    const atkMult = CHAPTER_ATK_MULT[chapter.id - 1] || 1;
+    const normalWaves = encounters.map(([name, roster], index) => {
+      const growth = 1 + index * 0.14;
+      return {
+        chapter: chapter.id,
+        wave: firstWave + index,
+        name,
+        boss: false,
+        reward: reward + index * 4,
+        enemies: roster.map(key => {
+          const enemy = enemies[key];
+          return {
+            ...enemy,
+            lv: chapter.id,
+            hp: Math.round(enemy.hp * hpMult * growth),
+            atk: Math.round(enemy.atk * atkMult * growth)
+          };
+        })
+      };
+    });
+    const { skill, escorts, ...bossEnemy } = boss;
+    return [...normalWaves, {
+      chapter: chapter.id,
+      wave: firstWave + encounters.length,
+      name: "审判波次 · " + boss.name,
+      boss: true,
+      bossTitle: chapter.bossName,
+      bossSkill: skill,
+      reward: reward + 60,
+      enemies: [
+        {
+          ...bossEnemy,
+          lv: chapter.id,
+          hp: Math.round(bossEnemy.hp * hpMult * 2.6),
+          atk: Math.round(bossEnemy.atk * atkMult * 1.6),
+          skillInterval: Math.max(2.6, (bossEnemy.skillInterval || 4.2) * 0.85),
+          bossId: chapter.bossId
+        },
+        ...escorts.map(key => {
+          const e = enemies[key];
+          return {
+            ...e,
+            lv: chapter.id,
+            hp: Math.round(e.hp * hpMult * 1.35),
+            atk: Math.round(e.atk * atkMult * 1.25)
+          };
+        })
+      ]
+    }];
+  }
+
+  const CHAPTERS = [
+    {
+      id: 1, key: "ch1", name: "暮色古堡",
+      mapAsset: "assets/maps/map-01-citadel.webp", themeColor: "#f5c869",
+      bossId: "grom", bossName: "赤甲战神 · 格罗姆", crystalReward: 10,
+      enemies: {
+        raider: campaignEnemy("哥布林掠袭者", "melee", "ch1_goblin_raider", 105, 10, 1.15),
+        brute: campaignEnemy("兽人重斧", "tank", "ch1_orc_brute", 165, 12, 1.25),
+        scout: campaignEnemy("哥布林斥候", "ranged", "ch1_goblin_raider", 70, 11, 1.10)
+      },
+      encounters: [
+        ["斥候试探", ["raider", "raider", "scout"]],
+        ["破门先锋", ["brute", "raider", "scout"]],
+        ["城门争夺", ["brute", "raider", "raider", "scout"]],
+        ["赤斧巡队", ["brute", "brute", "raider", "scout"]],
+        ["王庭守备", ["brute", "brute", "raider", "scout", "scout"]]
+      ],
+      boss: {
+        ...campaignEnemy("赤甲战神", "boss", "ch1_boss_warlord", 620, 26, 1.35),
+        skillInterval: 4.5, escorts: ["brute", "scout"],
+        skill: "每 4.5 秒释放【裂地重击】，伤害全军并为自己叠盾"
+      }
+    },
+    {
+      id: 2, key: "ch2", name: "幽冥地窟",
+      mapAsset: "assets/maps/map-02-catacombs.svg", themeColor: "#38e8a8",
+      bossId: "lich", bossName: "深渊巫妖 · 玛尔扎", crystalReward: 12,
+      enemies: {
+        ghoul: campaignEnemy("墓穴食尸鬼", "melee", "ch2_crypt_ghoul", 232, 18, 1.05),
+        archer: campaignEnemy("骸骨弓手", "ranged", "ch2_bone_archer", 156, 20, 1.0),
+        acolyte: campaignEnemy("死灵侍僧", "caster", "ch2_necro_acolyte", 178, 22, 1.2),
+        priest: campaignEnemy("骸骨祭司", "caster", "ch2_bone_priest", 160, 16, 1.4)
+      },
+      encounters: [
+        ["墓门尸潮", ["ghoul", "ghoul", "archer"]],
+        ["骸骨伏兵", ["ghoul", "archer", "archer", "acolyte"]],
+        ["尸灯长廊", ["ghoul", "ghoul", "archer", "priest"]],
+        ["亡灵祭仪", ["ghoul", "ghoul", "acolyte", "priest"]],
+        ["白骨护卫", ["ghoul", "ghoul", "archer", "archer", "acolyte"]]
+      ],
+      boss: {
+        ...campaignEnemy("深渊巫妖", "boss", "ch2_boss_lich", 1120, 35, 1.25),
+        skillInterval: 4.2, escorts: ["ghoul", "archer", "acolyte"],
+        skill: "每 4.2 秒释放【幽冥连锁】，攻击至多 3 名敌人并汲取生命"
+      }
+    },
+    {
+      id: 3, key: "ch3", name: "凛冬要塞",
+      mapAsset: "assets/maps/map-03-frostpeak.svg", themeColor: "#6be5ff",
+      bossId: "icequeen", bossName: "霜狱女皇 · 芙蕾雅", crystalReward: 14,
+      enemies: {
+        guard: campaignEnemy("霜甲卫兵", "tank", "ch3_frost_guard", 385, 25, 1.2),
+        yeti: campaignEnemy("风雪巨兽", "melee", "ch3_blizzard_yeti", 285, 30, 1.25),
+        assassin: campaignEnemy("冰霜刺客", "assassin", "ch3_ice_assassin", 205, 26, 0.94)
+      },
+      encounters: [
+        ["寒关警戒", ["guard", "yeti", "assassin"]],
+        ["冰刃潜伏", ["guard", "yeti", "assassin", "assassin"]],
+        ["铁门风暴", ["guard", "guard", "yeti", "assassin"]],
+        ["雪兽围袭", ["guard", "yeti", "yeti", "assassin", "assassin"]],
+        ["霜狱近卫", ["guard", "guard", "yeti", "assassin", "assassin"]]
+      ],
+      boss: {
+        ...campaignEnemy("霜狱女皇", "boss", "ch3_boss_icequeen", 1620, 42, 1.25),
+        skillInterval: 4.8, escorts: ["guard", "yeti", "assassin"],
+        skill: "每 4.8 秒释放【霜狱新星】，伤害全军并降低攻速 2 秒"
+      }
+    },
+    {
+      id: 4, key: "ch4", name: "熔岩祭坛",
+      mapAsset: "assets/maps/map-04-inferno.svg", themeColor: "#ff6d24",
+      bossId: "balrog", bossName: "炎魔领主 · 卡扎克", crystalReward: 16,
+      enemies: {
+        imp: campaignEnemy("熔岩小鬼", "caster", "ch4_lava_imp", 310, 36, 1.1),
+        hound: campaignEnemy("炼狱猎犬", "melee", "ch4_hell_hound", 430, 37, 0.95),
+        golem: campaignEnemy("黑曜巨像", "tank", "ch4_obsidian_golem", 600, 33, 1.3)
+      },
+      encounters: [
+        ["地火警报", ["golem", "hound", "imp"]],
+        ["焦土追猎", ["golem", "hound", "hound", "imp"]],
+        ["炽炎哨站", ["golem", "hound", "imp", "imp"]],
+        ["黑曜壁垒", ["golem", "golem", "hound", "imp", "imp"]],
+        ["熔炉卫队", ["golem", "golem", "hound", "hound", "imp"]]
+      ],
+      boss: {
+        ...campaignEnemy("炎魔领主", "boss", "ch4_boss_balrog", 2130, 49, 1.24),
+        skillInterval: 4.3, escorts: ["golem", "hound", "imp"],
+        skill: "每 4.3 秒释放【熔岩断层】，重击存活前排，前排全灭时席卷后排"
+      }
+    },
+    {
+      id: 5, key: "ch5", name: "星界神殿",
+      mapAsset: "assets/maps/map-05-astral.svg", themeColor: "#c77dff",
+      bossId: "dragon", bossName: "厄运魔龙 · 阿斯特拉", crystalReward: 20,
+      enemies: {
+        stalker: campaignEnemy("虚空潜行者", "assassin", "ch5_void_stalker", 463, 43, 0.91),
+        sentinel: campaignEnemy("星界哨兵", "tank", "ch5_astral_sentinel", 810, 40, 1.25),
+        mage: campaignEnemy("星辉法师", "caster", "ch5_star_mage", 490, 45, 1.07)
+      },
+      encounters: [
+        ["虚空裂隙", ["sentinel", "stalker", "mage"]],
+        ["星矛巡行", ["sentinel", "sentinel", "stalker", "mage"]],
+        ["流星围猎", ["sentinel", "stalker", "stalker", "mage", "mage"]],
+        ["神殿屏障", ["sentinel", "sentinel", "stalker", "mage", "mage"]],
+        ["命运守卫", ["sentinel", "sentinel", "stalker", "stalker", "mage"]]
+      ],
+      boss: {
+        ...campaignEnemy("厄运魔龙", "boss", "ch5_boss_dragon", 2240, 60, 1.2),
+        skillInterval: 4, escorts: ["sentinel", "stalker", "mage"],
+        skill: "每 4 秒喷吐【毁灭龙息】，伤害全军并强化自身攻速与攻击"
+      }
+    }
+  ].map(({ enemies, encounters, boss, ...chapter }) => ({
+    ...chapter,
+    waves: chapterWaves(chapter, enemies, encounters, boss).map(addPhases)
+  }));
+
+  const WAVES = CHAPTERS.flatMap(chapter => chapter.waves);
+
+  const ENDLESS_AFFIXES = {
+    blood_tide: { name: "嗜血狂潮", desc: "敌军攻速 +25%" },
+    twin_kings: { name: "双王降临", desc: "两名不同章节的 Boss 加入末批" },
+    gold_tide: { name: "黄金狂潮", desc: "每次击杀获得双倍额外金币与水晶" },
+    iron_vow: { name: "铁壁军势", desc: "敌军额外生命 +20%" }
+  };
+
+  function putEndlessWave(run, number) {
+    run.endlessWave = number;
+    run.chapter = (number - 1) % CHAPTERS.length + 1;
+    run.endlessAffixes = sample(Object.keys(ENDLESS_AFFIXES), Math.random() < .55 ? 1 : 2);
+  }
+
+  function getEndlessWave(run) {
+    const number = run.endlessWave;
+    const chapter = CHAPTERS[run.chapter - 1];
+    const dual = run.endlessAffixes.includes("twin_kings");
+    const boss = dual || number % 3 === 0;
+    const base = chapter.waves[boss ? 5 : (number - 1) % 5];
+    const enemies = base.enemies.map(unit => ({ unit, chapter: run.chapter }));
+    if (dual) {
+      const next = CHAPTERS[run.chapter % CHAPTERS.length];
+      enemies.push({ unit: next.waves.at(-1).enemies[0], chapter: next.id });
+    }
+    const extraHp = run.endlessAffixes.includes("iron_vow") ? 1.2 : 1;
+    return addPhases({
+      ...base,
+      endless: true,
+      wave: number,
+      name: boss ? (dual ? "双王降临" : base.name) : "无尽轮回 · " + base.name,
+      boss,
+      bossTitle: dual ? "双王降临 · 两名章节 Boss" : base.bossTitle,
+      bossSkill: dual ? "两名首领将在最后一批同时出战" : base.bossSkill,
+      reward: base.reward + number * 25,
+      enemies: enemies.map(({ unit, chapter: origin }) => ({
+        ...unit,
+        lv: 5 + number,
+        hp: Math.round(unit.hp / CHAPTER_HP_MULT[origin - 1] * CHAPTER_HP_MULT.at(-1)
+          * Math.pow(1.22, number) * extraHp),
+        atk: Math.round(unit.atk / CHAPTER_ATK_MULT[origin - 1] * CHAPTER_ATK_MULT.at(-1)
+          * Math.pow(1.15, number))
+      }))
+    });
+  }
+
+  function createEndlessRun(champion) {
+    const run = restoreRun(JSON.parse(JSON.stringify(champion)));
+    Object.assign(run, {
+      mode: "endless", wave: 30, outcome: null, pendingChapterClear: null,
+      pendingCoreChoices: null, pendingShop: null, queuedShop: null, pendingEncounter: null,
+      totalSpins: 0, totalMatches: 0, totalAbsorbs: 0, maxLines: 0, startedAt: Date.now(),
+      hp: run.maxHp
+    });
+    putEndlessWave(run, 1);
+    prepareNextWave(run);
+    return run;
+  }
+
+  function getWave(run) {
+    if (run?.mode === "endless") return getEndlessWave(run);
+    return WAVES[(run?.wave ?? 1) - 1] ?? WAVES[0];
+  }
+
+  function getChapter(run) {
+    return CHAPTERS[(run?.chapter ?? getWave(run).chapter) - 1] ?? CHAPTERS[0];
+  }
 
   const FIELD_SLOTS = 6; // 0,1,2 front row; 3,4,5 back row
   const BENCH_SLOTS = 4;
+  const START_FIELD = [0, 1, 3, 4];
+  const SHOP_ITEMS = {
+    enchant: { name: "单格附魔铁砧", cost: 3, art: "shopAnvil", desc: "为指定盘面格永久设置一种符文。" },
+    nudge: { name: "时间微调沙漏", cost: 2, art: "shopHourglass", desc: "补充 2 次可跨波保留的微调。" },
+    dice: { name: "灌铅命运骰", cost: 3, art: "shopDice", desc: "增加指定兵种 20 权重，或移除一种符号。" },
+    repair: { name: "修复基地生命 (+1 ❤️)", cost: 2, art: "fateCrystal", desc: "恢复 1 点顶部红心【基地城防生命】（战败扣血、归零失败；英雄每波自动满血）。" },
+    spins: { name: "免费转包", cost: 2, art: "shopDice", desc: "下一场战斗前可额外免费转动 3 次。" }
+  };
+  const SLOT_UPGRADES = {
+    field: { name: "出战阵位", base: 4, max: FIELD_SLOTS, costs: [3, 5] },
+    bench: { name: "备战席位", base: 2, max: BENCH_SLOTS, costs: [3, 5] },
+    core: { name: "核心槽位", base: 4, max: 6, costs: [4, 5] }
+  };
+
+  function restoreRun(run) {
+    run.unlockedFieldSlots ??= [...new Set([...START_FIELD, ...run.field.flatMap((u, i) => u ? [i] : [])])];
+    run.unlockedBenchSlots ??= Math.max(2, run.bench.findLastIndex(Boolean) + 1);
+    run.unlockedCoreSlots ??= Math.max(4, run.cores.length);
+    run.nudgeReserve ??= 0;
+    run.purchasedEnchants ??= {};
+    run.bannedSymbols ??= [];
+    run.coreLevels ??= {};
+    run.shop ??= createShop(false);
+    run.logs ??= [];
+    run.pendingShop ??= null;
+    run.queuedShop ??= null;
+    run.pendingEncounter ??= null;
+    run.mode ??= "campaign";
+    run.maxLines ??= Math.min(8, run.lastLines?.length ?? 0);
+    return run;
+  }
+
+  function isSlotOpen(run, area, index) {
+    return area === "field" ? run.unlockedFieldSlots.includes(index) : index < run.unlockedBenchSlots;
+  }
+
+  function slotCost(run, area) {
+    const config = SLOT_UPGRADES[area];
+    if (!config) return null;
+    const count = area === "field" ? run.unlockedFieldSlots.length
+      : area === "bench" ? run.unlockedBenchSlots : run.unlockedCoreSlots;
+    return config.costs[count - config.base] ?? null;
+  }
+
+  function unlockSlot(run, area, fieldIndex) {
+    const cost = slotCost(run, area);
+    if (cost === null || run.crystals < cost) return false;
+    if (area === "field") {
+      const index = fieldIndex ?? [2, 5].find(slot => !isSlotOpen(run, "field", slot));
+      if (![2, 5].includes(index) || isSlotOpen(run, "field", index)) return false;
+      run.unlockedFieldSlots.push(index);
+    } else if (area === "bench") {
+      run.unlockedBenchSlots += 1;
+    } else {
+      run.unlockedCoreSlots += 1;
+    }
+    run.crystals -= cost;
+    return true;
+  }
+
+  function sample(items, count) {
+    const pool = [...items];
+    return Array.from({ length: Math.min(count, pool.length) }, () =>
+      pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+
+  function createShop(halfPrice = false) {
+    return {
+      halfPrice,
+      offers: halfPrice ? sample(Object.keys(SHOP_ITEMS), 3) : Object.keys(SHOP_ITEMS),
+      bought: [], rerolls: 0
+    };
+  }
+
+  function shopPrice(run, item) {
+    return Math.ceil(SHOP_ITEMS[item].cost * (run.pendingShop.halfPrice ? 0.5 : 1));
+  }
+
+  function refreshShop(run) {
+    if (!run.pendingShop || run.pendingShop.halfPrice || run.gold < 15) return false;
+    const pool = Object.keys(SHOP_ITEMS);
+    const previous = run.pendingShop.offers;
+    const offers = sample(pool, 3);
+    if (offers.length === previous.length && offers.every(id => previous.includes(id))) {
+      offers[2] = sample(pool.filter(id => !previous.includes(id)), 1)[0];
+    }
+    run.gold -= 15;
+    run.pendingShop = { ...run.pendingShop, offers, bought: [], rerolls: run.pendingShop.rerolls + 1 };
+    return true;
+  }
+
+  function setPurchasedEnchant(run, index, enchant) {
+    if (!Number.isInteger(index) || index < 0 || index > 8 || !Object.hasOwn(CELL_ENCHANT_INFO, enchant)) return false;
+    run.purchasedEnchants[index] = enchant;
+    run.cellEnchants[index] = enchant;
+    return true;
+  }
+
+  function canModifySymbol(run, id, action) {
+    const weights = getEffectiveWeights(run);
+    if (!weights[id]) return false;
+    if (action === "boost") return UNIT_IDS.includes(id);
+    return action === "ban" && Object.values(weights).filter(Boolean).length > 1;
+  }
+
+  function shopPurchase(run, item, options = {}) {
+    const shop = run.pendingShop;
+    if (!shop || !shop.offers.includes(item) || shop.bought.includes(item)) return false;
+    const cost = shopPrice(run, item);
+    if (run.crystals < cost) return false;
+
+    switch (item) {
+      case "enchant":
+        if (!setPurchasedEnchant(run, options.index, options.enchant)) return false;
+        break;
+      case "nudge":
+        run.nudgeReserve += 2;
+        run.nudgesLeft += 2;
+        break;
+      case "dice": {
+        const { symbol, action } = options;
+        if (!canModifySymbol(run, symbol, action)) return false;
+        if (action === "boost") {
+          run.weights[symbol] = (run.weights[symbol] ?? SYMBOLS[symbol].baseWeight) + 20;
+        } else {
+          run.bannedSymbols.push(symbol);
+        }
+        run.nudgePreview = [rollSymbol(run), rollSymbol(run), rollSymbol(run)];
+        break;
+      }
+      case "repair":
+        if (run.hp >= run.maxHp) return false;
+        run.hp += 1;
+        break;
+      case "spins":
+        run.freeSpins += 3;
+        break;
+    }
+    run.crystals -= cost;
+    shop.bought.push(item);
+    return true;
+  }
+
+  function retainedCells(run) {
+    return [...new Set([...run.locked, ...run.cellEnchants.flatMap((enchant, index) =>
+      enchant === "lock" ? [index] : [])])];
+  }
+
+  const REEL_TIERS = [
+    {
+      level: 1,
+      name: "铁制初机",
+      upgradeCost: 60,
+      maxLocks: 1,
+      jokerBonus: 0,
+      statBonus: 0,
+      bonusSpins: 0,
+      bonusXp: 0,
+      unlocked: ["knight", "archer", "mage", "gold", "joker", "iron", "ember"],
+      desc: "基础兵种池，1 锁格位"
+    },
+    {
+      level: 2,
+      name: "秘银轮盘",
+      upgradeCost: 110,
+      maxLocks: 2,
+      jokerBonus: 2,
+      statBonus: 0.08,
+      bonusSpins: 0,
+      bonusXp: 0,
+      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "gold", "joker", "iron", "ember"],
+      desc: "解锁 4 新职业 + 全军基础属性 +8% + 锁格 +1"
+    },
+    {
+      level: 3,
+      name: "符文机台",
+      upgradeCost: 180,
+      maxLocks: 2,
+      jokerBonus: 4,
+      statBonus: 0.16,
+      bonusSpins: 1,
+      bonusXp: 0,
+      unlocked: ["knight", "archer", "mage", "priest", "assassin", "berserker", "engineer", "necromancer", "bard", "gold", "joker", "iron", "ember"],
+      enchantCells: { 4: "double" },
+      desc: "解锁唤师/吟游者 + 中心【×2 双倍格】+ 每波免费转 +1 + 属性 +16%"
+    },
+    {
+      level: 4,
+      name: "鎏金圣轮",
+      upgradeCost: 275,
+      maxLocks: 3,
+      jokerBonus: 6,
+      statBonus: 0.26,
+      bonusSpins: 1,
+      bonusXp: 1,
+      unlocked: [...UNIT_IDS, "gold", "joker", "iron", "ember"],
+      enchantCells: { 4: "double", 0: "gold", 8: "gold" },
+      desc: "解锁女武神 + 对角【+25G 鎏金】+ 新召自带 +1 经验 + 属性 +26%"
+    },
+    {
+      level: 5,
+      name: "命运神机",
+      upgradeCost: null,
+      maxLocks: 3,
+      jokerBonus: 9,
+      statBonus: 0.38,
+      bonusSpins: 2,
+      bonusXp: 2,
+      unlocked: [...UNIT_IDS, "gold", "joker", "iron", "ember"],
+      enchantCells: { 4: "double", 0: "gold", 8: "gold", 2: "lucky", 6: "lucky" },
+      desc: "副对角【★2 赐福】+ 新召直出 2 级 + 每波免费转 +2 + 属性 +38%！"
+    }
+  ];
+
+  const CELL_ENCHANT_INFO = {
+    double: { badge: "×2", name: "双倍符文格", desc: "连线经过此格时，金币与召唤效果翻倍！" },
+    gold: { badge: "+25G", name: "鎏金聚财格", desc: "连线经过此格时，额外爆出 +25 金币！" },
+    lucky: { badge: "★2", name: "命运赐福格", desc: "连线经过此格召唤的单位自带 +2 经验直达转职！" },
+    lock: { badge: "锁定", name: "自动锁定格", desc: "每次转动免费保留当前符号，不占手动锁格额度。" }
+  };
 
   function createUnit(id, type, opts = {}) {
     return {
@@ -470,10 +1062,19 @@
     };
   }
 
+  const STAR_THRESHOLDS = [0, 2, 5, 9, 14]; // ★1, ★2(转职), ★3, ★4, ★5(神话)
+
   function unitLevel(unit) {
-    if (unit.xp >= 5) return 3;
-    if (unit.xp >= 2) return 2;
+    const xp = unit.xp || 0;
+    if (xp >= 14) return 5;
+    if (xp >= 9) return 4;
+    if (xp >= 5) return 3;
+    if (xp >= 2) return 2;
     return 1;
+  }
+
+  function nextStarXp(lvl) {
+    return STAR_THRESHOLDS[lvl] ?? null;
   }
 
   function hasCore(run, coreId) {
@@ -483,29 +1084,50 @@
   function getUnitStats(unit, run) {
     const def = SYMBOLS[unit.type];
     const lvl = unitLevel(unit);
-    let hp = def.hp * (1 + unit.xp * 0.28) + unit.bonusHp + (run?.globalBonusHp || 0);
-    let atk = def.atk * (1 + unit.xp * 0.25) + unit.bonusAtk + (run?.globalBonusAtk || 0);
-    let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.04;
-    let atkCd = def.atkCd * (1 - (lvl - 1) * 0.06);
+    const effXp = unit.xp <= 14 ? unit.xp : 14 + (unit.xp - 14) * 0.45;
+    let hp = def.hp * (1 + effXp * 0.11 + (lvl - 1) * 0.08) + unit.bonusHp + (run?.globalBonusHp || 0);
+    let atk = def.atk * (1 + effXp * 0.10 + (lvl - 1) * 0.07) + unit.bonusAtk + (run?.globalBonusAtk || 0);
+    let crit = def.crit + unit.bonusCrit + (lvl - 1) * 0.025;
+    let atkCd = def.atkCd * (1 - (lvl - 1) * 0.035);
 
     if (unit.lucky) {
-      hp *= 1.2;
-      atk *= 1.2;
+      hp *= 1.12;
+      atk *= 1.12;
     }
     if (unit.evolution && def.evolutions[unit.evolution]) {
       const evo = def.evolutions[unit.evolution];
-      hp *= evo.hpMult;
-      atk *= evo.atkMult;
+      // Softened evolution multiplier so ★2 isn't an unbreakable spike, leaving room for ★3-★5 growth!
+      const softHp = 1 + (evo.hpMult - 1) * 0.52;
+      const softAtk = 1 + (evo.atkMult - 1) * 0.55;
+      hp *= softHp;
+      atk *= softAtk;
     }
     if (run) {
-      if (hasCore(run, "royal_decree")) atk *= 1.12;
-      if (hasCore(run, "crit_dice")) crit += 0.2;
-      if (hasCore(run, "arcane_echo") && (unit.type === "mage" || unit.type === "priest")) {
-        atkCd *= 0.78;
+      const tier = getReelTier(run);
+      if (tier.statBonus > 0) {
+        hp *= (1 + tier.statBonus);
+        atk *= (1 + tier.statBonus);
       }
+      const royalLv = coreLevel(run, "royal_decree");
+      if (royalLv) atk *= (1 + 0.12 * royalLv);
+      const critLv = coreLevel(run, "crit_dice");
+      if (critLv) crit += 0.2 + (critLv - 1) * 0.12;
+      const arcaneLv = coreLevel(run, "arcane_echo");
+      if (arcaneLv && (unit.type === "mage" || unit.type === "priest")) {
+        atkCd *= Math.max(0.5, 1 - (0.22 + (arcaneLv - 1) * 0.12));
+      }
+      const forgeLv = coreLevel(run, "iron_forge");
+      if (forgeLv) { hp *= (1 + 0.18 * forgeLv); atk *= (1 + 0.1 * forgeLv); }
+      const bootsLv = coreLevel(run, "swift_boots");
+      if (bootsLv) atkCd *= Math.max(0.55, 1 - 0.14 * bootsLv);
+      const axeLv = coreLevel(run, "executioner_axe");
+      if (axeLv) { atk *= (1 + 0.18 * axeLv); crit += 0.08 * axeLv; }
+      const angelLv = coreLevel(run, "guardian_angel");
+      if (angelLv) { hp *= (1 + 0.25 * angelLv); atk *= (1 + 0.15 * angelLv); }
       const fieldIdx = run.field.findIndex(u => u && u.id === unit.id);
-      if (fieldIdx >= 0 && fieldIdx < 3 && hasCore(run, "vanguard_oath")) {
-        hp *= 1.3;
+      const vanLv = coreLevel(run, "vanguard_oath");
+      if (fieldIdx >= 0 && fieldIdx < 3 && vanLv) {
+        hp *= (1 + 0.3 + (vanLv - 1) * 0.18);
       }
     }
 
@@ -541,9 +1163,13 @@
     field[1] = createUnit(1, "knight");
     field[4] = createUnit(2, "archer");
 
-    return {
+    return restoreRun({
+      mode: "campaign",
+      chapter: 1,
       wave: 1,
-      gold: 115,
+      startedAt: Date.now(),
+      gold: 75,
+      crystals: 2,
       hp: 5,
       maxHp: 5,
       freeSpins: 2,
@@ -553,27 +1179,48 @@
       totalMatches: 0,
       totalAbsorbs: 0,
       nextId: 3,
+      reelLevel: 1,
+      fever: 0,
+      feverActive: false,
+      cellEnchants: Array(9).fill(null),
+      nudgesLeft: 2,
+      nudgePreview: ["knight", "archer", "mage"],
       field,
       bench: Array(BENCH_SLOTS).fill(null),
-      board: ["knight", "archer", "mage", "gold", "joker", "priest", "assassin", "knight", "archer"],
+      board: ["knight", "archer", "mage", "gold", "knight", "archer", "mage", "knight", "gold"],
       locked: [],
       lastLines: [],
       cores: [],
+      coreLevels: {},
       weights,
       rigBoosts: {},
       globalBonusHp: 0,
       globalBonusAtk: 0,
       pendingEvolutions: [],
       pendingCoreChoices: null,
+      pendingChapterClear: null,
       outcome: null // null | "victory" | "defeat"
-    };
+    });
+  }
+
+  function getReelTier(run) {
+    return REEL_TIERS[Math.min((run.reelLevel || 1) - 1, REEL_TIERS.length - 1)];
   }
 
   function getEffectiveWeights(run) {
+    const tier = getReelTier(run);
+    const unlocked = new Set(tier.unlocked);
     const w = {};
     for (const id of SYMBOL_IDS) {
+      if (!unlocked.has(id) || run.bannedSymbols?.includes(id)) {
+        w[id] = 0;
+        continue;
+      }
       let val = run.weights[id] ?? SYMBOLS[id].baseWeight;
-      if (id === "joker" && hasCore(run, "wild_surge")) val *= 2;
+      if (id === "joker") {
+        val += tier.jokerBonus;
+        if (hasCore(run, "wild_surge")) val *= 2;
+      }
       if (id === "gold" && hasCore(run, "midas_reel")) val += 10;
       w[id] = Math.max(2, val);
     }
@@ -582,7 +1229,7 @@
 
   function getSymbolOdds(run) {
     const w = getEffectiveWeights(run);
-    const total = Object.values(w).reduce((a, b) => a + b, 0);
+    const total = Object.values(w).reduce((a, b) => a + b, 0) || 1;
     const odds = {};
     for (const id of SYMBOL_IDS) {
       odds[id] = w[id] / total;
@@ -595,6 +1242,7 @@
     const total = Object.values(w).reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
     for (const id of SYMBOL_IDS) {
+      if (w[id] <= 0) continue;
       r -= w[id];
       if (r <= 0) return id;
     }
@@ -602,7 +1250,8 @@
   }
 
   function getMaxLocks(run) {
-    return hasCore(run, "extra_lock") ? 4 : 2;
+    const tier = getReelTier(run);
+    return tier.maxLocks + (hasCore(run, "extra_lock") ? 2 : 0);
   }
 
   function getLockCost(run) {
@@ -610,12 +1259,42 @@
   }
 
   function getSpinCost(run) {
-    if (run.freeSpins > 0) return 0;
+    if (run.feverActive || run.freeSpins > 0) return 0;
     return 20 + run.paidSpinsThisWave * 10;
   }
 
   function getTotalSpinCost(run) {
     return getSpinCost(run) + run.locked.length * getLockCost(run);
+  }
+
+  function upgradeReelTier(run) {
+    const cur = getReelTier(run);
+    if (!cur.upgradeCost || run.gold < cur.upgradeCost || run.reelLevel >= REEL_TIERS.length) {
+      return null;
+    }
+    run.gold -= cur.upgradeCost;
+    run.reelLevel += 1;
+    const next = getReelTier(run);
+    run.cellEnchants = Array(9).fill(null);
+    if (next.enchantCells) {
+      for (const [cellIdx, enchant] of Object.entries(next.enchantCells)) {
+        run.cellEnchants[Number(cellIdx)] = enchant;
+      }
+    }
+    for (const [index, enchant] of Object.entries(run.purchasedEnchants)) {
+      run.cellEnchants[index] = enchant;
+    }
+    run.nudgePreview = [rollSymbol(run), rollSymbol(run), rollSymbol(run)];
+    return next;
+  }
+
+  function hasNearMiss(board) {
+    // Check if col 0 & col 1 already form a 2-match on any row or diagonal
+    const pairs = [
+      [0, 1], [3, 4], [6, 7], // rows
+      [0, 4], [6, 4]          // diagonals
+    ];
+    return pairs.some(([a, b]) => board[a] === board[b] || board[a] === "joker" || board[b] === "joker");
   }
 
   function evaluateBoard(board) {
@@ -638,22 +1317,20 @@
   }
 
   function addUnitToRoster(run, unit) {
-    // Prefer appropriate row: tanks/assassins front (0..2), ranged/support back (3..5)
-    const isFront = unit.type === "knight" || unit.type === "assassin";
+    const isFront = isUnitFrontline(unit.type);
     const order = isFront ? [1, 0, 2, 4, 3, 5] : [4, 3, 5, 1, 0, 2];
     for (const idx of order) {
-      if (!run.field[idx]) {
+      if (isSlotOpen(run, "field", idx) && !run.field[idx]) {
         run.field[idx] = unit;
         return { placed: "field", index: idx };
       }
     }
-    for (let i = 0; i < run.bench.length; i += 1) {
+    for (let i = 0; i < run.unlockedBenchSlots; i += 1) {
       if (!run.bench[i]) {
         run.bench[i] = unit;
         return { placed: "bench", index: i };
       }
     }
-    // Roster completely full -> auto-convert into XP for same-type unit or gold!
     const allUnits = [...run.field, ...run.bench].filter(Boolean);
     const same = allUnits.find(u => u.type === unit.type);
     if (same) {
@@ -669,58 +1346,14 @@
     return { placed: "overflow_gold", gold: 25 };
   }
 
-  function executeSpin(run) {
-    const cost = getTotalSpinCost(run);
-    if (run.gold < cost) return null;
-
-    run.gold -= cost;
-    const usedFree = run.freeSpins > 0;
-    if (usedFree) {
-      run.freeSpins -= 1;
-    } else {
-      run.paidSpinsThisWave += 1;
-    }
-    run.spinsThisWave += 1;
-    run.totalSpins += 1;
-
-    const nextBoard = Array.from({ length: 9 }, (_, i) =>
-      run.locked.includes(i) ? run.board[i] : rollSymbol(run)
-    );
-
-    if (run.spinsThisWave === 1 && hasCore(run, "black_note") && !run.locked.includes(4)) {
-      nextBoard[4] = "joker";
-    }
-
-    run.board = nextBoard;
-    run.locked = [];
-
-    const hits = evaluateBoard(nextBoard);
-    run.lastLines = hits;
-
-    const summary = {
-      board: [...nextBoard],
-      hits,
-      goldGained: 0,
-      freeSpinsGained: 0,
-      summoned: [],
-      notes: []
-    };
-
-    if (hits.length === 0) {
-      if (run.spinsThisWave === 1 && hasCore(run, "lucky_bell")) {
-        run.freeSpins += 1;
-        summary.freeSpinsGained += 1;
-        summary.notes.push("回响铜铃触发：+1 免费转动！");
-      }
-      if (hasCore(run, "coin_sack")) {
-        run.gold += 14;
-        summary.goldGained += 14;
-        summary.notes.push("聚宝钱袋：+14 金币");
-      }
-      return summary;
-    }
-
+  function awardHits(run, hits, isFever, summary) {
+    const enchants = run.cellEnchants || Array(9).fill(null);
     run.totalMatches += hits.length;
+    run.maxLines = Math.max(run.maxLines ?? 0, hits.length);
+    if (hits.length >= 3 && Math.random() < 0.35) {
+      run.crystals += 1;
+      summary.notes.push("连线暴击：+1 命运水晶！");
+    }
 
     if (hasCore(run, "coin_sack")) {
       run.gold += 10;
@@ -728,7 +1361,7 @@
     }
 
     if (hits.length >= 2) {
-      const comboGold = 25 * (hits.length - 1);
+      const comboGold = 25 * (hits.length - 1) * (isFever ? 2 : 1);
       run.gold += comboGold;
       summary.goldGained += comboGold;
       summary.notes.push(`${hits.length} 重连线暴击！额外 +${comboGold} 金币`);
@@ -742,33 +1375,92 @@
     }
 
     for (const hit of hits) {
+      const lineEnchants = hit.cells.map(c => enchants[c]).filter(Boolean);
+      const hasDouble = lineEnchants.includes("double");
+      const goldCells = lineEnchants.filter(e => e === "gold").length;
+      const hasLuckyCell = lineEnchants.includes("lucky");
+
+      if (goldCells > 0) {
+        const bonus = goldCells * 25 * (isFever ? 2 : 1);
+        run.gold += bonus;
+        summary.goldGained += bonus;
+        summary.notes.push(`鎏金格触发 +${bonus} 金币`);
+      }
+
+      const mult = (hasDouble ? 2 : 1) * (isFever ? 2 : 1);
+
       if (hit.superJackpot) {
-        run.gold += 120;
-        summary.goldGained += 120;
-        const randType = UNIT_IDS[Math.floor(Math.random() * UNIT_IDS.length)];
-        const unit = createUnit(run.nextId++, randType, { xp: 2, lucky: true });
+        const g = 120 * mult;
+        run.gold += g;
+        summary.goldGained += g;
+        const pool = getReelTier(run).unlocked.filter(id => UNIT_IDS.includes(id) && !run.bannedSymbols.includes(id));
+        const randType = sample(pool.length > 0 ? pool : getReelTier(run).unlocked.filter(id => UNIT_IDS.includes(id)), 1)[0];
+        const unit = createUnit(run.nextId++, randType, { xp: 2 + (isFever ? 1 : 0), lucky: true });
         addUnitToRoster(run, unit);
         if (!run.pendingEvolutions.includes(unit.id)) {
           run.pendingEvolutions.push(unit.id);
         }
         summary.summoned.push(unit);
-        summary.notes.push("三王大满贯！+120 金币 & 召唤 2 级幸运精锐！");
+        summary.notes.push(`三王大满贯！+${g} 金币 & 召唤 2 级幸运精锐！`);
+      } else if (hit.symbol === "iron") {
+        const g = 15 * mult;
+        const hpB = 14 * mult;
+        const atkB = 3 * mult;
+        run.gold += g;
+        run.globalBonusHp += hpB;
+        run.globalBonusAtk += atkB;
+        summary.goldGained += g;
+        summary.notes.push(`锻造精铁：全军永久 +${hpB} 生命、+${atkB} 攻击，+${g} 金币！`);
+      } else if (hit.symbol === "ember") {
+        const charge = 40 * mult;
+        run.fever = Math.min(100, (run.fever || 0) + charge);
+        if (run.fever >= 100 && !run.feverActive) {
+          run.feverActive = true;
+          summary.triggeredFever = true;
+        }
+        const deployed = run.field.filter(Boolean);
+        let xpNote = "";
+        if (deployed.length > 0) {
+          const pick = deployed[Math.floor(Math.random() * deployed.length)];
+          const before = unitLevel(pick);
+          pick.xp += mult;
+          if (before < 2 && unitLevel(pick) >= 2 && !pick.evolution && !run.pendingEvolutions.includes(pick.id)) {
+            run.pendingEvolutions.push(pick.id);
+          }
+          xpNote = `，${SYMBOLS[pick.type].short} +${mult} 经验`;
+        }
+        summary.notes.push(`星火充能：狂热 +${charge}%${xpNote}！`);
       } else if (hit.symbol === "gold") {
-        run.gold += 55;
+        const g = 38 * mult;
+        run.gold += g;
         run.freeSpins += 1;
-        summary.goldGained += 55;
+        summary.goldGained += g;
         summary.freeSpinsGained += 1;
-        if (hasCore(run, "midas_reel")) {
-          run.globalBonusHp += 16;
-          run.globalBonusAtk += 3;
-          summary.notes.push("点金滚轮：全军永久 +16 生命、+3 攻击！");
+        if (hasDouble) summary.notes.push("双倍符文格：金币收益 ×2！");
+        const midasLv = coreLevel(run, "midas_reel");
+        if (midasLv) {
+          run.globalBonusHp += 16 * midasLv;
+          run.globalBonusAtk += 3 * midasLv;
+          summary.notes.push(`点金滚轮 Lv.${midasLv}：全军永久 +${16 * midasLv} 生命、+${3 * midasLv} 攻击！`);
         }
       } else {
-        const extraXp = (hits.length >= 2 ? 1 : 0) + (hit.hasWild && hasCore(run, "wild_surge") ? 2 : 0);
-        const spawnOne = () => {
+        const tier = getReelTier(run);
+        const wildLv = coreLevel(run, "wild_surge");
+        const extraXp = (hits.length >= 2 ? 1 : 0)
+          + (hit.hasWild && wildLv ? wildLv + 1 : 0)
+          + (isFever ? 1 : 0)
+          + (hasLuckyCell ? 2 : 0)
+          + (tier.bonusXp || 0);
+        const royalLv = coreLevel(run, "royal_decree");
+        const royalChance = royalLv ? Math.min(0.85, 0.4 + (royalLv - 1) * 0.2) : 0;
+        const spawnCount = (hasDouble ? 2 : 1) + (royalLv && Math.random() < royalChance ? 1 : 0);
+        if (hasDouble) summary.notes.push("双倍符文格：双倍召唤！");
+        if (hasLuckyCell) summary.notes.push("命运赐福格：直出高阶经验！");
+
+        for (let s = 0; s < spawnCount; s += 1) {
           const unit = createUnit(run.nextId++, hit.symbol, {
             xp: extraXp,
-            lucky: hit.hasWild
+            lucky: hit.hasWild || isFever || hasLuckyCell
           });
           const placement = addUnitToRoster(run, unit);
           if (unitLevel(unit) >= 2 && !unit.evolution && placement.placed !== "overflow_gold" && placement.placed !== "overflow_xp") {
@@ -777,15 +1469,142 @@
             }
           }
           summary.summoned.push(unit);
-        };
-        spawnOne();
-        if (hasCore(run, "royal_decree") && Math.random() < 0.4) {
-          spawnOne();
-          summary.notes.push("皇室敕令：额外召唤 1 名同职业单位！");
         }
       }
     }
+  }
 
+  function executeSpin(run) {
+    const cost = getTotalSpinCost(run);
+    if (run.gold < cost) return null;
+
+    run.gold -= cost;
+    const isFever = !!run.feverActive;
+    if (isFever) {
+      run.feverActive = false;
+      run.fever = 0;
+    } else if (run.freeSpins > 0) {
+      run.freeSpins -= 1;
+    } else {
+      run.paidSpinsThisWave += 1;
+    }
+    run.spinsThisWave += 1;
+    run.totalSpins += 1;
+
+    const retained = retainedCells(run);
+    const nextBoard = Array.from({ length: 9 }, (_, i) =>
+      retained.includes(i) ? run.board[i] : rollSymbol(run)
+    );
+
+    if ((isFever || (run.spinsThisWave === 1 && hasCore(run, "black_note"))) && !run.locked.includes(4)) {
+      nextBoard[4] = "joker";
+    }
+
+    run.board = nextBoard;
+    run.locked = [];
+    run.nudgePreview = [rollSymbol(run), rollSymbol(run), rollSymbol(run)];
+
+    const hits = evaluateBoard(nextBoard);
+    run.lastLines = hits;
+
+    const summary = {
+      board: [...nextBoard],
+      hits,
+      isFever,
+      nearMiss: hasNearMiss(nextBoard),
+      goldGained: 0,
+      freeSpinsGained: 0,
+      summoned: [],
+      notes: [],
+      triggeredFever: false
+    };
+
+    if (hits.length === 0) {
+      if (!isFever) {
+        run.fever = Math.min(100, (run.fever || 0) + 25);
+        if (run.fever >= 100) {
+          run.feverActive = true;
+          summary.triggeredFever = true;
+          summary.notes.push("狂热槽蓄满！下一转【狂热转盘】免费+中心百搭+双倍奖励！");
+        }
+      }
+      if (run.spinsThisWave === 1 && hasCore(run, "lucky_bell")) {
+        run.freeSpins += 1;
+        summary.freeSpinsGained += 1;
+        summary.notes.push("回响铜铃触发：+1 免费转动！");
+      }
+      if (hasCore(run, "coin_sack")) {
+        run.gold += 14;
+        summary.goldGained += 14;
+        summary.notes.push("聚宝钱袋：+14 金币");
+      }
+      return summary;
+    }
+
+    if (!isFever) {
+      run.fever = Math.min(100, (run.fever || 0) + 12);
+      if (run.fever >= 100) {
+        run.feverActive = true;
+        summary.triggeredFever = true;
+      }
+    }
+
+    awardHits(run, hits, isFever, summary);
+    return summary;
+  }
+
+  function getNudgeCost(run) {
+    return (run.nudgesLeft || 0) > 0 ? 0 : 10;
+  }
+
+  function getWinningNudgeCols(run) {
+    const preview = run.nudgePreview || [];
+    const cols = [];
+    for (let col = 0; col < 3; col += 1) {
+      const inc = preview[col];
+      if (!inc) continue;
+      const b = [...run.board];
+      b[col + 6] = b[col + 3];
+      b[col + 3] = b[col];
+      b[col] = inc;
+      if (evaluateBoard(b).length > 0) cols.push(col);
+    }
+    return cols;
+  }
+
+  function nudgeColumn(run, col) {
+    if (col < 0 || col > 2) return null;
+    const cost = getNudgeCost(run);
+    if (cost > 0) {
+      if (run.gold < cost) return null;
+      run.gold -= cost;
+    } else {
+      if (run.nudgesLeft <= run.nudgeReserve) run.nudgeReserve -= 1;
+      run.nudgesLeft -= 1;
+    }
+    const incoming = (run.nudgePreview && run.nudgePreview[col]) || rollSymbol(run);
+    const b = [...run.board];
+    b[col + 6] = b[col + 3];
+    b[col + 3] = b[col];
+    b[col] = incoming;
+    run.board = b;
+    run.nudgePreview[col] = rollSymbol(run);
+
+    const hits = evaluateBoard(b);
+    run.lastLines = hits;
+    const summary = {
+      board: [...b],
+      hits,
+      cost,
+      isFever: false,
+      goldGained: 0,
+      freeSpinsGained: 0,
+      summoned: [],
+      notes: []
+    };
+    if (hits.length > 0) {
+      awardHits(run, hits, false, summary);
+    }
     return summary;
   }
 
@@ -799,6 +1618,7 @@
 
   function swapSlots(run, fromArea, fromIdx, toArea, toIdx) {
     if (fromArea === toArea && fromIdx === toIdx) return false;
+    if (!isSlotOpen(run, fromArea, fromIdx) || !isSlotOpen(run, toArea, toIdx)) return false;
     const srcArr = fromArea === "field" ? run.field : run.bench;
     const dstArr = toArea === "field" ? run.field : run.bench;
     const temp = srcArr[fromIdx];
@@ -815,10 +1635,20 @@
 
     const target = tLoc.unit;
     const donor = dLoc.unit;
-    const beforeLevel = unitLevel(target);
+    const tLv = unitLevel(target);
+    const dLv = unitLevel(donor);
+
+    // Prevent weaker/lower-tier units from eating stronger carries!
+    if (dLv > tLv || (dLv === tLv && donor.xp > target.xp) || (donor.evolution && !target.evolution)) {
+      return {
+        error: "无法用低阶单位吞噬高阶主力！请先选中高星/高经验主力作为【主体】，再点选低阶单位作为【素材】。"
+      };
+    }
+
+    const beforeLevel = tLv;
     const sameClass = target.type === donor.type;
 
-    let xpGain = (sameClass ? 2 : 1) + Math.floor(donor.xp / 2);
+    let xpGain = sameClass ? (2 + donor.xp) : (1 + Math.floor(donor.xp * 0.6));
     if (hasCore(run, "devour_crest")) {
       xpGain += 1;
       run.gold += 18;
@@ -826,21 +1656,21 @@
     target.xp += xpGain;
     if (donor.lucky) target.lucky = true;
 
-    // Cross-class inheritance mini-trait!
     let inherited = "";
     if (!sameClass) {
-      if (donor.type === "knight") { target.bonusHp += 28; inherited = "+28 生命"; }
-      else if (donor.type === "archer") { target.bonusAtk += 5; inherited = "+5 攻击"; }
-      else if (donor.type === "mage") { target.bonusAtk += 6; inherited = "+6 法强"; }
-      else if (donor.type === "priest") { target.bonusHp += 20; target.bonusAtk += 3; inherited = "+20 生命 +3 攻击"; }
-      else if (donor.type === "assassin") { target.bonusCrit += 0.06; inherited = "+6% 暴击"; }
+      if (donor.type === "knight") { target.bonusHp += 35; inherited = "跨职继承 +35 生命"; }
+      else if (donor.type === "archer") { target.bonusAtk += 6; inherited = "跨职继承 +6 攻击"; }
+      else if (donor.type === "mage") { target.bonusAtk += 7; inherited = "跨职继承 +7 法强"; }
+      else if (donor.type === "priest") { target.bonusHp += 24; target.bonusAtk += 4; inherited = "跨职继承 +24 生命 +4 攻击"; }
+      else if (donor.type === "assassin") { target.bonusCrit += 0.07; inherited = "跨职继承 +7% 暴击"; }
+      else if (isUnitFrontline(donor.type)) { target.bonusHp += 26; target.bonusAtk += 4; inherited = "跨职继承 +26 生命 +4 攻击"; }
+      else { target.bonusAtk += 6; inherited = "跨职继承 +6 攻击"; }
     } else {
-      target.bonusHp += 15;
-      target.bonusAtk += 4;
-      inherited = "同职共鸣 +15 生命 +4 攻击";
+      target.bonusHp += 20;
+      target.bonusAtk += 5;
+      inherited = "同职融合 +20 生命 +5 攻击（完整继承经验）";
     }
 
-    // Remove donor
     if (dLoc.area === "field") run.field[dLoc.index] = null;
     else run.bench[dLoc.index] = null;
 
@@ -883,87 +1713,272 @@
     return true;
   }
 
+  function getRigBoostCost(run, symId) {
+    const count = run.rigBoosts[symId] || 0;
+    return count < 2 ? 1 : 2; // Costs Fate Crystals!
+  }
+
   function boostSymbolWeight(run, symId) {
     const count = run.rigBoosts[symId] || 0;
-    const cost = 25 + count * 15;
-    if (run.gold < cost || count >= 4) return false;
-    run.gold -= cost;
+    const cost = getRigBoostCost(run, symId);
+    if (!getEffectiveWeights(run)[symId] || run.crystals < cost || count >= 4) return false;
+    run.crystals -= cost;
     run.weights[symId] = (run.weights[symId] || SYMBOLS[symId].baseWeight) + 12;
     run.rigBoosts[symId] = count + 1;
     return true;
   }
 
   function reduceSymbolWeight(run, symId) {
-    const cost = 30;
+    const cost = 2; // 2 Fate Crystals
     const current = run.weights[symId] ?? SYMBOLS[symId].baseWeight;
-    if (run.gold < cost || current <= 4) return false;
-    run.gold -= cost;
+    if (!getEffectiveWeights(run)[symId] || run.crystals < cost || current <= 4) return false;
+    run.crystals -= cost;
     run.weights[symId] = Math.max(4, current - 10);
     return true;
   }
 
+  function addLog(run, tag, text) {
+    if (!run) return;
+    run.logs ??= [];
+    const stamp = run.mode === "endless"
+      ? `无尽 W${run.endlessWave || 1}`
+      : `C${run.chapter || 1}-W${((run.wave - 1) % 6) + 1}`;
+    run.logs.unshift({ at: Date.now(), stamp, tag, text });
+    if (run.logs.length > 120) run.logs.length = 120;
+  }
+
+  function ensureShop(run) {
+    if (!run.shop) run.shop = createShop(false);
+    return run.shop;
+  }
+
   function draftCoreChoices(run) {
-    const pool = CORES.filter(c => !run.cores.includes(c.id));
-    if (pool.length === 0) return [];
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(3, shuffled.length)).map(c => c.id);
+    const ch = run.chapter || 1;
+    const levels = run.coreLevels || {};
+    const slotsFull = run.cores.length >= run.unlockedCoreSlots;
+
+    const rarityOdds = ch === 1
+      ? { common: 0.95, rare: 0.05, legendary: 0 }
+      : ch === 2
+        ? { common: 0.72, rare: 0.26, legendary: 0.02 }
+        : ch === 3
+          ? { common: 0.45, rare: 0.45, legendary: 0.1 }
+          : ch === 4
+            ? { common: 0.22, rare: 0.52, legendary: 0.26 }
+            : { common: 0.1, rare: 0.45, legendary: 0.45 };
+
+    const pickWeighted = (list, count, picked) => {
+      const rem = list.filter(c => !picked.includes(c.id));
+      while (picked.length < count && rem.length > 0) {
+        const r = Math.random();
+        const targetRarity = r < rarityOdds.common ? "common"
+          : r < rarityOdds.common + rarityOdds.rare ? "rare" : "legendary";
+        let candidates = rem.filter(c => c.rarity === targetRarity);
+        if (candidates.length === 0) candidates = rem;
+        const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+        picked.push(chosen.id);
+        rem.splice(rem.indexOf(chosen), 1);
+      }
+    };
+
+    const picked = [];
+    const unowned = CORES.filter(c => !run.cores.includes(c.id));
+    const upgradeable = CORES.filter(c => run.cores.includes(c.id) && (levels[c.id] || 1) < 3);
+
+    if (!slotsFull) {
+      // Offer 3 fresh unowned cores; if fewer than 3 left, top up with upgradeable owned cores
+      pickWeighted(unowned, 3, picked);
+      pickWeighted(upgradeable, 3, picked);
+    } else {
+      // Slots full: offer up to 2 upgradeable owned cores + 1-3 new unowned replacement cores so there are ALWAYS 3 distinct options!
+      pickWeighted(upgradeable, Math.min(2, upgradeable.length), picked);
+      pickWeighted(unowned, 3, picked);
+      pickWeighted(upgradeable, 3, picked);
+    }
+    return picked;
   }
 
   function pickCore(run, coreId) {
+    run.coreLevels ??= {};
     if (!run.cores.includes(coreId)) {
-      run.cores.push(coreId);
-      if (coreId === "free_spin_gear") {
-        run.freeSpins += 2;
+      if (run.cores.length >= run.unlockedCoreSlots) {
+        // Replace oldest non-legendary core (or oldest core) so full slots never block drafting!
+        const rarityRank = id => ({ common: 0, rare: 1, legendary: 2 }[CORES.find(c => c.id === id)?.rarity] ?? 0);
+        const replaceIdx = run.cores.reduce((best, id, idx) =>
+          rarityRank(id) < rarityRank(run.cores[best]) ? idx : best, 0);
+        const removed = run.cores[replaceIdx];
+        delete run.coreLevels[removed];
+        run.cores[replaceIdx] = coreId;
+      } else {
+        run.cores.push(coreId);
       }
+      run.coreLevels[coreId] = 1;
+      if (coreId === "free_spin_gear") run.freeSpins += 2;
+      if (coreId === "guardian_angel") run.freeSpins += 1;
+    } else {
+      run.coreLevels[coreId] = Math.min(3, (run.coreLevels[coreId] || 1) + 1);
+      if (coreId === "free_spin_gear") run.freeSpins += 1;
+      if (coreId === "lucky_bell") run.globalBonusHp += 15;
     }
     run.pendingCoreChoices = null;
+    return true;
   }
 
-  function resolveWave(run, won) {
-    const waveDef = WAVES[run.wave - 1];
-    let reward = won ? waveDef.reward : Math.round(waveDef.reward * 0.65);
+  const ENCOUNTERS = {
+    cede: { name: "赌命祭坛", desc: "牺牲 1 点城防，获得一枚未持有的传说核心和 100 金币。核心槽满时替换一枚较低稀有度核心。" },
+    safe: { name: "祭坛赠礼", desc: "领取 35 金币。" },
+    mirror: { name: "镜像熔炉", desc: "复制出战战力最高的单位至空备战位，保留经验、转职与强化属性。" },
+    recast: { name: "混沌重铸", desc: "随机把一枚普通核心替换为未持有的传说核心，继承等级。" },
+    runes: { name: "混沌铭文", desc: "随机获得 2 个永久双倍格。优先使用空白格。" },
+    market: { name: "神秘黑市", desc: "打开黑市，半价购买三件随机秘宝。水晶价格向上取整。" },
+    supply: { name: "水晶遗馈", desc: "领取 3 枚命运水晶。" }
+  };
+
+  function legendaryChoices(run) {
+    return CORES.filter(core => core.rarity === "legendary" && !run.cores.includes(core.id));
+  }
+
+  function encounterAvailable(run, id) {
+    const rarityOf = key => CORES.find(core => core.id === key)?.rarity;
+    if (id === "cede") {
+      return run.hp > 1 && legendaryChoices(run).length > 0
+        && (run.cores.length < run.unlockedCoreSlots || run.cores.some(key => rarityOf(key) !== "legendary"));
+    }
+    if (id === "mirror") return run.field.some(Boolean) && run.bench.slice(0, run.unlockedBenchSlots).includes(null);
+    if (id === "recast") return legendaryChoices(run).length > 0 && run.cores.some(key => rarityOf(key) === "common");
+    if (id === "runes") return run.cellEnchants.filter(enchant => enchant !== "double").length >= 2;
+    return id === "safe" || id === "market" || id === "supply";
+  }
+
+  function draftEncounter(run) {
+    const options = Object.keys(ENCOUNTERS).filter(id => !["safe", "supply"].includes(id)
+      && encounterAvailable(run, id));
+    if (options.length < 2) options.push("supply");
+    return ["safe", ...sample(options, 2)];
+  }
+
+  function cashInLegendary(run, old) {
+    const [legendary] = sample(legendaryChoices(run), 1);
+    if (old) {
+      run.cores[run.cores.indexOf(old)] = legendary.id;
+      run.coreLevels[legendary.id] = run.coreLevels[old] ?? 1;
+      delete run.coreLevels[old];
+    } else {
+      pickCore(run, legendary.id);
+    }
+  }
+
+  function pickEncounter(run, id) {
+    if (!run.pendingEncounter?.includes(id) || !encounterAvailable(run, id)) return false;
+    if (id === "safe") {
+      run.gold += 35;
+    } else if (id === "supply") {
+      run.crystals += 3;
+    } else if (id === "cede" || id === "recast") {
+      const eligible = CORES.filter(core => run.cores.includes(core.id) &&
+        (id === "recast" ? core.rarity === "common" : core.rarity !== "legendary"));
+      const [replaced] = id === "recast" || run.cores.length >= run.unlockedCoreSlots ? sample(eligible, 1) : [];
+      cashInLegendary(run, replaced?.id);
+      if (id === "cede") {
+        run.hp -= 1;
+        run.gold += 100;
+      }
+    } else if (id === "mirror") {
+      const index = run.bench.slice(0, run.unlockedBenchSlots).indexOf(null);
+      const strongest = run.field.filter(Boolean).sort((a, b) => unitPower(b, run) - unitPower(a, run))[0];
+      const copy = { ...strongest, id: run.nextId++ };
+      run.bench[index] = copy;
+      if (unitLevel(copy) >= 2 && !copy.evolution) run.pendingEvolutions.push(copy.id);
+    } else if (id === "runes") {
+      const empty = run.cellEnchants.flatMap((enchant, index) => !enchant ? [index] : []);
+      const existing = run.cellEnchants.flatMap((enchant, index) => enchant && enchant !== "double" ? [index] : []);
+      const cells = [...sample(empty, 2), ...sample(existing, 2)].slice(0, 2);
+      cells.forEach(index => setPurchasedEnchant(run, index, "double"));
+    } else if (id === "market") {
+      run.queuedShop = run.pendingShop;
+      run.pendingShop = createShop(true);
+    }
+    run.pendingEncounter = null;
+    return true;
+  }
+
+  function prepareNextWave(run) {
+    const tier = getReelTier(run);
+    const gearLv = coreLevel(run, "free_spin_gear");
+    const angelLv = coreLevel(run, "guardian_angel");
+    const nudgeLv = coreLevel(run, "twin_nudge");
+    run.freeSpins = 2 + (tier.bonusSpins || 0) + (gearLv ? gearLv + 1 : 0) + (angelLv ? 1 : 0);
+    run.paidSpinsThisWave = 0;
+    run.spinsThisWave = 0;
+    run.nudgesLeft = 2 + nudgeLv + run.nudgeReserve;
+    run.locked = [];
+    run.lastLines = [];
+  }
+
+  function resolveWave(run, won, battle = {}) {
+    const waveDef = getWave(run);
+    const endless = run.mode === "endless";
+    let reward = (won ? waveDef.reward : Math.round(waveDef.reward * 0.65)) + (battle.gold ?? 0);
     let interest = 0;
-    if (won && hasCore(run, "interest_ledger")) {
-      interest = Math.min(45, Math.floor(run.gold / 20) * 5);
+    const ledgerLv = coreLevel(run, "interest_ledger");
+    if (won && ledgerLv) {
+      interest = Math.min(45 + (ledgerLv - 1) * 25, Math.floor(run.gold / 20) * 5);
       reward += interest;
     }
     run.gold += reward;
-
+    const prismLv = coreLevel(run, "crystal_prism");
+    const crystalBonus = won ? (waveDef.boss ? 5 : 2) + Number(!!battle.flawless) + prismLv : 0;
+    const crystalsGained = crystalBonus + (battle.crystals ?? 0);
+    run.crystals += crystalsGained;
     const dmg = won ? 0 : (waveDef.boss ? 2 : 1);
     run.hp = Math.max(0, run.hp - dmg);
-
-    if (run.hp <= 0) {
+    const summary = { wave: waveDef, won, reward, interest, crystalsGained, dmg, finished: true };
+    if (!run.hp) {
       run.outcome = "defeat";
-      return { won, reward, interest, dmg, finished: true };
-    }
-    if (won && run.wave >= WAVES.length) {
-      run.outcome = "victory";
-      return { won, reward, interest, dmg, finished: true };
+      return summary;
     }
 
-    // Advance wave if won, or advance anyway after taking damage so run progresses
-    if (run.wave < WAVES.length) {
-      run.wave += 1;
-    }
-    run.freeSpins = 2 + (hasCore(run, "free_spin_gear") ? 2 : 0);
-    run.paidSpinsThisWave = 0;
-    run.spinsThisWave = 0;
-    run.locked = [];
-    run.lastLines = [];
-
-    // Offer a Roguelike Core choice after every wave!
-    if (run.cores.length < 6) {
-      run.pendingCoreChoices = draftCoreChoices(run);
+    // Refresh persistent shop stock without forcing a popup every wave!
+    if (won) run.shop = createShop(false);
+    if (won && waveDef.boss && !endless) {
+      const chapterReward = getChapter(run).crystalReward;
+      run.crystals += chapterReward;
+      summary.crystalsGained += chapterReward;
+      run.hp = run.maxHp;
+      run.pendingChapterClear = waveDef.chapter;
+      // Auto-pop Crystal Shop ONCE upon clearing a Chapter Map!
+      run.pendingShop = run.shop;
+      if (waveDef.wave === WAVES.length) run.outcome = "victory";
     }
 
-    return { won, reward, interest, dmg, finished: false };
+    const advanced = won || (!endless && !waveDef.boss);
+    if (advanced && waveDef.wave % 3 === 0) run.pendingEncounter = draftEncounter(run);
+    if (run.outcome === "victory") return summary;
+
+    if (advanced) {
+      if (endless) putEndlessWave(run, run.endlessWave + 1);
+      else {
+        run.wave += 1;
+        run.chapter = getWave(run).chapter;
+      }
+    }
+    prepareNextWave(run);
+    // Authentic Slotbound cadence: Core Draft at Chapter midpoint (Wave 3) & Chapter Boss (Wave 6)
+    const waveInChapter = (waveDef.wave - 1) % 6 + 1;
+    if (won && (waveInChapter === 3 || waveInChapter === 6)) {
+      const choices = draftCoreChoices(run);
+      if (choices.length) run.pendingCoreChoices = choices;
+    }
+    return { ...summary, finished: false };
+  }
+
+  function unitPower(unit, run) {
+    const stats = getUnitStats(unit, run);
+    return Math.round(stats.atk * 2.5 + stats.hp * .35);
   }
 
   function getTotalPower(run) {
-    return run.field.filter(Boolean).reduce((sum, u) => {
-      const s = getUnitStats(u, run);
-      return sum + Math.round(s.atk * 2.5 + s.hp * 0.35);
-    }, 0);
+    return run.field.filter(Boolean).reduce((sum, unit) => sum + unitPower(unit, run), 0);
   }
 
   globalThis.Slotbound = {
@@ -973,15 +1988,45 @@
     PAYLINES,
     SYNERGIES,
     CORES,
+    CHAPTERS,
     WAVES,
+    getWave,
+    getChapter,
     FIELD_SLOTS,
     BENCH_SLOTS,
+    REEL_TIERS,
+    CELL_ENCHANT_INFO,
+    SHOP_ITEMS,
+    SLOT_UPGRADES,
+    ENDLESS_AFFIXES,
+    ENCOUNTERS,
+    createEndlessRun,
+    encounterAvailable,
+    pickEncounter,
+    restoreRun,
+    isSlotOpen,
+    slotCost,
+    unlockSlot,
+    refreshShop,
+    shopPrice,
+    shopPurchase,
+    canModifySymbol,
+    retainedCells,
     createRun,
+    STAR_THRESHOLDS,
     createUnit,
     unitLevel,
+    nextStarXp,
     hasCore,
+    coreLevel,
+    coreUpgradeDesc,
+    addLog,
+    ensureShop,
+    getReelTier,
+    upgradeReelTier,
     getUnitStats,
     getActiveSynergies,
+    getFactionSynergies,
     getEffectiveWeights,
     getSymbolOdds,
     getMaxLocks,
@@ -989,12 +2034,17 @@
     getSpinCost,
     getTotalSpinCost,
     evaluateBoard,
+    hasNearMiss,
     executeSpin,
+    getNudgeCost,
+    getWinningNudgeCols,
+    nudgeColumn,
     findUnitLocation,
     swapSlots,
     absorbUnit,
     sellUnit,
     applyEvolution,
+    getRigBoostCost,
     boostSymbolWeight,
     reduceSymbolWeight,
     pickCore,

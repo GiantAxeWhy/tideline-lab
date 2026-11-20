@@ -341,6 +341,21 @@
       <!-- Glowing Eye & Flame Nostril -->
       <polygon points="58,52 72,56 60,62" fill="#ffe169"/>
       <path d="M26 68 L10 74 L24 78 Z" fill="#ff6d00"/>
+    </svg>`,
+
+    iron: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+      <defs><linearGradient id="irG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8b95a8"/><stop offset="55%" stop-color="#475063"/><stop offset="100%" stop-color="#1d222e"/></linearGradient></defs>
+      <polygon points="44,124 26,86 54,42 106,36 134,74 118,124" fill="url(#irG)" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+      <polygon points="54,42 86,62 66,118 44,124 26,86" fill="#6b758a" opacity="0.55"/>
+      <polyline points="54,42 86,62 134,74" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linejoin="round"/>
+      <line x1="86" y1="62" x2="66" y2="118" stroke="${INK}" stroke-width="4.5"/>
+      <polygon points="62,56 76,64 68,78" fill="#cbd5e8" opacity="0.55"/>
+    </svg>`,
+
+    ember: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+      <defs><radialGradient id="emG" cx="50%" cy="60%" r="55%"><stop offset="0%" stop-color="#fff4b8"/><stop offset="48%" stop-color="#ff8c38"/><stop offset="100%" stop-color="#a8202c"/></radialGradient></defs>
+      <path d="M80,22 C102,52 126,72 118,108 C112,130 96,140 80,140 C64,140 48,130 42,108 C34,76 58,56 66,40 C68,54 74,56 80,22 Z" fill="url(#emG)" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M80,68 C94,86 96,106 80,124 C64,106 66,86 80,68 Z" fill="#fff3b0" opacity="0.82"/>
     </svg>`
   };
 
@@ -368,12 +383,51 @@
     arenaBg: "assets/arena-bg.webp",
     gold: "assets/sym-gold.png",
     boss_grom: "assets/boss-warlord.png",
+    fateCrystal: "assets/items/crystal-fate.svg",
+    shopSlot: "assets/items/shop-unlock-slot.svg",
+    shopAnvil: "assets/items/shop-enchant-anvil.svg",
+    shopHourglass: "assets/items/shop-potion-nudge.svg",
+    shopDice: "assets/items/shop-dice-rig.svg",
+    endlessCrown: "assets/items/endless-crown.svg",
+    berserker: "assets/heroes/hero-berserker.svg",
+    engineer: "assets/heroes/hero-engineer.svg",
+    necromancer: "assets/heroes/hero-necromancer.svg",
+    bard: "assets/heroes/hero-bard.svg",
+    valkyrie: "assets/heroes/hero-valkyrie.svg",
+    turret: "assets/heroes/summon-turret.svg",
+    map_citadel: "assets/maps/map-01-citadel.webp",
+    map_catacombs: "assets/maps/map-02-catacombs.svg",
+    map_frostpeak: "assets/maps/map-03-frostpeak.svg",
+    map_inferno: "assets/maps/map-04-inferno.svg",
+    map_astral: "assets/maps/map-05-astral.svg",
+    ch1_goblin_raider: "assets/enemies/ch1/goblin-raider.svg",
+    ch1_orc_brute: "assets/enemies/ch1/orc-brute.svg",
+    ch1_boss_warlord: "assets/enemies/ch1/boss-warlord.png",
+    ch2_crypt_ghoul: "assets/enemies/ch2/crypt-ghoul.svg",
+    ch2_bone_archer: "assets/enemies/ch2/bone-archer.svg",
+    ch2_bone_priest: "assets/enemies/ch2/necro-acolyte.svg",
+    ch2_necro_acolyte: "assets/enemies/ch2/necro-acolyte.svg",
+    ch2_boss_lich: "assets/enemies/ch2/boss-lich.svg",
+    ch3_frost_guard: "assets/enemies/ch3/frost-guard.svg",
+    ch3_blizzard_yeti: "assets/enemies/ch3/blizzard-yeti.svg",
+    ch3_ice_assassin: "assets/enemies/ch3/ice-assassin.svg",
+    ch3_boss_icequeen: "assets/enemies/ch3/boss-icequeen.svg",
+    ch4_lava_imp: "assets/enemies/ch4/lava-imp.svg",
+    ch4_hell_hound: "assets/enemies/ch4/hell-hound.svg",
+    ch4_obsidian_golem: "assets/enemies/ch4/obsidian-golem.svg",
+    ch4_boss_balrog: "assets/enemies/ch4/boss-balrog.svg",
+    ch5_void_stalker: "assets/enemies/ch5/void-stalker.svg",
+    ch5_astral_sentinel: "assets/enemies/ch5/astral-sentinel.svg",
+    ch5_star_mage: "assets/enemies/ch5/star-mage.svg",
+    ch5_boss_dragon: "assets/enemies/ch5/boss-dragon.svg",
     knight: svgToDataUrl(CHARACTER_SVGS.knight),
     archer: svgToDataUrl(CHARACTER_SVGS.archer),
     mage: svgToDataUrl(CHARACTER_SVGS.mage),
     priest: svgToDataUrl(CHARACTER_SVGS.priest),
     assassin: svgToDataUrl(CHARACTER_SVGS.assassin),
     joker: svgToDataUrl(CHARACTER_SVGS.joker),
+    iron: svgToDataUrl(CHARACTER_SVGS.iron),
+    ember: svgToDataUrl(CHARACTER_SVGS.ember),
     enemy_melee: svgToDataUrl(CHARACTER_SVGS.enemy_melee),
     enemy_tank: svgToDataUrl(CHARACTER_SVGS.enemy_tank),
     enemy_ranged: svgToDataUrl(CHARACTER_SVGS.enemy_ranged),
@@ -383,18 +437,20 @@
     boss_dragon: svgToDataUrl(CHARACTER_SVGS.boss_dragon)
   };
 
-  const IMAGE_CACHE = {};
+  const IMAGE_CACHE = new Map();
   for (const [key, url] of Object.entries(SPRITE_URLS)) {
     const img = new Image();
     img.src = url;
-    IMAGE_CACHE[key] = img;
+    IMAGE_CACHE.set(key, img);
+    IMAGE_CACHE.set(url, img);
   }
 
-  function getSpriteImg(key) {
-    return IMAGE_CACHE[key] || null;
+  function getSpriteImg(keyOrUrl) {
+    return IMAGE_CACHE.get(keyOrUrl) ?? null;
   }
 
   function getEnemyArtKey(enemy) {
+    if (enemy.artKey && SPRITE_URLS[enemy.artKey]) return enemy.artKey;
     if (enemy.bossId === "grom") return "boss_grom";
     if (enemy.bossId === "lich") return "boss_lich";
     if (enemy.bossId === "dragon") return "boss_dragon";

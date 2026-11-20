@@ -74,6 +74,22 @@
     tick() {
       tone(720 + Math.random() * 140, 0.03, "square", 0.02, 0);
     },
+    anticipation(step = 0) {
+      tone(520 + step * 55, 0.055, "sawtooth", 0.038, 0, 580 + step * 60);
+    },
+    feverReady() {
+      [440, 554.37, 659.25, 880, 1108.73].forEach((f, i) => {
+        tone(f, 0.24, "sawtooth", 0.075, i * 0.06);
+      });
+    },
+    tierUp() {
+      [330, 440, 554.37, 659.25, 880].forEach((f, i) => {
+        tone(f, 0.22, "triangle", 0.09, i * 0.07);
+      });
+    },
+    nudge() {
+      tone(290, 0.08, "triangle", 0.07, 0, 480);
+    },
     reelStop(col) {
       const base = [180, 220, 270][col] || 220;
       tone(base, 0.09, "triangle", 0.09, 0, base * 0.65);

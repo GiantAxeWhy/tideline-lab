@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c070a"/><stop offset="60%" stop-color="#3b0f14"/><stop offset="100%" stop-color="#6e1b18"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#26161a"/><stop offset="100%" stop-color="#12090c"/></linearGradient>
+    <radialGradient id="gL" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff5412" stop-opacity="0.72"/><stop offset="100%" stop-color="#ff5412" stop-opacity="0"/></radialGradient>
+    <radialGradient id="vig" cx="50%" cy="52%" r="65%"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#04050a" stop-opacity="0.68"/></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <path d="M0,390 Q320,250 640,340 T1280,390 Z" fill="#2b0c10"/>
+    <path d="M460,390 L520,160 L580,390 M700,390 L770,130 L840,390" fill="#1a090d" stroke="#0d0406" stroke-width="5"/>
+    <path d="M560,390 Q640,350 720,390" fill="none" stroke="#ff7b24" stroke-width="10" opacity="0.8"/>
+  <!-- Playable 2.5D Stone Arena Floor -->
+  <polygon points="0,390 1280,390 1280,720 0,720" fill="url(#floor)"/>
+  <line x1="0" y1="390" x2="1280" y2="390" stroke="#ff6d24" stroke-width="4" opacity="0.5"/>
+  <!-- Perspective Stone Grid -->
+  <g stroke="#080a10" stroke-width="2.5" opacity="0.55">
+    <line x1="0" y1="450" x2="1280" y2="450"/><line x1="0" y1="525" x2="1280" y2="525"/><line x1="0" y1="615" x2="1280" y2="615"/>
+    <line x1="220" y1="390" x2="80" y2="720"/><line x1="430" y1="390" x2="350" y2="720"/><line x1="640" y1="390" x2="640" y2="720"/>
+    <line x1="850" y1="390" x2="930" y2="720"/><line x1="1060" y1="390" x2="1200" y2="720"/>
+  </g>
+  <path d="M0,565 Q300,530 640,575 T1280,555" fill="none" stroke="#ff5e14" stroke-width="14" opacity="0.6"/>
+    <path d="M0,565 Q300,530 640,575 T1280,555" fill="none" stroke="#ffe066" stroke-width="4" opacity="0.85"/>
+  <circle cx="150" cy="360" r="170" fill="url(#gL)"/><circle cx="1130" cy="360" r="170" fill="url(#gL)"/>
+  <rect width="1280" height="720" fill="url(#vig)"/>
+</svg>

@@ -8,6 +8,7 @@
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
   const SAVE_KEY = "slotbound-zh-v2";
+  const PROFILE_KEY = "slotbound-records-v1";
   const RARITY_LABEL = {
     common: "普通核心",
     rare: "稀有核心",
@@ -24,8 +25,10 @@
   const FORMATION_ORDER = [3, 0, 4, 1, 5, 2];
 
   let run = loadRun();
+  const profile = loadProfile();
   let busy = false;
   let spinningCols = [false, false, false];
+  let anticipationCol = -1;
   let displayBoard = [...run.board];
   let selectedSlot = null;
   let armyMode = "swap";
@@ -51,7 +54,16 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.field) && Array.isArray(parsed.board)) {
-          return parsed;
+          parsed.reelLevel ??= 1;
+          parsed.fever ??= 0;
+          parsed.feverActive ??= false;
+          parsed.cellEnchants ??= Array(9).fill(null);
+          parsed.nudgesLeft ??= 1;
+          parsed.nudgePreview ??= ["knight", "archer", "mage"];
+          parsed.chapter ??= G.getWave(parsed).chapter;
+          parsed.crystals ??= 0;
+          parsed.pendingChapterClear ??= null;
+          return G.restoreRun(parsed);
         }
       }
     } catch {
@@ -60,12 +72,50 @@
     return G.createRun();
   }
 
+  function loadProfile() {
+    const defaults = { maxLines: 0, highestEndless: 0, champion: null, fastest: null };
+    try {
+      return { ...defaults, ...JSON.parse(localStorage.getItem(PROFILE_KEY)) };
+    } catch {
+      return defaults;
+    }
+  }
+
+  function recordProfile() {
+    profile.maxLines = Math.max(profile.maxLines, run.maxLines);
+    if (run.mode === "endless") {
+      profile.highestEndless = Math.max(profile.highestEndless, run.endlessWave - 1);
+    } else if (run.outcome === "victory" && run.wave === G.WAVES.length) {
+      profile.champion = { ...run };
+      if (run.startedAt && !run.completedAt) run.completedAt = Date.now();
+      const duration = run.completedAt - run.startedAt;
+      if (duration > 0 && (!profile.fastest || duration < profile.fastest.duration)) {
+        profile.fastest = { duration, units: run.field.filter(Boolean).map(unit => ({ ...unit })) };
+      }
+    }
+  }
+
   function save() {
+    recordProfile();
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(run));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     } catch {
       // ignore
     }
+  }
+
+  let alertTimer = null;
+
+  function showAlertPopup(title, msg, ms = 2800) {
+    const el = $("game-alert-toast");
+    $("alert-toast-title").textContent = title;
+    $("alert-toast-msg").textContent = msg;
+    el.hidden = false;
+    clearTimeout(alertTimer);
+    alertTimer = setTimeout(() => {
+      el.hidden = true;
+    }, ms);
   }
 
   function showToast(text) {
@@ -86,20 +136,36 @@
   }
 
   function renderTopbar() {
-    const waveDef = G.WAVES[Math.min(run.wave - 1, G.WAVES.length - 1)];
-    $("wave-badge").textContent = `第 ${run.wave} / ${G.WAVES.length} 波`;
+    const chapter = G.getChapter(run);
+    const waveDef = G.getWave(run);
+    const endless = run.mode === "endless";
+    const chapterWave = waveDef.wave - chapter.waves[0].wave + 1;
+    $("wave-badge").textContent = endless ? `无尽第 ${run.endlessWave} 波 · ${chapter.name}`
+      : `第 ${chapter.id} 章 · ${chapter.name}（${chapterWave}/${chapter.waves.length} 波）`;
+    $("wave-dots").hidden = endless;
+    $("btn-endless").disabled = busy || !profile.champion;
+    $("btn-endless").title = profile.champion ? "使用通关阵容直接挑战" : "通关五章后解锁";
+    const affixes = $("endless-affixes");
+    affixes.hidden = !endless;
+    if (endless) {
+      const effects = run.endlessAffixes.map(id => G.ENDLESS_AFFIXES[id]);
+      affixes.textContent = effects.map(effect => effect.name).join(" · ");
+      affixes.title = effects.map(effect => effect.name + " " + effect.desc).join(" · ");
+    }
+    $("wave-badge").style.color = chapter.themeColor;
     $("wave-name").textContent = waveDef.name;
     $("hud-gold").textContent = run.gold;
+    $("hud-crystals").textContent = run.crystals;
     $("hud-hp").textContent = `${run.hp} / ${run.maxHp}`;
     $("hud-power").textContent = G.getTotalPower(run);
 
-    $("wave-dots").innerHTML = G.WAVES.map(w => {
+    $("wave-dots").innerHTML = chapter.waves.map((w, index) => {
       const cls = [
         "wave-dot",
         w.wave < run.wave ? "past" : w.wave === run.wave ? "current" : "",
         w.boss ? "boss" : ""
       ].filter(Boolean).join(" ");
-      return `<span class="${cls}" title="第 ${w.wave} 波：${w.name}"></span>`;
+      return `<span class="${cls}" title="本章第 ${index + 1} 波 · ${w.name}"></span>`;
     }).join("");
 
     const bossPill = $("boss-pill");
@@ -113,18 +179,59 @@
       $("enemy-intel").textContent = `来袭 ${waveDef.enemies.length} 名敌军 · 总生命 ${totalHp} · 赏金 ${waveDef.reward} 金币`;
     }
 
+    $("enemy-warning").hidden = !waveDef.enemies.some(enemy => enemy.tactic === "backline_diver");
+    if (!busy) renderReinforcements(0, waveDef.phases.length, 0, waveDef.phases.at(-1).delay, 0);
+
     const canFight = !busy && !run.outcome && run.field.some(Boolean);
     $("btn-fight").disabled = !canFight;
     $("btn-fight").lastElementChild.textContent = arena.mode === "fighting" ? "激战中…" : "开战迎敌";
   }
 
+  function renderReinforcements(count, total, time, lastDelay, nextDelay) {
+    const progress = $("reinforcement-progress");
+    const status = $("reinforcement-count");
+    const next = $("reinforcement-next");
+    const label = `援军 ${count}/${total}`;
+    const description = !count ? "分批抵达"
+      : nextDelay === undefined ? "全部抵达" : `下一批 ${Math.max(0, Math.ceil(nextDelay - time))} 秒`;
+    progress.max = lastDelay || 1;
+    progress.value = count === total ? progress.max : Math.min(lastDelay, time);
+    if (status.textContent !== label) status.textContent = label;
+    if (next.textContent !== description) next.textContent = description;
+  }
+
   function renderReels() {
+    const tier = G.getReelTier(run);
+    $("tier-badge").textContent = `Lv.${tier.level} ${tier.name}`;
+    $("tier-sub").textContent = tier.desc;
+    const tierBtn = $("btn-tier-up");
+    if (tier.upgradeCost) {
+      tierBtn.textContent = `↑ 升阶 ${tier.upgradeCost}G`;
+      tierBtn.disabled = busy || !!run.outcome || run.gold < tier.upgradeCost;
+      const nextTier = G.REEL_TIERS[tier.level];
+      tierBtn.title = nextTier ? `升至 Lv.${nextTier.level} ${nextTier.name}：${nextTier.desc}` : "";
+    } else {
+      tierBtn.textContent = "MAX 神机";
+      tierBtn.disabled = true;
+      tierBtn.title = "轮盘已达最高阶";
+    }
+
+    // Fever meter
+    const feverPct = run.feverActive ? 100 : Math.min(100, run.fever || 0);
+    $("fever-fill").style.width = `${feverPct}%`;
+    $("fever-bar").classList.toggle("ready", !!run.feverActive);
+    document.querySelector(".cabinet").classList.toggle("fever-mode", !!run.feverActive);
+    $("fever-text").textContent = run.feverActive
+      ? "狂热就绪！下一转免费 + 中心百搭 + 2× 收益"
+      : `命运狂热槽 ${feverPct}%（满额必爆双倍百搭）`;
+
     const matchedSet = new Set();
     if (!spinningCols.some(Boolean)) {
       for (const line of run.lastLines) {
         for (const c of line.cells) matchedSet.add(c);
       }
     }
+    const enchants = run.cellEnchants || Array(9).fill(null);
 
     $("reel-grid").innerHTML = displayBoard.map((symId, idx) => {
       const sym = G.SYMBOLS[symId] || G.SYMBOLS.knight;
@@ -132,16 +239,47 @@
       const isSpin = spinningCols[col] && !run.locked.includes(idx);
       const isLocked = run.locked.includes(idx);
       const isMatched = !isSpin && matchedSet.has(idx);
+      const isAntic = anticipationCol === col && isSpin;
+      const enchant = enchants[idx];
+      const enchInfo = enchant ? G.CELL_ENCHANT_INFO[enchant] : null;
       const cls = [
         "reel-cell",
         isSpin ? "spinning" : "",
         isLocked ? "locked" : "",
-        isMatched ? "matched" : ""
+        isMatched ? "matched" : "",
+        isAntic ? "anticipation" : ""
       ].filter(Boolean).join(" ");
-      return `<button type="button" class="${cls}" data-cell="${idx}" style="--sym-color:${sym.color}" title="${sym.name}：${sym.skillDesc}"${busy || run.outcome ? " disabled" : ""}>
+      return `<button type="button" class="${cls}" data-cell="${idx}" style="--sym-color:${sym.color}" title="${sym.name}：${sym.skillDesc}${enchInfo ? " | " + enchInfo.name + "：" + enchInfo.desc : ""}"${busy || run.outcome ? " disabled" : ""}>
+        ${enchInfo ? `<span class="enchant-badge ${enchant}">${enchInfo.badge}</span>` : ""}
         ${isLocked ? `<span class="lock-badge">${Art.UI_ICONS.lock}</span>` : ""}
         <span class="cell-art">${Art.renderPortraitImg(symId, sym.name, "reel-sprite")}</span>
         <span class="cell-name">${sym.short}</span>
+      </button>`;
+    }).join("");
+
+    // Top incoming symbol preview + bottom Nudge buttons (with glowing "可连线！" highlight!)
+    const preview = run.nudgePreview || ["knight", "archer", "mage"];
+    const nudgeCost = G.getNudgeCost ? G.getNudgeCost(run) : ((run.nudgesLeft || 0) > 0 ? 0 : 10);
+    const canNudge = !busy && !run.outcome && (nudgeCost === 0 || run.gold >= nudgeCost);
+    const winCols = (!busy && !run.outcome && G.getWinningNudgeCols) ? G.getWinningNudgeCols(run) : [];
+
+    $("nudge-preview-row").innerHTML = [0, 1, 2].map(col => {
+      const inc = preview[col] || "knight";
+      const sym = G.SYMBOLS[inc] || G.SYMBOLS.knight;
+      const isHot = winCols.includes(col);
+      return `<div class="preview-chip${isHot ? " hot" : ""}" style="--sym-color:${sym.color}" title="下调第 ${col + 1} 列将从顶部顶入【${sym.name}】">
+        <span>↓</span>
+        ${Art.renderPortraitImg(inc, sym.short, "")}
+        <span>${sym.short}</span>
+      </div>`;
+    }).join("");
+
+    $("nudge-row").innerHTML = [0, 1, 2].map(col => {
+      const inc = preview[col] || "knight";
+      const isHot = winCols.includes(col);
+      const costTag = nudgeCost === 0 ? "免费" : `${nudgeCost}G`;
+      return `<button type="button" class="nudge-btn${isHot ? " hot" : ""}" data-nudge="${col}" title="将第 ${col + 1} 列往下调 1 格，顶入【${G.SYMBOLS[inc].name}】（${nudgeCost === 0 ? `免费剩余 ${run.nudgesLeft} 次` : `花费 ${nudgeCost} 金币`}）"${canNudge ? "" : " disabled"}>
+        <span>${isHot ? "↓ 可连线!" : `↓ 下调(${costTag})`}</span>
       </button>`;
     }).join("");
 
@@ -165,29 +303,34 @@
     $("btn-spin").disabled = disabledSpin;
     $("mech-lever").disabled = disabledSpin;
 
-    if (run.freeSpins > 0 && run.locked.length === 0) {
+    if (run.feverActive) {
+      $("spin-cost-label").textContent = totalCost > 0 ? `狂热 + 锁 ${totalCost}G` : "狂热免费！";
+    } else if (run.freeSpins > 0 && run.locked.length === 0) {
       $("spin-cost-label").textContent = `免费 ×${run.freeSpins}`;
     } else if (run.freeSpins > 0) {
       $("spin-cost-label").textContent = `免费 + 锁 ${totalCost}G`;
     } else {
       $("spin-cost-label").textContent = `${totalCost} 金币`;
     }
-    $("lock-status").textContent = `锁格 ${run.locked.length} / ${maxLocks}（${lockCost} 金币/格）`;
+    $("lock-status").textContent = `锁格 ${run.locked.length} / ${maxLocks}（${lockCost}G/格） · 微调 ${run.nudgesLeft || 0}/1`;
     $("btn-rig").disabled = busy || !!run.outcome;
   }
 
   function renderCores() {
-    $("core-count").textContent = `${run.cores.length} / 6`;
+    $("core-count").textContent = `${run.cores.length} / ${run.unlockedCoreSlots}`;
+    const levels = run.coreLevels || {};
     const slots = [];
     for (let i = 0; i < 6; i += 1) {
       const id = run.cores[i];
       if (!id) {
-        slots.push('<div class="core-slot empty">核心槽位</div>');
+        const label = i < run.unlockedCoreSlots ? "核心槽位" : "封印槽位";
+        slots.push(`<div class="core-slot empty">${label}</div>`);
       } else {
         const core = G.CORES.find(c => c.id === id);
-        slots.push(`<div class="core-slot ${core.rarity}" title="${core.name}（${RARITY_LABEL[core.rarity]}）：${core.desc}">
+        const lv = levels[id] || 1;
+        slots.push(`<div class="core-slot ${core.rarity}" title="${core.name} Lv.${lv}（${RARITY_LABEL[core.rarity]}）：${core.desc}">
           <span class="c-medallion">${core.icon}</span>
-          <span class="c-name">${core.name}</span>
+          <span class="c-name">${core.name}${lv > 1 ? ` Lv.${lv}` : ""}</span>
         </div>`);
       }
     }
@@ -204,6 +347,12 @@
         <span class="syn-cnt">${s.count}/${s.req}${s.active ? " ✓" : ""}</span>
       </div>`;
     }).join("");
+    $("faction-bar").innerHTML = G.getFactionSynergies(run).map(flow => {
+      const title = `${flow.types.map(type => G.SYMBOLS[type].short).join(" / ")}${flow.cores ? " + 经济核心" : ""} · ${flow.tier === 4 ? flow.enhanced : flow.desc}`;
+      return `<div class="syn-pill${flow.tier ? " active" : ""}" style="--syn-color:${flow.color}" title="${title}">
+        <span>${flow.name}</span><span class="syn-cnt">${flow.tier ? `${flow.tier} 阶` : `${flow.count} 人`}</span>
+      </div>`;
+    }).join("");
   }
 
   function renderUnitCard(unit, area, index, emptyLabel) {
@@ -213,6 +362,13 @@
       : null;
     const isAbsorbCandidate = armyMode === "absorb" && selectedUnit && unit && unit.id !== selectedUnit.id;
 
+    if (!G.isSlotOpen(run, area, index)) {
+      const cost = G.slotCost(run, area);
+      return `<button type="button" class="unit-slot sealed" data-unlock="${area}" data-index="${index}"
+        ${busy || run.outcome || run.crystals < cost ? "disabled" : ""}>
+        ${Art.UI_ICONS.lock}<span>封印${area === "field" ? "阵位" : "备战位"} · ${cost} 水晶</span>
+      </button>`;
+    }
     if (!unit) {
       return `<button type="button" class="unit-slot empty${isSelected ? " selected" : ""}" data-area="${area}" data-index="${index}"${busy || run.outcome ? " disabled" : ""}>${emptyLabel}</button>`;
     }
@@ -228,8 +384,11 @@
       unit.evolution ? "evolved" : ""
     ].filter(Boolean).join(" ");
 
-    const xpPct = st.level === 1 ? Math.min(100, (unit.xp / 2) * 100)
-      : st.level === 2 ? Math.min(100, ((unit.xp - 2) / 3) * 100) : 100;
+    const curFloor = G.STAR_THRESHOLDS ? G.STAR_THRESHOLDS[st.level - 1] : 0;
+    const nextReq = G.nextStarXp ? G.nextStarXp(st.level) : null;
+    const xpPct = nextReq !== null
+      ? Math.min(100, Math.max(0, ((unit.xp - curFloor) / Math.max(1, nextReq - curFloor)) * 100))
+      : 100;
 
     return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" style="--u-color:${sym.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
@@ -262,7 +421,7 @@
     ).join("");
 
     const benchUsed = run.bench.filter(Boolean).length;
-    $("bench-count").textContent = `${benchUsed} / ${G.BENCH_SLOTS}`;
+    $("bench-count").textContent = `${benchUsed} / ${run.unlockedBenchSlots}`;
 
     $("btn-mode-swap").classList.toggle("active", armyMode === "swap");
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
@@ -289,9 +448,10 @@
     const st = G.getUnitStats(unit, run);
     const evo = unit.evolution ? sym.evolutions[unit.evolution] : null;
     const sellVal = 15 + unit.xp * 10;
-    const nextNeed = st.level === 1 ? `距 2 级转职还差 ${Math.max(0, 2 - unit.xp)} 经验`
-      : st.level === 2 ? `距 3 级传说还差 ${Math.max(0, 5 - unit.xp)} 经验`
-      : "已达满星传说";
+    const nextReq = G.nextStarXp ? G.nextStarXp(st.level) : null;
+    const nextNeed = nextReq !== null
+      ? `距 ${st.level + 1} 星${st.level === 1 ? "（转职）" : ""}还差 ${Math.max(0, nextReq - unit.xp)} 经验`
+      : "已达 5 星神话满星";
 
     el.innerHTML = `<div class="ins-left">
       <div class="ins-avatar" style="--u-color:${sym.color}">${Art.renderPortraitImg(unit.type, sym.name, "ins-sprite")}</div>
@@ -317,7 +477,7 @@
         selectedSlot = null;
         save();
         renderAll();
-        setTicker("出售单位", `获得 +${gained} 金币，可用于继续转动轮盘或调校概率。`);
+        setTicker("出售单位", `获得 +${gained} 金币，可用于转动轮盘或刷新商店。`);
       } else {
         setTicker("无法出售", "至少需要保留 1 名军团单位迎战！");
       }
@@ -346,7 +506,7 @@
 
     busy = true;
     selectedSlot = null;
-    const lockedBefore = [...run.locked];
+    const lockedBefore = G.retainedCells(run);
     const result = G.executeSpin(run);
     if (!result) {
       busy = false;
@@ -360,13 +520,17 @@
 
     SFX.lever();
     spinningCols = [true, true, true];
-    setTicker("轮盘高速运转中…", "祈祷连线与百搭降临！");
+    anticipationCol = -1;
+    setTicker(result.isFever ? "狂热转盘全速爆发中！" : "轮盘高速运转中…", "祈祷连线与百搭降临！");
     renderTopbar();
     renderReels();
 
-    const stopTimes = [300, 520, 760];
+    const col2Stop = result.nearMiss ? 1080 : 740;
+    const stopTimes = [290, 510, col2Stop];
     const start = performance.now();
     let lastTick = 0;
+    let anticStep = 0;
+    const tierPool = G.getReelTier(run).unlocked;
 
     while (spinningCols.some(Boolean)) {
       const elapsed = performance.now() - start;
@@ -377,38 +541,61 @@
             displayBoard[r * 3 + c] = result.board[r * 3 + c];
           }
           SFX.reelStop(c);
+          if (c === 1 && result.nearMiss && spinningCols[2]) {
+            anticipationCol = 2;
+            setTicker("听牌悬念！第 3 列加速中…", "前两列已凑成 2 连，期待绝杀大奖！", "jackpot");
+          }
         }
       }
 
-      if (elapsed - lastTick >= 65) {
+      const tickInterval = anticipationCol === 2 ? 52 : 65;
+      if (elapsed - lastTick >= tickInterval) {
         lastTick = elapsed;
         for (let i = 0; i < 9; i += 1) {
           const c = i % 3;
           if (spinningCols[c] && !lockedBefore.includes(i)) {
-            displayBoard[i] = G.SYMBOL_IDS[Math.floor(Math.random() * G.SYMBOL_IDS.length)];
+            displayBoard[i] = tierPool[Math.floor(Math.random() * tierPool.length)];
           }
         }
-        if (spinningCols.some(Boolean)) SFX.tick();
+        if (spinningCols.some(Boolean)) {
+          if (anticipationCol === 2) SFX.anticipation(anticStep++);
+          else SFX.tick();
+        }
         renderReels();
       }
-      await wait(24);
+      await wait(22);
     }
 
+    anticipationCol = -1;
     displayBoard = [...result.board];
     busy = false;
     save();
     renderAll();
 
+    if (result.triggeredFever) {
+      SFX.feverReady();
+      showToast("狂热槽蓄满！下一转免费 + 百搭 + 2× 收益！");
+    }
+
     if (result.hits.length === 0) {
+      G.addLog(run, "轮盘", `转动未连线（花费 ${cost}G，狂热 ${run.fever}%）`);
       setTicker(
-        "本次未连线",
-        result.notes.length ? result.notes.join(" · ") : "可点击格面锁定关键符号再转，或直接开战！"
+        "本次未连线（狂热 +25%）",
+        result.notes.length ? result.notes.join(" · ") : "可点击下方【↓微调】绝杀补连，或锁格再转！"
       );
     } else {
-      const isBig = result.hits.length >= 2 || result.hits.some(h => h.superJackpot);
+      const summonLog = result.summoned.map(u => G.SYMBOLS[u.type].short).join("、");
+      G.addLog(run, "轮盘", `${result.isFever ? "狂热" : ""}${result.hits.length} 线连奖${summonLog ? `，召唤：${summonLog}` : ""}${result.goldGained ? `，+${result.goldGained}G` : ""}`);
+      const isBig = result.isFever || result.hits.length >= 2 || result.hits.some(h => h.superJackpot);
       if (isBig) {
         SFX.jackpot();
-        showToast(result.hits.some(h => h.superJackpot) ? "三王大满贯 SUPER JACKPOT!" : `${result.hits.length} 重连线大爆发！`);
+        showToast(
+          result.hits.some(h => h.superJackpot)
+            ? "三王大满贯 SUPER JACKPOT!"
+            : result.isFever
+              ? `狂热双倍大爆发（${result.hits.length} 线）！`
+              : `${result.hits.length} 重连线大爆发！`
+        );
       } else if (result.hits.every(h => h.symbol === "gold")) {
         SFX.coin();
         showToast("命运金币连线！+55 金币 & +1 免费转");
@@ -424,7 +611,7 @@
       if (result.notes.length) parts.push(...result.notes);
 
       setTicker(
-        isBig ? `${result.hits.length} 线连奖大爆发！` : `连线成功（${result.hits.length} 线）`,
+        isBig ? `${result.isFever ? "狂热 " : ""}${result.hits.length} 线连奖大爆发！` : `连线成功（${result.hits.length} 线）`,
         parts.join(" · "),
         isBig ? "jackpot" : "win"
       );
@@ -433,8 +620,46 @@
     checkPendingModals();
   }
 
+  function handleTierUpgrade() {
+    if (busy || run.outcome) return;
+    const next = G.upgradeReelTier(run);
+    if (!next) return;
+    G.addLog(run, "轮盘", `轮盘升阶至 Lv.${next.level} ${next.name}`);
+    SFX.tierUp();
+    showToast(`轮盘升阶：Lv.${next.level} ${next.name}！`);
+    setTicker(`轮盘升至 Lv.${next.level} ${next.name}`, next.desc, "jackpot");
+    save();
+    renderAll();
+  }
+
+  function handleNudge(col) {
+    if (busy || run.outcome) return;
+    const res = G.nudgeColumn(run, col);
+    if (!res) return;
+    SFX.nudge();
+    displayBoard = [...res.board];
+    save();
+    renderAll();
+    if (res.hits.length > 0) {
+      SFX.jackpot();
+      showToast(`微调绝杀！触发 ${res.hits.length} 线连奖！`);
+      const summonNames = res.summoned.map(u => G.SYMBOLS[u.type].short);
+      const parts = [];
+      if (summonNames.length) parts.push(`召唤：${summonNames.join("、")}`);
+      if (res.goldGained) parts.push(`+${res.goldGained} 金币`);
+      setTicker(`微调绝杀成功（${res.hits.length} 线）！`, parts.join(" · "), "jackpot");
+      checkPendingModals();
+    } else {
+      setTicker("微调完成", "第 " + (col + 1) + " 列已下移 1 格，可继续锁格或转动。");
+    }
+  }
+
   function handleCellClick(cellIdx) {
     if (busy || run.outcome) return;
+    if (run.cellEnchants[cellIdx] === "lock") {
+      setTicker("自动锁定格", "此格每次转动免费保留符号。");
+      return;
+    }
     const pos = run.locked.indexOf(cellIdx);
     if (pos !== -1) {
       run.locked.splice(pos, 1);
@@ -472,7 +697,14 @@
 
     if (armyMode === "absorb" && srcUnit && clickedUnit) {
       const res = G.absorbUnit(run, srcUnit.id, clickedUnit.id);
+      if (res?.error) {
+        SFX.lock();
+        showAlertPopup("无法吞噬", res.error);
+        setTicker("无法吞噬", res.error);
+        return;
+      }
       if (res) {
+        G.addLog(run, "军团", `${G.SYMBOLS[res.target.type].name} 吞噬强化 +${res.xpGain} 经验（${res.inherited}）`);
         SFX.absorb();
         setTicker(
           "吞噬进化成功！",
@@ -504,30 +736,30 @@
     selectedSlot = null;
     renderAll();
 
-    arena.startBattle(run, won => {
-      const summary = G.resolveWave(run, won);
+    arena.startBattle(run, (won, battle) => {
+      const summary = G.resolveWave(run, won, battle);
+      G.addLog(run, "战斗", `${summary.wave.name}${won ? "胜利" : "失守"}：+${summary.reward}G${summary.crystalsGained ? ` +${summary.crystalsGained}水晶` : ""}${summary.dmg ? ` -${summary.dmg}城防` : ""}`);
       busy = false;
       displayBoard = [...run.board];
       save();
       renderAll();
 
-      if (summary.finished) {
-        openEndDialog();
-      } else {
+      if (!summary.finished) {
         const bonusTxt = summary.interest ? `（含利息 +${summary.interest}）` : "";
+        const crystalTxt = summary.crystalsGained ? ` · +${summary.crystalsGained} 水晶` : "";
         setTicker(
-          won ? `第 ${run.wave - 1} 波告捷！` : `防线受损（-${summary.dmg} 耐久）`,
-          `获得 +${summary.reward} 金币${bonusTxt}，已刷新 ${run.freeSpins} 次免费转动！`,
+          won ? `第 ${summary.wave.wave} 波告捷！` : `防线受损（-${summary.dmg} 耐久）`,
+          `获得 +${summary.reward} 金币${bonusTxt}${crystalTxt}，已刷新 ${run.freeSpins} 次免费转动！`,
           won ? "win" : ""
         );
-        checkPendingModals();
       }
-    });
+      checkPendingModals();
+    }, renderReinforcements);
   }
 
   function checkPendingModals() {
-    if (run.outcome) {
-      openEndDialog();
+    if (run.pendingChapterClear) {
+      openChapterDialog();
       return;
     }
     if (run.pendingEvolutions.length > 0) {
@@ -536,7 +768,97 @@
     }
     if (run.pendingCoreChoices && run.pendingCoreChoices.length > 0) {
       openCoreDialog();
+      return;
     }
+    if (run.pendingEncounter) {
+      openEncounter();
+      return;
+    }
+    if (run.pendingShop) {
+      openShopDialog();
+      return;
+    }
+    if (run.outcome) openEndDialog();
+  }
+
+  function openEncounter() {
+    $("encounter-choices").innerHTML = run.pendingEncounter.map(id => {
+      const option = G.ENCOUNTERS[id];
+      return `<button type="button" class="core-card" data-encounter="${id}" ${G.encounterAvailable(run, id) ? "" : "disabled"}>
+        <strong>${option.name}</strong><p>${option.desc}</p>
+      </button>`;
+    }).join("");
+    if (!$("encounter-dialog").open) $("encounter-dialog").showModal();
+  }
+
+  function openShopDialog() {
+    const shop = run.pendingShop;
+    const dialog = $("shop-dialog");
+    $("shop-title").textContent = shop.halfPrice ? "神秘黑市" : "命运秘宝商店";
+    $("shop-balance").textContent = `${run.crystals} 命运水晶 · ${run.gold} 金币`;
+    $("btn-shop-refresh").hidden = shop.halfPrice;
+    $("btn-shop-refresh").disabled = run.gold < 15;
+    const expansion = shop.halfPrice ? [] : Object.entries(G.SLOT_UPGRADES)
+      .filter(([area]) => G.slotCost(run, area) !== null).map(([area, upgrade]) => {
+        const cost = G.slotCost(run, area);
+        return `<div class="shop-card">
+          ${Art.renderPortraitImg("shopSlot", "", "shop-icon")}
+          <strong>解锁${upgrade.name}</strong>
+          <button type="button" class="secondary-btn" data-shop-slot="${area}" ${run.crystals < cost ? "disabled" : ""}>${cost} 水晶</button>
+        </div>`;
+      });
+    const offers = shop.offers.map(id => {
+      const item = G.SHOP_ITEMS[id];
+      const cost = G.shopPrice(run, id);
+      const sold = shop.bought.includes(id);
+      const unavailable = sold || run.crystals < cost || (id === "repair" && run.hp >= run.maxHp);
+      const enchantOptions = Object.entries(G.CELL_ENCHANT_INFO).map(([key, info]) =>
+        `<option value="${key}">${info.name}</option>`).join("");
+      const symbolOptions = G.SYMBOL_IDS.filter(key => G.getEffectiveWeights(run)[key] > 0).map(key =>
+        `<option value="${key}">${G.SYMBOLS[key].name}</option>`).join("");
+      const fields = id === "enchant" ? `<label>格位<select data-option="index">${run.board.map((_, i) =>
+        `<option value="${i}">第 ${Math.floor(i / 3) + 1} 行 · 第 ${i % 3 + 1} 列</option>`).join("")}</select></label>
+        <label>符文<select data-option="enchant">${enchantOptions}</select></label>`
+        : id === "dice" ? `<label>符号<select data-option="symbol">${symbolOptions}</select></label>
+          <label>效果<select data-option="action"><option value="boost">兵种权重 +20</option><option value="ban">移除出签池</option></select></label>` : "";
+      return `<div class="shop-card">
+        ${Art.renderPortraitImg(item.art, "", "shop-icon")}
+        <strong>${item.name}</strong><p>${item.desc}</p>${sold ? "" : fields}
+        <button type="button" class="secondary-btn" data-buy="${id}" ${unavailable ? "disabled" : ""}>
+          ${sold ? "已购买" : id === "repair" && run.hp >= run.maxHp ? "城防已满" : `${cost} 水晶`}
+        </button>
+      </div>`;
+    });
+    $("shop-items").innerHTML = [...expansion, ...offers].join("");
+    if (!dialog.open) {
+      $("shop-notice").textContent = "";
+      dialog.showModal();
+    }
+  }
+
+  function closeShop() {
+    run.pendingShop = run.queuedShop;
+    run.queuedShop = null;
+    $("shop-dialog").close();
+    save();
+    checkPendingModals();
+  }
+
+  function openChapterDialog() {
+    const chapter = G.CHAPTERS[run.pendingChapterClear - 1];
+    const next = G.CHAPTERS[chapter.id];
+    const dialog = $("chapter-dialog");
+    dialog.style.setProperty("--chapter-accent", chapter.themeColor);
+    $("chapter-banner-map").src = chapter.mapAsset;
+    $("chapter-title").textContent = chapter.name;
+    $("chapter-boss").textContent = `已击败 ${chapter.bossName}`;
+    $("chapter-restored").textContent = `城防已恢复至 ${run.maxHp} / ${run.maxHp}`;
+    $("chapter-reward").textContent = `+${chapter.crystalReward} 命运水晶`;
+    $("chapter-next").textContent = next
+      ? `下一章 · ${next.name}`
+      : "五章战役已全部征服，无尽轮回已解锁";
+    $("btn-chapter-continue").textContent = next ? `进入${next.name}` : "领取战后奖励";
+    if (!dialog.open) dialog.showModal();
   }
 
   function openEvoDialog() {
@@ -576,19 +898,32 @@
 
   function openCoreDialog() {
     const choices = run.pendingCoreChoices || [];
+    const levels = run.coreLevels || {};
+    const slotsFull = run.cores.length >= run.unlockedCoreSlots;
     $("core-choices").innerHTML = choices.map(id => {
       const c = G.CORES.find(item => item.id === id);
+      const owned = run.cores.includes(id);
+      const nextLv = (levels[id] || 1) + 1;
+      const badge = owned
+        ? `核心升阶 → Lv.${nextLv}`
+        : (slotsFull ? `${RARITY_LABEL[c.rarity]} · 替换旧核` : RARITY_LABEL[c.rarity]);
+      const desc = owned ? G.coreUpgradeDesc(c.id, nextLv) : c.desc;
       return `<button type="button" class="core-card ${c.rarity}" data-core="${c.id}">
         <span class="card-medallion">${c.icon}</span>
-        <span class="card-rarity">${RARITY_LABEL[c.rarity]}</span>
+        <span class="card-rarity">${badge}</span>
         <strong>${c.name}</strong>
-        <p>${c.desc}</p>
+        <p>${desc}</p>
       </button>`;
     }).join("");
 
     $("core-choices").querySelectorAll("[data-core]").forEach(btn => {
       btn.onclick = () => {
-        G.pickCore(run, btn.dataset.core);
+        const coreId = btn.dataset.core;
+        const c = G.CORES.find(item => item.id === coreId);
+        const wasOwned = run.cores.includes(coreId);
+        G.pickCore(run, coreId);
+        const lv = G.coreLevel(run, coreId);
+        G.addLog(run, "核心", wasOwned ? `核心升阶：${c.name} → Lv.${lv}` : `装备核心：${c.name}（${RARITY_LABEL[c.rarity]}）`);
         SFX.evolve();
         $("core-dialog").close();
         save();
@@ -600,6 +935,50 @@
     if (!$("core-dialog").open) $("core-dialog").showModal();
   }
 
+  function openManualShop() {
+    if (busy || run.outcome) return;
+    run.pendingShop = G.ensureShop(run);
+    openShopDialog();
+  }
+
+  function openLogDialog() {
+    const logs = run.logs || [];
+    $("log-summary").textContent = `共 ${logs.length} 条记录 · 当前战力 ${G.getTotalPower(run)}（保存在浏览器本地）`;
+    $("action-log-list").innerHTML = logs.length
+      ? logs.map(item => `<div class="log-entry">
+          <span class="log-stamp">${item.stamp}</span>
+          <span class="log-tag ${item.tag}">${item.tag}</span>
+          <span class="log-text">${item.text}</span>
+        </div>`).join("")
+      : '<div class="inspector-empty">暂无行动记录，转动轮盘或开始战斗后将自动记录每一步操作。</div>';
+    if (!$("log-dialog").open) $("log-dialog").showModal();
+  }
+
+  function exportLogs() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      chapter: run.chapter,
+      wave: run.wave,
+      mode: run.mode,
+      gold: run.gold,
+      crystals: run.crystals,
+      hp: run.hp,
+      reelLevel: run.reelLevel,
+      power: G.getTotalPower(run),
+      cores: run.cores.map(id => ({ id, lv: G.coreLevel(run, id) })),
+      field: run.field.filter(Boolean).map(u => ({ type: u.type, xp: u.xp, evo: u.evolution, lucky: u.lucky, stats: G.getUnitStats(u, run) })),
+      logs: run.logs || []
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `slotbound-log-c${run.chapter}-w${run.wave}.json`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   function openRigDialog() {
     if (busy || run.outcome) return;
     renderRigList();
@@ -608,22 +987,26 @@
 
   function renderRigList() {
     const odds = G.getSymbolOdds(run);
-    $("rig-gold-val").textContent = run.gold + " 金币";
+    const crystals = run.crystals || 0;
+    $("rig-gold-val").textContent = `${crystals} 命运水晶（过关掉落）`;
     $("rig-list").innerHTML = G.SYMBOL_IDS.map(id => {
       const sym = G.SYMBOLS[id];
       const pct = (odds[id] * 100).toFixed(1);
       const boosts = run.rigBoosts[id] || 0;
-      const upCost = 25 + boosts * 15;
+      const upCost = G.getRigBoostCost(run, id);
       const curW = run.weights[id] ?? sym.baseWeight;
-      const canUp = run.gold >= upCost && boosts < 4;
-      const canDown = run.gold >= 30 && curW > 4;
+      const available = odds[id] > 0;
+      const canUp = available && crystals >= upCost && boosts < 4;
+      const canDown = available && crystals >= 2 && curW > 4;
+      const upLabel = !available ? (run.bannedSymbols.includes(id) ? "已移除" : "待升阶")
+        : boosts >= 4 ? "已满" : `+权 ${upCost} 水晶`;
       return `<div class="rig-row" style="--sym-color:${sym.color}">
         <div class="rig-sym">${Art.renderPortraitImg(id, sym.name, "rig-thumb")}<span>${sym.name}</span></div>
         <div class="rig-bar-wrap"><div class="rig-bar-fill" style="width:${Math.min(100, odds[id] * 260)}%"></div></div>
         <div class="rig-pct">${pct}%</div>
         <div class="rig-btns">
-          <button type="button" class="rig-act up" data-rig-up="${id}"${canUp ? "" : " disabled"}>${boosts >= 4 ? "已满" : `+权 ${upCost}G`}</button>
-          <button type="button" class="rig-act down" data-rig-down="${id}"${canDown ? "" : " disabled"}>-权 30G</button>
+          <button type="button" class="rig-act up" data-rig-up="${id}"${canUp ? "" : " disabled"}>${upLabel}</button>
+          <button type="button" class="rig-act down" data-rig-down="${id}"${canDown ? "" : " disabled"}>-权 2水晶</button>
         </div>
       </div>`;
     }).join("");
@@ -652,42 +1035,98 @@
     });
   }
 
+  function openRecords() {
+    const stats = profile.fastest;
+    const duration = stats ? Math.round(stats.duration / 1000) : 0;
+    const time = stats ? `${Math.floor(duration / 60)} 分 ${duration % 60} 秒` : "—";
+    $("records-stats").innerHTML = [
+      ["无尽最高通过波次", profile.highestEndless || "—"],
+      ["最高单次连线", profile.maxLines || "—"],
+      ["最快战役通关", time]
+    ].map(([label, value]) => `<div class="end-stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
+    $("records-lineup").textContent = stats ? `通关阵容 · ${stats.units.map(unit => {
+      const symbol = G.SYMBOLS[unit.type];
+      return symbol.evolutions[unit.evolution]?.name ?? symbol.name;
+    }).join("、")}` : "完成五章战役后记录用时和通关阵容。";
+    $("records-dialog").showModal();
+  }
+
   function openEndDialog() {
     const won = run.outcome === "victory";
-    $("end-tag").textContent = won ? "荣耀通关" : "防线失守";
-    $("end-title").textContent = won ? "命运由你掌控！" : "厄运吞噬了防线";
-    $("end-desc").textContent = won
-      ? "你成功击溃了厄运魔龙与全部 10 波敌军，打造出无敌的转运军团！"
-      : `你在第 ${run.wave} 波倒下。尝试搭配不同核心与概率调校，下一次必能改命！`;
+    const legacyVictory = won && run.wave < G.WAVES.length;
+    const endless = run.mode === "endless";
+    $("end-tag").textContent = endless ? "无尽战绩" : won ? "荣耀通关" : "防线失守";
+    $("end-title").textContent = won ? "命运由你掌控！" : "防线失守";
+    $("end-desc").textContent = endless ? `通过了 ${run.endlessWave - 1} 波无尽挑战。`
+      : legacyVictory ? "这局已通关。再来一局即可挑战五章战役。"
+      : won ? `你击败了厄运魔龙，守住全部 ${G.WAVES.length} 波敌军！`
+      : `你在${G.getChapter(run).name}的第 ${run.wave} 波倒下。`;
+    $("btn-endless-continue").hidden = !profile.champion;
+    const progress = endless ? String(run.endlessWave) : `${run.wave} / ${legacyVictory ? run.wave : G.WAVES.length}`;
     $("end-stats").innerHTML = `
-      <div class="end-stat"><span>抵达波次</span><strong>${run.wave} / ${G.WAVES.length}</strong></div>
+      <div class="end-stat"><span>抵达波次</span><strong>${progress}</strong></div>
       <div class="end-stat"><span>累计转动</span><strong>${run.totalSpins}</strong></div>
-      <div class="end-stat"><span>连线次数</span><strong>${run.totalMatches}</strong></div>
+      <div class="end-stat"><span>最高单次连线</span><strong>${run.maxLines}</strong></div>
       <div class="end-stat"><span>吞噬进化</span><strong>${run.totalAbsorbs}</strong></div>
     `;
     if (!$("end-dialog").open) $("end-dialog").showModal();
   }
 
-  function restartGame() {
-    if (busy) return;
-    run = G.createRun();
+  function startRun(next, title, detail) {
+    run = next;
     displayBoard = [...run.board];
     selectedSlot = null;
     armyMode = "swap";
     save();
-    ["core-dialog", "evo-dialog", "rig-dialog", "end-dialog"].forEach(id => {
-      if ($(id).open) $(id).close();
-    });
-    setTicker("新征程开启！", "拉动轮盘召唤军团，记得合理利用免费转动与锁格机制！");
+    document.querySelectorAll("dialog[open]").forEach(dialog => dialog.close());
+    setTicker(title, detail);
     renderAll();
+  }
+
+  function restartGame() {
+    if (busy) return;
+    startRun(G.createRun(), "新征程开启", "使用免费转动召唤军团，准备第 1 波战斗。");
+  }
+
+  function enterEndless() {
+    if (busy || !profile.champion) return;
+    if (!run.outcome && !window.confirm("使用通关阵容开始无尽轮回？当前战局将结束。")) return;
+    const base = run.mode === "campaign" && run.outcome === "victory" && run.wave === G.WAVES.length
+      ? run : profile.champion;
+    startRun(G.createEndlessRun(base), "无尽轮回开启", "每波携带随机词缀，每三波触发一次命运奇遇。");
   }
 
   $("btn-spin").addEventListener("click", handleSpin);
   $("mech-lever").addEventListener("click", handleSpin);
+  $("btn-tier-up").addEventListener("click", handleTierUpgrade);
+  $("nudge-row").addEventListener("click", e => {
+    const btn = e.target.closest("[data-nudge]");
+    if (btn && !btn.disabled) handleNudge(Number(btn.dataset.nudge));
+  });
   $("btn-fight").addEventListener("click", handleFight);
   $("btn-rig").addEventListener("click", openRigDialog);
+  $("btn-open-shop").addEventListener("click", openManualShop);
+  $("btn-open-logs").addEventListener("click", openLogDialog);
+  $("btn-export-logs").addEventListener("click", exportLogs);
   $("btn-restart").addEventListener("click", restartGame);
   $("btn-end-restart").addEventListener("click", restartGame);
+  $("btn-endless").addEventListener("click", enterEndless);
+  $("btn-endless-continue").addEventListener("click", enterEndless);
+  $("btn-records").addEventListener("click", openRecords);
+  $("encounter-choices").addEventListener("click", event => {
+    const card = event.target.closest("[data-encounter]");
+    if (!card || card.disabled || !G.pickEncounter(run, card.dataset.encounter)) return;
+    $("encounter-dialog").close();
+    save();
+    renderAll();
+    checkPendingModals();
+  });
+  $("btn-chapter-continue").addEventListener("click", () => {
+    run.pendingChapterClear = null;
+    $("chapter-dialog").close();
+    save();
+    checkPendingModals();
+  });
 
   $("btn-mode-swap").addEventListener("click", () => {
     armyMode = "swap";
@@ -716,6 +1155,15 @@
   });
 
   const onRosterClick = e => {
+    const sealed = e.target.closest("[data-unlock]");
+    if (sealed && !sealed.disabled && !busy && !run.outcome) {
+      if (G.unlockSlot(run, sealed.dataset.unlock, Number(sealed.dataset.index))) {
+        save();
+        renderAll();
+        setTicker("阵位解锁", "新席位已可部署单位。", "win");
+      }
+      return;
+    }
     const btn = e.target.closest("[data-area]");
     if (btn && !btn.disabled) handleSlotClick(btn.dataset.area, Number(btn.dataset.index));
   };
@@ -726,7 +1174,36 @@
     btn.addEventListener("click", () => $(btn.dataset.close).close());
   });
 
-  ["core-dialog", "evo-dialog"].forEach(id => {
+  $("shop-items").addEventListener("click", event => {
+    const button = event.target.closest("[data-buy], [data-shop-slot]");
+    if (!button || button.disabled) return;
+    const card = button.closest(".shop-card");
+    const options = Object.fromEntries([...card.querySelectorAll("[data-option]")].map(select =>
+      [select.dataset.option, select.dataset.option === "index" ? Number(select.value) : select.value]));
+    const bought = button.dataset.shopSlot ? G.unlockSlot(run, button.dataset.shopSlot)
+      : G.shopPurchase(run, button.dataset.buy, options);
+    if (bought) {
+      SFX.coin();
+      save();
+      renderAll();
+      openShopDialog();
+    }
+    $("shop-notice").textContent = bought ? "购买成功。" : "当前选择无法购买，请检查目标和水晶余额。";
+  });
+  $("btn-shop-refresh").addEventListener("click", () => {
+    if (!G.refreshShop(run)) return;
+    save();
+    renderAll();
+    openShopDialog();
+    $("shop-notice").textContent = "已刷新商品。";
+  });
+  $("btn-shop-continue").addEventListener("click", closeShop);
+  $("shop-dialog").addEventListener("cancel", event => {
+    event.preventDefault();
+    closeShop();
+  });
+
+  ["core-dialog", "evo-dialog", "chapter-dialog", "encounter-dialog"].forEach(id => {
     $(id).addEventListener("cancel", e => e.preventDefault());
   });
 
@@ -741,6 +1218,7 @@
     }
   });
 
+  if (run.outcome === "victory" && run.wave === G.WAVES.length) save();
   renderAll();
   checkPendingModals();
 })();

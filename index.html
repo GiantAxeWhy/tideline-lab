@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0b0c12">
   <meta name="description" content="转运军团 — 融合 3×3 机械老虎机、概率调校、吞噬转职与实时自走棋防守的暗黑奇幻 Roguelike 策略游戏。">
   <title>转运军团 · SLOTBOUND</title>
+  <link rel="icon" type="image/svg+xml" href="assets/items/crystal-fate.svg">
   <link rel="stylesheet" href="styles.css">
   <script defer src="sfx.js"></script>
   <script defer src="art.js"></script>
@@ -14,6 +15,10 @@
   <script defer src="app.js"></script>
 </head>
 <body>
+  <div id="game-alert-toast" class="game-alert-toast" role="alert" hidden>
+    <strong id="alert-toast-title">无法吞噬</strong>
+    <span id="alert-toast-msg"></span>
+  </div>
   <header class="topbar">
     <div class="brand">
       <div class="crest" id="brand-crest" aria-hidden="true"></div>
@@ -23,18 +28,22 @@
       </div>
     </div>
 
-    <div class="wave-bar" aria-label="波次进度">
+    <div class="wave-bar" aria-label="章节与波次进度">
       <div class="wave-label">
-        <span id="wave-badge">第 1 / 10 波</span>
+        <span id="wave-badge">第 1 章 · 暮色古堡（1/6 波）</span>
         <strong id="wave-name">斥候试探</strong>
       </div>
       <div class="wave-dots" id="wave-dots"></div>
     </div>
 
     <div class="top-stats">
-      <div class="stat-pill gold" title="金币：用于转动老虎机、锁格与调校概率">
+      <div class="stat-pill gold" title="金币用于转动轮盘、锁格、轮盘升阶与刷新商店">
         <span class="stat-ico" id="ico-gold"></span>
-        <strong id="hud-gold">115</strong>
+        <strong id="hud-gold">120</strong>
+      </div>
+      <div class="stat-pill crystal" title="命运水晶">
+        <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="命运水晶">
+        <strong id="hud-crystals">0</strong>
       </div>
       <div class="stat-pill hp" title="城防耐久：战败扣除 1 点，审判波次战败扣除 2 点">
         <span class="stat-ico" id="ico-hp"></span>
@@ -45,8 +54,16 @@
         <strong id="hud-power">0</strong>
       </div>
       <div class="top-controls">
+        <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="随时打开命运秘宝商店消耗水晶">
+          <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
+        </button>
+        <button id="btn-open-logs" class="icon-btn" type="button" title="查看本局操作与战斗日志">日志</button>
         <button id="btn-speed" class="icon-btn" title="切换战斗倍速">1×倍速</button>
         <button id="btn-mute" class="icon-btn square-btn" title="开关音效" aria-label="开关音效"></button>
+        <button id="btn-endless" class="icon-btn" title="通关五章后解锁" disabled>
+          <img class="ui-ico" src="assets/items/endless-crown.svg" alt="">无尽
+        </button>
+        <button id="btn-records" class="icon-btn" type="button">战绩</button>
         <button id="btn-restart" class="icon-btn subtle" title="重新开始新一局">重开</button>
       </div>
     </div>
@@ -62,21 +79,36 @@
 
           <div class="cabinet-head">
             <div>
-              <h2>命运轮盘</h2>
-              <p class="cabinet-sub">8 线连奖 · 点击格面可锁定符号</p>
+              <div class="cabinet-title-row">
+                <h2>命运轮盘</h2>
+                <span class="tier-badge" id="tier-badge">Lv.1 铁制初机</span>
+              </div>
+              <p class="cabinet-sub" id="tier-sub">8 线连奖 · 点击格面锁定</p>
             </div>
-            <button id="btn-rig" class="rig-btn" type="button"><span id="ico-rig"></span>概率调校</button>
+            <div class="cabinet-head-btns">
+              <button id="btn-tier-up" class="tier-btn" type="button">↑ 升阶 45G</button>
+              <button id="btn-rig" class="rig-btn" type="button"><span id="ico-rig"></span>概率</button>
+            </div>
+          </div>
+
+          <div class="fever-bar" id="fever-bar" title="每次未连线+25%、连线+12%；满100%触发【狂热转盘】：免费+中心必出百搭+2倍收益！">
+            <div class="fever-track"><div class="fever-fill" id="fever-fill"></div></div>
+            <span class="fever-text" id="fever-text">狂热充能 0%</span>
           </div>
 
           <div class="cabinet-lights" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
 
+          <div class="nudge-preview-row" id="nudge-preview-row" aria-label="即将顶入符号预览"></div>
+
           <div class="reel-frame" id="reel-frame">
             <div class="reel-grid" id="reel-grid"></div>
             <svg class="payline-svg" id="payline-svg" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
             <div class="jackpot-toast" id="jackpot-toast" hidden></div>
           </div>
+
+          <div class="nudge-row" id="nudge-row" aria-label="单列微调"></div>
 
           <div class="spin-ticker" id="spin-ticker">
             <strong id="ticker-title">拉动拉杆召唤军团</strong>
@@ -120,13 +152,21 @@
           <div class="arena-info">
             <span class="boss-pill" id="boss-pill" hidden></span>
             <span id="enemy-intel" class="enemy-intel">来袭：3 名敌军</span>
+            <span id="endless-affixes" class="endless-affixes" hidden></span>
+            <span id="enemy-warning" class="enemy-warning" hidden>⚠ 敌军会偷袭后排，建议安排坦克保护。</span>
           </div>
           <button id="btn-fight" class="fight-btn" type="button"><span id="ico-fight"></span><span>开战迎敌</span></button>
+        </div>
+        <div id="reinforcement" class="reinforcement">
+          <span id="reinforcement-count"></span>
+          <progress id="reinforcement-progress" max="9" value="0" aria-label="援军进度"></progress>
+          <span id="reinforcement-next"></span>
         </div>
         <div class="arena-stage">
           <canvas id="battle-canvas"></canvas>
         </div>
         <div class="synergy-bar" id="synergy-bar" aria-label="职业羁绊"></div>
+        <div class="synergy-bar faction-bar" id="faction-bar" aria-label="流派羁绊"></div>
       </div>
 
       <div class="army-card">
@@ -194,11 +234,82 @@
         </div>
         <button class="close-btn" data-close="rig-dialog" aria-label="关闭">×</button>
       </div>
-      <p class="dialog-desc">消耗金币提高核心兵种的出现权重，或压低不需要的符号概率，把运气变成可控流派！</p>
+      <p class="dialog-desc">消耗命运水晶调整已解锁符号的出现权重。</p>
       <div class="rig-list" id="rig-list"></div>
       <div class="dialog-footer">
-        <span class="rig-gold">当前金币：<strong id="rig-gold-val">0</strong></span>
+        <span class="rig-gold">余额 <strong id="rig-gold-val">0 命运水晶</strong></span>
         <button class="secondary-btn" data-close="rig-dialog" type="button">完成调校</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="chapter-dialog" class="game-dialog chapter-dialog" aria-labelledby="chapter-title">
+    <div class="chapter-banner">
+      <img id="chapter-banner-map" class="chapter-banner-map" alt="">
+      <div class="chapter-banner-body">
+        <div class="dialog-tag">章节征服</div>
+        <h2 id="chapter-title"></h2>
+        <p id="chapter-boss"></p>
+      </div>
+    </div>
+    <div class="dialog-inner center">
+      <div class="chapter-rewards">
+        <span id="chapter-restored"></span>
+        <span class="chapter-crystal-reward">
+          <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="">
+          <strong id="chapter-reward"></strong>
+        </span>
+      </div>
+      <p class="dialog-desc" id="chapter-next"></p>
+      <button id="btn-chapter-continue" class="spin-btn compact-btn" type="button"></button>
+    </div>
+  </dialog>
+
+  <dialog id="shop-dialog" class="game-dialog" aria-labelledby="shop-title">
+    <div class="dialog-inner">
+      <h2 id="shop-title">命运秘宝商店</h2>
+      <p class="dialog-desc" id="shop-balance"></p>
+      <div class="shop-grid" id="shop-items"></div>
+      <p class="shop-notice" id="shop-notice" role="status"></p>
+      <div class="dialog-footer shop-footer">
+        <button id="btn-shop-refresh" type="button" class="secondary-btn">刷新商品 · 15 金币</button>
+        <button id="btn-shop-continue" type="button" class="spin-btn compact-btn">离开商店</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="encounter-dialog" class="game-dialog" aria-labelledby="encounter-title">
+    <div class="dialog-inner">
+      <h2 id="encounter-title">命运奇遇</h2>
+      <p class="dialog-desc">选择一项带入接下来的战斗。</p>
+      <div class="core-choices" id="encounter-choices"></div>
+    </div>
+  </dialog>
+
+  <dialog id="records-dialog" class="game-dialog" aria-labelledby="records-title">
+    <div class="dialog-inner">
+      <div class="dialog-head-row">
+        <h2 id="records-title">战绩</h2>
+        <button class="close-btn" data-close="records-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="end-stats records-stats" id="records-stats"></div>
+      <p class="dialog-desc" id="records-lineup"></p>
+    </div>
+  </dialog>
+
+  <dialog id="log-dialog" class="game-dialog" aria-labelledby="log-title">
+    <div class="dialog-inner">
+      <div class="dialog-head-row">
+        <div>
+          <div class="dialog-tag">行动记录</div>
+          <h2 id="log-title">本局行为日志</h2>
+        </div>
+        <button class="close-btn" data-close="log-dialog" aria-label="关闭">×</button>
+      </div>
+      <div class="action-log-list" id="action-log-list"></div>
+      <div class="dialog-footer">
+        <span class="rig-gold" id="log-summary">共 0 条记录（保存在浏览器本地）</span>
+        <button id="btn-export-logs" class="secondary-btn" type="button">导出战报 JSON</button>
       </div>
     </div>
   </dialog>
@@ -210,7 +321,10 @@
       <h2 id="end-title">防线大捷！</h2>
       <p class="dialog-desc" id="end-desc"></p>
       <div class="end-stats" id="end-stats"></div>
-      <button id="btn-end-restart" class="spin-btn compact-btn" type="button">再来一局</button>
+      <div class="end-actions">
+        <button id="btn-end-restart" class="secondary-btn" type="button">新开战役</button>
+        <button id="btn-endless-continue" class="spin-btn compact-btn" type="button" hidden>开启无尽轮回</button>
+      </div>
     </div>
   </dialog>
 </body>

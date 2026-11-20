@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1930"/><stop offset="60%" stop-color="#17375e"/><stop offset="100%" stop-color="#2b5e8f"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#264669"/><stop offset="100%" stop-color="#102238"/></linearGradient>
+    <radialGradient id="gL" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#6be5ff" stop-opacity="0.72"/><stop offset="100%" stop-color="#6be5ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="vig" cx="50%" cy="52%" r="65%"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#04050a" stop-opacity="0.68"/></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <polygon points="0,390 190,120 360,390" fill="#132d4d" stroke="#081424" stroke-width="4"/>
+    <polygon points="260,390 540,70 810,390" fill="#1a3b63" stroke="#081424" stroke-width="4"/>
+    <polygon points="720,390 1010,105 1280,390" fill="#132d4d" stroke="#081424" stroke-width="4"/>
+    <g fill="#a6f2ff" opacity="0.75">
+      <polygon points="120,390 150,240 185,390"/><polygon points="1100,390 1135,230 1165,390"/>
+      <circle cx="320" cy="140" r="3"/><circle cx="480" cy="190" r="2.5"/><circle cx="890" cy="130" r="3.5"/><circle cx="710" cy="220" r="2.5"/>
+    </g>
+  <!-- Playable 2.5D Stone Arena Floor -->
+  <polygon points="0,390 1280,390 1280,720 0,720" fill="url(#floor)"/>
+  <line x1="0" y1="390" x2="1280" y2="390" stroke="#80e5ff" stroke-width="4" opacity="0.5"/>
+  <!-- Perspective Stone Grid -->
+  <g stroke="#080a10" stroke-width="2.5" opacity="0.55">
+    <line x1="0" y1="450" x2="1280" y2="450"/><line x1="0" y1="525" x2="1280" y2="525"/><line x1="0" y1="615" x2="1280" y2="615"/>
+    <line x1="220" y1="390" x2="80" y2="720"/><line x1="430" y1="390" x2="350" y2="720"/><line x1="640" y1="390" x2="640" y2="720"/>
+    <line x1="850" y1="390" x2="930" y2="720"/><line x1="1060" y1="390" x2="1200" y2="720"/>
+  </g>
+  <path d="M360,490 L470,540 L420,620 M880,470 L790,550 L850,640" fill="none" stroke="#9ef4ff" stroke-width="3" opacity="0.45"/>
+  <circle cx="150" cy="360" r="170" fill="url(#gL)"/><circle cx="1130" cy="360" r="170" fill="url(#gL)"/>
+  <rect width="1280" height="720" fill="url(#vig)"/>
+</svg>
