@@ -574,21 +574,21 @@
       Array.from({ length: size }, (_, i) => scaleUnit(regular[(i + offset) % regular.length], hpM, atkM));
 
     if (boss.length > 0) {
-      const boostedBoss = boss.map(b => ({ ...b, cd: Math.max(0.75, Number((b.cd * 0.88).toFixed(2))) }));
+      const boostedBoss = boss.map(b => ({ ...b, cd: Math.max(0.62, Number((b.cd * 0.76).toFixed(2))) }));
       const bossPatterns = [
-        [3, 4, 2],
-        [2, 5, 3],
-        [4, 3, 3],
-        [3, 5, 3],
-        [4, 4, 4]
+        [3, 4, 3],
+        [3, 5, 4],
+        [4, 4, 4],
+        [4, 5, 4],
+        [5, 5, 5]
       ];
       const [p1, p2, p3] = bossPatterns[(wave.chapter - 1) % bossPatterns.length];
       return {
         ...wave,
         phases: [
-          { delay: 0, enemies: makeSquad(p1, 1.0, 1.0, 0) },
-          { delay: 5.0, enemies: makeSquad(p2, 1.22, 1.14, 1) },
-          { delay: 10.0, enemies: [...boostedBoss, ...makeSquad(p3, 1.32, 1.18, 2)] }
+          { delay: 0, enemies: makeSquad(p1, 1.08, 1.05, 0) },
+          { delay: 4.8, enemies: makeSquad(p2, 1.32, 1.20, 1) },
+          { delay: 9.5, enemies: [...boostedBoss, ...makeSquad(p3, 1.48, 1.28, 2)] }
         ]
       };
     }
@@ -649,6 +649,8 @@
       };
     });
     const { skill, escorts, ...bossEnemy } = boss;
+    const bossHpScale = [4.2, 4.6, 5.0, 5.4, 6.2][chapter.id - 1] || 5.0;
+    const bossAtkScale = [2.2, 2.3, 2.4, 2.5, 2.75][chapter.id - 1] || 2.4;
     return [...normalWaves, {
       chapter: chapter.id,
       wave: firstWave + encounters.length,
@@ -661,10 +663,10 @@
         {
           ...bossEnemy,
           lv: chapter.id,
-          hp: Math.round(bossEnemy.hp * hpMult * 2.85),
-          atk: Math.round(bossEnemy.atk * atkMult * 1.7),
-          shieldPierce: 0.4,
-          skillInterval: Math.max(2.6, (bossEnemy.skillInterval || 4.2) * 0.85),
+          hp: Math.round(bossEnemy.hp * hpMult * bossHpScale),
+          atk: Math.round(bossEnemy.atk * atkMult * bossAtkScale),
+          shieldPierce: 0.55,
+          skillInterval: Math.max(2.2, Number(((bossEnemy.skillInterval || 4.0) * 0.72).toFixed(2))),
           bossId: chapter.bossId
         },
         ...escorts.map(key => {
@@ -672,8 +674,8 @@
           return {
             ...e,
             lv: chapter.id,
-            hp: Math.round(e.hp * hpMult * 1.35),
-            atk: Math.round(e.atk * atkMult * 1.25)
+            hp: Math.round(e.hp * hpMult * 1.65),
+            atk: Math.round(e.atk * atkMult * 1.45)
           };
         })
       ]

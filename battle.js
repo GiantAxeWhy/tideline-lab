@@ -267,8 +267,8 @@
         definition: def, bossId: def.bossId, name: def.name, lv: def.lv,
         color: G.getChapter(this.run).themeColor,
         x: isReinforcement ? Math.min(this.w - 24, pos.x + 95) : pos.x, y: pos.y, homeX: pos.x, homeY: pos.y,
-        hp: def.hp, maxHp: def.hp, shield: isBoss ? Math.round(def.hp * .22) : 0,
-        atk: def.atk, crit: isBoss ? .15 : .08, atkCd: def.cd,
+        hp: def.hp, maxHp: def.hp, shield: isBoss ? Math.round(def.hp * .35) : 0,
+        atk: def.atk, crit: isBoss ? .22 : .08, atkCd: def.cd,
         moveSpd: baseMove * scale,
         range: baseRange * scale,
         mass: isBoss ? 4.5 : def.kind === "tank" ? 2.5 : 1.0,
@@ -499,11 +499,11 @@
     _applyDamage(attacker, target, rawDmg, opts = {}) {
       if (!target?.alive || target.invulnerable > 0) return 0;
       let dmg = Math.max(1, Math.round(rawDmg));
-      // Chapter 2 Boss (Lich) Build Check: gains 14% dmg reduction per living minion (max 56%) -> forces AOE clear!
+      // Chapter 2 Boss (Lich) Build Check: gains 16% dmg reduction per living minion (max 64%) -> forces AOE clear!
       if (target.bossId === "lich") {
         const minions = this.enemies.filter(e => e.alive && e !== target).length;
         if (minions > 0) {
-          const dr = Math.min(0.56, minions * 0.14);
+          const dr = Math.min(0.64, minions * 0.16);
           dmg = Math.max(1, Math.round(dmg * (1 - dr)));
         }
       }
@@ -910,80 +910,79 @@
 
       if (boss.bossId === "grom") {
         // Ch1 Exam: Basic Frontline & Sustain
-        this.rings.push({ x: boss.x, y: boss.y, r: 16, maxR: 280, color: "#ff595e", life: 0.45 });
-        boss.shield += Math.round(boss.maxHp * 0.14);
-        this._spawnText(boss.x, boss.y - 24, "裂地重击!", "#ff595e", 16);
-        livingAllies.forEach(a => this._applyDamage(boss, a, boss.atk * 0.88, { color: "#ff7a7e" }));
+        this.rings.push({ x: boss.x, y: boss.y, r: 16, maxR: 310, color: "#ff595e", life: 0.48 });
+        boss.shield += Math.round(boss.maxHp * 0.18);
+        this._spawnText(boss.x, boss.y - 24, "裂地重击!", "#ff595e", 17);
+        livingAllies.forEach(a => this._applyDamage(boss, a, boss.atk * 1.12, { color: "#ff7a7e" }));
       } else if (boss.bossId === "lich") {
-        // Ch2 Exam: AOE Clear (summons skeleton minions; each living minion gives Lich 14% DR!)
-        this._spawnText(boss.x, boss.y - 24, "亡灵潮涌 · 幽冥连锁!", "#c77dff", 16);
+        // Ch2 Exam: AOE Clear (summons skeleton minions; each living minion gives Lich 16% DR!)
+        this._spawnText(boss.x, boss.y - 24, "亡灵潮涌 · 幽冥连锁!", "#c77dff", 17);
         const existingMinions = this.enemies.filter(e => e.alive && e !== boss).length;
-        for (let i = 0; i < Math.min(2, Math.max(0, 4 - existingMinions)); i += 1) {
-          const pos = { x: Math.max(this.w * 0.52, boss.homeX - 46), y: Math.min(this.h - 48, Math.max(40, boss.homeY + (i ? 42 : -42))) };
+        for (let i = 0; i < Math.min(3, Math.max(0, 5 - existingMinions)); i += 1) {
+          const pos = { x: Math.max(this.w * 0.52, boss.homeX - 46), y: Math.min(this.h - 48, Math.max(40, boss.homeY + (i - 1) * 38)) };
           const minion = this._createEnemy({
             name: "亡灵侍从", kind: "melee", artKey: "ch2_crypt_ghoul",
-            lv: boss.lv, hp: Math.round(boss.maxHp * 0.11), atk: Math.round(boss.atk * 0.36), cd: 1.2
+            lv: boss.lv, hp: Math.round(boss.maxHp * 0.13), atk: Math.round(boss.atk * 0.42), cd: 1.1
           }, pos, "enemy-" + this.nextEnemyId++, true);
           minion.ownerId = boss.uid;
           this.enemies.push(minion);
           this._spawnParticles(pos.x, pos.y, "#38e8a8", 10);
         }
         let drained = 0;
-        livingAllies.slice(0, 3).forEach(a => {
+        livingAllies.slice(0, 4).forEach(a => {
           this.beams.push({ x1: boss.x, y1: boss.y, x2: a.x, y2: a.y, color: "#b5179e", life: 0.32, jagged: true });
-          drained += this._applyDamage(boss, a, boss.atk * 0.88, { color: "#e0aaff" });
+          drained += this._applyDamage(boss, a, boss.atk * 1.15, { color: "#e0aaff" });
         });
-        const heal = Math.round(drained * 0.32);
+        const heal = Math.round(drained * 0.38);
         boss.hp = Math.min(boss.maxHp, boss.hp + heal);
         this._spawnText(boss.x, boss.y - 6, `+${heal}`, "#c77dff", 14);
       } else if (boss.bossId === "icequeen") {
         // Ch3 Exam: Backline Protection (snipes & freezes rear-row carries + chills whole team!)
-        this.rings.push({ x: boss.x, y: boss.y, r: 18, maxR: 305, color: "#6be5ff", life: 0.55 });
-        this._spawnText(boss.x, boss.y - 24, "极寒穿刺 · 冻结后排!", "#6be5ff", 16);
+        this.rings.push({ x: boss.x, y: boss.y, r: 18, maxR: 325, color: "#6be5ff", life: 0.55 });
+        this._spawnText(boss.x, boss.y - 24, "极寒穿刺 · 冻结后排!", "#6be5ff", 17);
         const rear = livingAllies.filter(ally => !this._isFrontZone(ally));
-        const snipeTarget = rear.length
-          ? rear[Math.floor(Math.random() * rear.length)]
-          : livingAllies[0];
-        if (snipeTarget) {
+        const snipePool = rear.length ? rear : livingAllies;
+        const snipeTargets = [...snipePool].sort(() => Math.random() - 0.5).slice(0, boss.phaseTwo ? 2 : 1);
+        for (const snipeTarget of snipeTargets) {
           this.beams.push({ x1: boss.x, y1: boss.y, x2: snipeTarget.x, y2: snipeTarget.y, color: "#80f0ff", life: 0.35, jagged: true });
-          this.rings.push({ x: snipeTarget.x, y: snipeTarget.y, r: 10, maxR: 58, color: "#6be5ff", life: 0.45 });
-          this._applyDamage(boss, snipeTarget, boss.atk * 1.55, { color: "#a5f1ff", isCrit: true });
-          snipeTarget.stunTimer = Math.max(snipeTarget.stunTimer, 1.2);
+          this.rings.push({ x: snipeTarget.x, y: snipeTarget.y, r: 10, maxR: 62, color: "#6be5ff", life: 0.45 });
+          this._applyDamage(boss, snipeTarget, boss.atk * 1.95, { color: "#a5f1ff", isCrit: true });
+          snipeTarget.stunTimer = Math.max(snipeTarget.stunTimer, 1.5);
           this._spawnText(snipeTarget.x, snipeTarget.y - 22, "冻结!", "#80f0ff", 14);
         }
         livingAllies.forEach(ally => {
-          this._applyDamage(boss, ally, boss.atk * 0.52, { color: "#a5f1ff" });
-          ally.slowTimer = Math.max(ally.slowTimer, 2.2);
+          this._applyDamage(boss, ally, boss.atk * 0.72, { color: "#a5f1ff" });
+          ally.slowTimer = Math.max(ally.slowTimer, 2.6);
         });
       } else if (boss.bossId === "balrog") {
         // Ch4 Exam: Frontline Tankiness (massive shield-breaking smash on frontline; wipes backline if frontline falls!)
         const front = livingAllies.filter(ally => this._isFrontZone(ally));
         const targets = front.length ? front : livingAllies;
-        this._spawnText(boss.x, boss.y - 24, front.length ? "熔岩断层 · 破盾重击!" : "防线崩塌 · 灭世火浪!", "#ff8b3d", 16);
+        this._spawnText(boss.x, boss.y - 24, front.length ? "熔岩断层 · 破盾重击!" : "防线崩塌 · 灭世火浪!", "#ff8b3d", 17);
         targets.forEach(ally => {
-          this.rings.push({ x: ally.x, y: ally.y, r: 12, maxR: 64, color: "#ff6d24", life: 0.48 });
-          this._applyDamage(boss, ally, boss.atk * (front.length ? 1.65 : 1.85), {
+          this.rings.push({ x: ally.x, y: ally.y, r: 12, maxR: 72, color: "#ff6d24", life: 0.48 });
+          this._applyDamage(boss, ally, boss.atk * (front.length ? 2.05 : 2.35), {
             color: "#ff9a57",
-            shieldMultiplier: 1.6
+            shieldMultiplier: 1.85
           });
         });
       } else if (boss.bossId === "dragon") {
-        // Ch5 Final Exam: Ultimate DPS Race & Full Build Check (stacks enrage + P2 spawns void assassins!)
-        this.rings.push({ x: boss.x, y: boss.y, r: 20, maxR: 340, color: "#ff2a55", life: 0.5 });
-        boss.enrage = Math.min(2.1, boss.enrage + 0.15);
-        this._spawnText(boss.x, boss.y - 26, `毁灭龙息 · 狂暴×${boss.enrage.toFixed(2)}!`, "#ff4d6d", 17);
-        livingAllies.forEach(a => this._applyDamage(boss, a, boss.atk * 0.96, { color: "#ff6b6b" }));
+        // Ch5 Final Exam: Ultimate DPS Race & Full Build Check (stacks enrage + P2 spawns 3 void assassins!)
+        this.rings.push({ x: boss.x, y: boss.y, r: 20, maxR: 360, color: "#ff2a55", life: 0.52 });
+        boss.enrage = Math.min(2.6, boss.enrage + 0.22);
+        this._spawnText(boss.x, boss.y - 26, `毁灭龙息 · 狂暴×${boss.enrage.toFixed(2)}!`, "#ff4d6d", 18);
+        livingAllies.forEach(a => this._applyDamage(boss, a, boss.atk * 1.22, { color: "#ff6b6b" }));
         if (boss.phaseTwo && !boss.summonedVoidGuards) {
           boss.summonedVoidGuards = true;
-          for (let i = 0; i < 2; i += 1) {
-            const pos = { x: this.w * 0.58, y: i ? this.h * 0.28 : this.h * 0.72 };
+          for (let i = 0; i < 3; i += 1) {
+            const pos = { x: this.w * 0.58, y: this.h * (0.24 + i * 0.26) };
             const stalker = this._createEnemy({
               name: "虚空突袭者", kind: "assassin", artKey: "ch5_void_stalker", tactic: "backline_diver",
-              lv: boss.lv, hp: Math.round(boss.maxHp * 0.12), atk: Math.round(boss.atk * 0.55), cd: 0.85
+              lv: boss.lv, hp: Math.round(boss.maxHp * 0.14), atk: Math.round(boss.atk * 0.65), cd: 0.78
             }, pos, "enemy-" + this.nextEnemyId++, true);
             this.enemies.push(stalker);
           }
-          this._spawnText(this.w * 0.5, 86, "⚠️ 魔龙召唤虚空刺客突袭后排！", "#ff75b5", 15);
+          this._spawnText(this.w * 0.5, 86, "⚠️ 魔龙召唤 3 名虚空刺客突袭后排！", "#ff75b5", 16);
         }
       }
     }
@@ -1180,14 +1179,20 @@
         }
         if (e.isBoss && !e.phaseTwo && e.hp <= e.maxHp * .5) {
           e.phaseTwo = true;
-          e.skillTimer = Math.min(e.skillTimer, e.skillInterval * .7);
-          this.shake = Math.max(this.shake, 15);
-          e.rageBubbleUntil = this.time + 2.2;
+          e.enrage = Math.min(2.6, (e.enrage || 1) + 0.28);
+          e.shield += Math.round(e.maxHp * 0.25);
+          e.skillTimer = Math.min(e.skillTimer, 0.6);
+          e.stunTimer = 0;
+          this.shake = Math.max(this.shake, 16);
+          this.rings.push({ x: e.x, y: e.y, r: 22, maxR: 220, color: "#ff2a55", life: 0.6 });
+          this._spawnText(e.x, e.y - 34, "🔥 二阶段狂暴觉醒！+护盾", "#ff4d6d", 17);
+          if (globalThis.SFX) globalThis.SFX.bossSkill();
+          e.rageBubbleUntil = this.time + 2.4;
         }
         if (e.hitFlash > 0) e.hitFlash -= dt;
         if (e.lunge < 0) e.lunge = Math.min(0, e.lunge + dt * 5);
-        if (e.slowTimer > 0) e.slowTimer -= dt;
-        e.stunTimer = Math.max(0, (e.stunTimer ?? 0) - dt);
+        if (e.slowTimer > 0) e.slowTimer -= dt * (e.isBoss ? 1.8 : 1);
+        e.stunTimer = Math.max(0, (e.stunTimer ?? 0) - dt * (e.isBoss ? 2.6 : 1));
         if (e.stunTimer > 0) continue;
 
         this._enemyTactic(e, dt);
