@@ -1574,18 +1574,14 @@
         const donor = getU(dragSrc.area, dragSrc.index);
         const receiver = getU(toArea, toIdx);
         if (donor && receiver && donor.id !== receiver.id) {
-          if (armyMode === "absorb" || dragSrc.area === "overflow") {
-            // ONLY trigger Absorb Choice modal when Absorb Mode is ON (or dragging an overflow unit onto a hero)!
+          if (armyMode === "absorb") {
             openAbsorbDialog(receiver, donor);
-          } else if (dragSrc.area !== "overflow" && toArea !== "overflow") {
-            // Normal mode: dragging one hero onto another cleanly swaps their slots!
-            if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
-              SFX.lock();
-              save();
-              renderAll();
-            }
+          } else if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
+            SFX.lock();
+            save();
+            renderAll();
           }
-        } else if (donor && !receiver && dragSrc.area !== "overflow" && toArea !== "overflow") {
+        } else if (donor && !receiver && toArea !== "overflow") {
           if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
             SFX.lock();
             save();

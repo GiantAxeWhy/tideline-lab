@@ -2889,6 +2889,38 @@
 
   function swapSlots(run, fromArea, fromIdx, toArea, toIdx) {
     if (fromArea === toArea && fromIdx === toIdx) return false;
+    // Support moving/swapping units out of the overflow queue into any open field/bench slot!
+    if (fromArea === "overflow" && (toArea === "field" || toArea === "bench")) {
+      if (!isSlotOpen(run, toArea, toIdx)) return false;
+      const ov = run.overflowUnits || [];
+      if (!ov[fromIdx]) return false;
+      const dstArr = toArea === "field" ? run.field : run.bench;
+      if (!dstArr[toIdx]) {
+        const [moved] = ov.splice(fromIdx, 1);
+        dstArr[toIdx] = moved;
+      } else {
+        const temp = ov[fromIdx];
+        ov[fromIdx] = dstArr[toIdx];
+        dstArr[toIdx] = temp;
+      }
+      if (toArea === "field" && dstArr[toIdx] && !dstArr[toIdx].pos) {
+        dstArr[toIdx].pos = defaultUnitPos(run, dstArr[toIdx], dstArr[toIdx].id);
+      }
+      return true;
+    }
+    if (toArea === "overflow" && (fromArea === "field" || fromArea === "bench")) {
+      if (!isSlotOpen(run, fromArea, fromIdx)) return false;
+      const ov = run.overflowUnits || [];
+      const srcArr = fromArea === "field" ? run.field : run.bench;
+      if (!ov[toIdx] || !srcArr[fromIdx]) return false;
+      const temp = srcArr[fromIdx];
+      srcArr[fromIdx] = ov[toIdx];
+      ov[toIdx] = temp;
+      if (fromArea === "field" && srcArr[fromIdx] && !srcArr[fromIdx].pos) {
+        srcArr[fromIdx].pos = defaultUnitPos(run, srcArr[fromIdx], srcArr[fromIdx].id);
+      }
+      return true;
+    }
     if (!isSlotOpen(run, fromArea, fromIdx) || !isSlotOpen(run, toArea, toIdx)) return false;
     const srcArr = fromArea === "field" ? run.field : run.bench;
     const dstArr = toArea === "field" ? run.field : run.bench;
