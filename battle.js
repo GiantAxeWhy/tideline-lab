@@ -214,7 +214,10 @@
         let shield = aegisLv > 0 ? Math.round(st.hp * ([0.15, 0.25, 0.36, 0.48, 0.65][aegisLv - 1] || 0.15)) : 0;
         if (frostLv > 0) shield += Math.round(st.hp * ([0.20, 0.30, 0.42, 0.55, 0.72][frostLv - 1] || 0.20));
         if (masteries.includes("thorn_armor")) shield += Math.round(st.hp * 0.35);
-        if (u.trait === "iron_skin") shield += 25;
+        if (masteries.includes("shadow_shield")) shield += Math.round(st.hp * 0.40);
+        if (masteries.includes("iron_will")) shield += Math.round(st.hp * 0.50);
+        if (masteries.includes("mana_barrier")) shield += Math.round(st.hp * 0.45);
+        if (u.trait === "iron_skin") shield += (Number.isFinite(u.traitVal) ? u.traitVal + 8 : 25);
         if (knightSyn) shield += 22;
         if (inFrontZone && G.hasCore(run, "vanguard_oath")) shield += 24;
         if (u.evolution === "fortress") shield += Math.round(st.hp * 0.28);
@@ -232,6 +235,7 @@
           skills: (u.skills || []).map(s => ({ ...s })),
           masteryBuffs: [...masteries],
           trait: u.trait || null,
+          traitVal: u.traitVal || 15,
           evolution: u.evolution,
           evolution3: u.evolution3 || null,
           lucky: u.lucky,
@@ -481,6 +485,10 @@
         this.battleGold += 5;
         this._spawnText(attacker.x, attacker.y - 20, "+5G", "#ffd86b", 13);
       }
+      if (attacker?.alive && attacker.side === "ally" && attacker.masteryBuffs?.includes("bounty_killer")) {
+        this.battleGold += 6;
+        this._spawnText(attacker.x, attacker.y - 24, "+6G", "#ffd86b", 13);
+      }
     }
 
     _endBattle(won) {
@@ -564,7 +572,16 @@
       if (target.side === "ally" && target.dmgReduceTimer > 0) {
         dmg = Math.max(1, Math.round(dmg * 0.55));
       }
+      if (target.side === "ally" && target.masteryBuffs?.includes("iron_will")) {
+        dmg = Math.max(1, Math.round(dmg * 0.80));
+      }
       target.hp = Math.max(0, target.hp - dmg);
+      if (!target.hp && target.masteryBuffs?.includes("phoenix_core") && !target.usedUndying) {
+        target.hp = Math.max(1, Math.round(target.maxHp * 0.35));
+        target.usedUndying = true;
+        target.invulnerable = 2.5;
+        this._spawnText(target.x, target.y - 22, "不死鸟复活!", "#ff9955", 15);
+      }
       if (target.side === "ally" && target.hp > 0 && target.hp <= target.maxHp * 0.35 && !target.usedUnderdog && G.hasCore(this.run, "underdog_fury")) {
         target.usedUnderdog = true;
         this._grantShield(target, target.maxHp * 0.25);
@@ -587,8 +604,12 @@
       this._spawnParticles(target.x, target.y, opts.particleColor || target.color, isCrit ? 10 : 5);
 
       if (attacker?.alive && attacker.side === "ally" && dealt > 0 && !opts.isReflect) {
-        if (attacker.trait === "vampiric") this._heal(attacker, dealt * 0.15);
+        if (attacker.trait === "vampiric") {
+          const vPct = (Number.isFinite(attacker.traitVal) ? attacker.traitVal : 15) / 100;
+          this._heal(attacker, dealt * vPct);
+        }
         if (attacker.masteryBuffs?.includes("phantom_cloak")) this._heal(attacker, dealt * 0.28);
+        if (attacker.masteryBuffs?.includes("war_berserk")) this._heal(attacker, dealt * 0.22);
         const bloodLv = this._skillLv(attacker, "blood_frenzy");
         if (bloodLv > 0) {
           this._heal(attacker, dealt * ([0.12, 0.18, 0.25, 0.32, 0.42][bloodLv - 1] || 0.12));
@@ -787,6 +808,12 @@
       const ambushLv = this._skillLv(u, "night_ambush");
       if (ambushLv > 0 && (isIsolated || target.kind === "ranged" || target.kind === "caster")) {
         dmg *= 1 + ([0.22, 0.34, 0.48, 0.65, 0.88][ambushLv - 1] || 0.22);
+      }
+      if (u.masteryBuffs?.includes("execute_mark") && target.hp <= target.maxHp * 0.45) {
+        dmg *= 1.75;
+      }
+      if (u.masteryBuffs?.includes("giant_slayer") && (target.isBoss || target.kind === "tank")) {
+        dmg *= 1.55;
       }
 
       if (G.hasCore(this.run, "berserk_banner") && u.hp / u.maxHp < 0.55) {

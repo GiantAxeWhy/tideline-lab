@@ -91,13 +91,31 @@
       costs: [5, 10, 16],
       desc: lv => `解锁高级商店货品（含神铸金骰、星界卷轴等）· 商店等级 Lv.${lv + 1}`
     },
+    interestBank: {
+      id: "interestBank",
+      name: "星陨复利银行",
+      icon: "🏦",
+      maxLevel: 4,
+      costs: [4, 7, 11, 16],
+      desc: lv => lv === 0
+        ? "未解锁：升级后每波胜利按存款产生金币利息"
+        : `每存 20G 产 +${1 + lv}G 利息（单波上限 +${[0, 15, 25, 35, 50][lv]}G）`
+    },
+    coreReroll: {
+      id: "coreReroll",
+      name: "核心重铸许可",
+      icon: "🔄",
+      maxLevel: 2,
+      costs: [5, 10],
+      desc: lv => `单局转运核心免费刷新次数：${1 + lv} 次（最多 3 次，之后消耗递增水晶）`
+    },
     heroArchive: {
       id: "heroArchive",
-      name: "英灵卡池解放",
+      name: "高阶英灵祝福",
       icon: "⚔️",
       maxLevel: 4,
-      costs: [4, 8, 13, 20],
-      desc: lv => `已解锁卡池：${["1~2费(白/绿)", "1~3费(解锁蓝卡)", "1~4费(解锁紫卡)", "1~5费(解锁金卡)", "全卡池满配(+0.3%金率)"][lv]}`
+      costs: [5, 9, 14, 20],
+      desc: lv => `全卡池已开放 · 额外提升紫率 +${(lv * 1.5).toFixed(1)}% · 金率 +${(lv * 0.25).toFixed(2)}%`
     }
   };
 
@@ -125,7 +143,9 @@
         coreWorkshop: 0,
         reelTech: 0,
         shopVault: 0,
-        heroArchive: 1 // Start with 1~3 cost unlocked, upgrade to unlock 4~5 cost & bonus gold rate
+        interestBank: 0,
+        coreReroll: 0,
+        heroArchive: 0
       }
     };
   }
@@ -208,10 +228,9 @@
     return true;
   }
 
-  function getMaxUnlockedRarityTier(meta) {
-    // 0 -> green(2), 1 -> blue(3), 2 -> purple(4), 3+ -> gold(5)
-    const lv = meta?.upgrades?.heroArchive ?? 1;
-    return Math.min(5, lv + 2);
+  function getMaxUnlockedRarityTier() {
+    // All 1~5 cost pools are naturally gated by Reel Tier Lv.1~Lv.5; heroArchive boosts high-tier drop odds!
+    return 5;
   }
 
   function unlockCodexHero(meta, heroId) {

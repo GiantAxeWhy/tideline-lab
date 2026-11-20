@@ -253,6 +253,11 @@
           </div>
         </div>
 
+        <div class="overflow-box" id="overflow-box" hidden>
+          <div class="sub-label"><span style="color:#ffd86b">⚠️ 军团超编暂存区（请先吞噬或出售后再摇杆/开战！）</span><span id="overflow-count">0</span></div>
+          <div class="overflow-grid" id="overflow-grid"></div>
+        </div>
+
         <div class="inspector" id="inspector">
           <div class="inspector-empty">点选任意军团单位查看详细属性、技能与吞噬强化选项。</div>
         </div>
@@ -267,6 +272,10 @@
       <h2>选择一枚转运核心</h2>
       <p class="dialog-desc">核心将永久改变老虎机规则或军团战斗机制，构筑你的专属流派！</p>
       <div class="core-choices" id="core-choices"></div>
+      <div class="dialog-footer" style="margin-top:0.75rem">
+        <span class="rig-gold" id="core-reroll-info"></span>
+        <button id="btn-core-reroll" class="secondary-btn" type="button">🔄 刷新核心（免费）</button>
+      </div>
     </div>
   </dialog>
 

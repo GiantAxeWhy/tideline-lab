@@ -381,42 +381,42 @@
   ];
 
   const SYNERGIES = {
-    knight: { name: "钢铁防线", req: 2, desc: "2+ 步兵：全军开局获得 +35 护盾" },
-    archer: { name: "箭雨齐发", req: 2, desc: "2+ 弓手：全军攻击速度 +18%" },
-    mage: { name: "奥术共鸣", req: 2, desc: "2+ 法师：全军技能与法术伤害 +25%" },
-    priest: { name: "圣光庇护", req: 2, desc: "2+ 祭司：全军每 2 秒回复 4% 最大生命" },
-    assassin: { name: "致命突袭", req: 2, desc: "2+ 刺客：全军暴击率 +18%" },
-    valkyrie: { name: "铁骑冲锋", req: 2, desc: "2+ 骑兵：全军移速 +18%，对护盾伤害 +40%" }
+    knight: { name: "钢铁防线", req: 2, types: ["knight", "frost_warden", "sun_templar"], desc: "2+ 不同重装坦克：全军开局获得 +35 护盾（同兵种不叠加）" },
+    archer: { name: "箭雨齐发", req: 2, types: ["archer", "engineer"], desc: "2+ 不同远程射手：全军攻击速度 +18%（同兵种不叠加）" },
+    mage: { name: "奥术共鸣", req: 2, types: ["mage", "necromancer", "chrono_mage", "void_emperor"], desc: "2+ 不同法系单位：全军技能与法术伤害 +25%（同兵种不叠加）" },
+    priest: { name: "圣光庇护", req: 2, types: ["priest", "bard"], desc: "2+ 不同辅助支援：全军每 2 秒回复 4% 最大生命（同兵种不叠加）" },
+    assassin: { name: "致命突袭", req: 2, types: ["assassin", "shadow_blade"], desc: "2+ 不同刺客单位：全军暴击率 +18%（同兵种不叠加）" },
+    valkyrie: { name: "铁骑冲锋", req: 2, types: ["valkyrie", "berserker", "astral_valkyrie"], desc: "2+ 不同冲锋狂战：全军移速 +18%，破盾 +40%（同兵种不叠加）" }
   };
 
   const FACTION_SYNERGIES = {
     alliance: {
       name: "圣辉联盟", short: "联盟",
-      types: ["knight", "priest", "valkyrie"],
+      types: ["knight", "priest", "valkyrie", "sun_templar", "astral_valkyrie"],
       color: "#f8e296",
-      desc: "2名 2★+：护盾 +35% 且破盾反弹圣伤",
-      enhanced: "3名 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
+      desc: "2名不同 2★+：护盾 +35% 且破盾反弹圣伤（同兵种不叠加）",
+      enhanced: "3名不同 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
     },
     elves: {
       name: "银月精灵", short: "精灵",
-      types: ["archer", "mage", "priest"],
+      types: ["archer", "mage", "bard", "chrono_mage"],
       color: "#7be7ff",
-      desc: "2名 2★+：全军攻速 +18%，每 4 击触发星落爆裂",
-      enhanced: "3名 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币"
+      desc: "2名不同 2★+：全军攻速 +18%，每 4 击触发星落爆裂（同兵种不叠加）",
+      enhanced: "3名不同 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币"
     },
     horde: {
       name: "赤血部落", short: "部落",
-      types: ["assassin", "valkyrie", "archer"],
+      types: ["assassin", "berserker", "engineer", "frost_warden"],
       color: "#ff7a6b",
-      desc: "2名 2★+：全军暴击吸血 22%，暴击率 +12%",
-      enhanced: "3名 2★+：全军暴击吸血 38%，全军攻击 +25%"
+      desc: "2名不同 2★+：全军暴击吸血 22%，暴击率 +12%（同兵种不叠加）",
+      enhanced: "3名不同 2★+：全军暴击吸血 38%，全军攻击 +25%"
     },
     undead: {
       name: "幽冥议会", short: "幽冥",
-      types: ["mage", "assassin", "knight"],
+      types: ["necromancer", "shadow_blade", "void_emperor"],
       color: "#a8ffcf",
-      desc: "2名 2★+：全军技能伤害 +20%，受击反伤 +15%",
-      enhanced: "3名 2★+：技能伤害 +40%，每击杀敌军全军回血 8%"
+      desc: "2名不同 2★+：全军技能伤害 +20%，受击反伤 +15%（同兵种不叠加）",
+      enhanced: "3名不同 2★+：技能伤害 +40%，每击杀敌军全军回血 8%"
     }
   };
 
@@ -519,22 +519,37 @@
     }
   };
 
-  // Level 30 (and 60) Master Awakening 3-choice buffs tailored by role!
+  // Expanded Level 30 (and 60/90) Master Awakening Pools (8 unique buffs per role -> random 3-choice!)
   const MASTERY_BUFFS = {
     assassin: [
       { id: "isolation", name: "孤立无援", icon: "🐺", desc: "目标周围 95px 内无其他敌军时，伤害 +65% 且必定暴击！" },
       { id: "shadow_double", name: "暗影连斩", icon: "⚔️", desc: "暴击时有 45% 概率瞬间追加一次 80% 伤害的影刃连斩！" },
-      { id: "phantom_cloak", name: "影遁吸血", icon: "🦇", desc: "开局跃迁切后排获得 2.5 秒 45% 减伤，并永久获得 +28% 吸血！" }
+      { id: "phantom_cloak", name: "影遁吸血", icon: "🦇", desc: "开局跃迁切后排获得 2.5 秒 45% 减伤，并永久获得 +28% 吸血！" },
+      { id: "execute_mark", name: "死神印记", icon: "💀", desc: "对生命低于 45% 的敌军造成 +75% 斩杀伤害！" },
+      { id: "blood_rush", name: "嗜血疾步", icon: "💨", desc: "移速 +40%，攻速 +28%，暴击率 +18%！" },
+      { id: "venom_blade", name: "淬毒暗刃", icon: "🧪", desc: "攻击永久附加破盾 2× 效果与 35% 攻击力加成！" },
+      { id: "shadow_shield", name: "幻影护幕", icon: "🌑", desc: "开局获得 40% 最大生命暗影护盾，最大生命 +25%！" },
+      { id: "bounty_killer", name: "赏金刺客", icon: "🪙", desc: "自身攻击 +32%，每击杀 1 名敌军额外爆出 +6 金币！" }
     ],
     front: [
       { id: "titan_body", name: "泰坦之躯", icon: "🗿", desc: "最大生命永久 +45%，碰撞质量翻倍，稳如磐石挡住敌军！" },
       { id: "thorn_armor", name: "真实反甲", icon: "🦔", desc: "受击反弹 40% 伤害给攻击者，且开局额外 +35% 护盾！" },
-      { id: "aegis_heart", name: "不屈壁垒", icon: "💠", desc: "自身获得的所有护盾效果 +65%，每 4 秒自动回复 10% 生命！" }
+      { id: "aegis_heart", name: "不屈壁垒", icon: "💠", desc: "自身获得的所有护盾效果 +65%，每 4 秒自动回复 10% 生命！" },
+      { id: "war_berserk", name: "狂战血脉", icon: "🔥", desc: "攻击力 +35%，普攻自带 22% 吸血，能抗能打！" },
+      { id: "shock_slam", name: "震地猛击", icon: "🔨", desc: "攻击力 +28%，最大生命 +30%，移速 +25%！" },
+      { id: "iron_will", name: "钢铁意志", icon: "🛡️", desc: "全伤害减免 20%，开局额外 +50% 最大生命护盾！" },
+      { id: "vanguard_fury", name: "先锋怒吼", icon: "📣", desc: "攻击速度 +30%，暴击率 +20%，撕碎敌方前排！" },
+      { id: "phoenix_core", name: "不死鸟之心", icon: "🐦‍🔥", desc: "每战首次受致命伤锁血无敌 2.5 秒并回复 35% 生命！" }
     ],
     ranged: [
       { id: "overdrive_shot", name: "超载射击", icon: "🎯", desc: "攻击距离 +65px，攻击速度永久 +30%！" },
       { id: "arcane_overload", name: "奥术过载", icon: "🔮", desc: "攻击与所有继承技能伤害永久 +45%！" },
-      { id: "holy_resonance", name: "神圣共鸣", icon: "✨", desc: "暴击率 +22%，每次攻击有 35% 概率为血量最低友军叠盾回血！" }
+      { id: "holy_resonance", name: "神圣共鸣", icon: "✨", desc: "暴击率 +22%，每次攻击有 35% 概率为血量最低友军叠盾回血！" },
+      { id: "piercing_eye", name: "破魔鹰眼", icon: "👁️", desc: "暴击率 +30%，攻击力 +28%，射程 +45px！" },
+      { id: "mana_barrier", name: "奥术护盾", icon: "🔵", desc: "开局获得 45% 最大生命法力护盾，最大生命 +30%！" },
+      { id: "rapid_chant", name: "极速咏唱", icon: "⚡", desc: "攻击速度永久 +38%，移速 +20%！" },
+      { id: "giant_slayer", name: "巨人杀手", icon: "🏹", desc: "对 Boss 与重装坦克伤害 +55%，攻击 +22%！" },
+      { id: "golden_blessing", name: "星陨赐福", icon: "🌟", desc: "生命 +28%、攻击 +28%、暴击 +15% 全能强化！" }
     ]
   };
 
@@ -685,11 +700,11 @@
       desc: "全军暴击率 +20%，暴击伤害从 165% 提升至 210%。"
     },
     {
-      id: "interest_ledger",
-      name: "复利账本",
-      rarity: "common",
-      icon: "📜",
-      desc: "每波胜利后，每持有 20 金币额外产生 +5 金币利息（上限 +45）。"
+      id: "reel_oracle",
+      name: "透视魔眼",
+      rarity: "rare",
+      icon: "👁️",
+      desc: "解锁轮盘顶部【下一格预告】，并在单列下调可触发连线时高亮提示！"
     },
     {
       id: "berserk_banner",
@@ -1428,6 +1443,12 @@
     run.totalGoldSpentOnSpins ??= 0;
     run.nextCoreMilestoneIdx ??= 0;
     run.pendingMastery ??= [];
+    run.overflowUnits ??= [];
+    run.overflowUnits.forEach(u => ensureUnitSkillState(u));
+    const Meta = globalThis.SlotboundMeta;
+    const meta = Meta ? Meta.loadMeta() : null;
+    run.freeCoreRerolls ??= Math.min(3, 1 + (meta?.upgrades?.coreReroll || 0));
+    run.paidCoreRerolls ??= 0;
     run.shopBoughtThisWave ??= false;
     if (!run.sideQuest) assignSideQuest(run);
     run.pendingShop ??= null;
@@ -1665,14 +1686,14 @@
         purpleBonus += stacks * 0.02 * rollerLv;
       }
     }
-    if ((meta?.upgrades?.heroArchive || 0) >= 4) goldBonus += 0.003;
-
-    if (maxTier < 5) { base.gold = 0; goldBonus = 0; }
-    if (maxTier < 4) { base.purple = 0; purpleBonus = 0; }
-    if (maxTier < 3) { base.blue = 0; }
+    const archiveLv = meta?.upgrades?.heroArchive || 0;
+    if (archiveLv > 0) {
+      goldBonus += archiveLv * 0.0025;
+      purpleBonus += archiveLv * 0.015;
+    }
 
     base.gold = Math.min(0.18, (base.gold || 0) + (base.gold > 0 || (run?.reelLevel || 1) >= 4 ? goldBonus : 0));
-    base.purple = Math.min(0.40, (base.purple || 0) + (base.purple > 0 || (run?.reelLevel || 1) >= 3 ? purpleBonus : 0));
+    base.purple = Math.min(0.42, (base.purple || 0) + (base.purple > 0 || (run?.reelLevel || 1) >= 3 ? purpleBonus : 0));
 
     // Rebalance white down so total sums to 1.0 cleanly
     const highSum = base.green + base.blue + base.purple + base.gold;
@@ -1735,14 +1756,14 @@
   };
 
   const UNIT_TRAITS = {
-    gem_donor: { id: "gem_donor", name: "源晶矿脉", badge: "💎吞噬+1~5晶", color: "#7be7ff", desc: "被吞噬或合星消耗时，随机爆出 1~5 颗命运水晶！" },
-    gold_donor: { id: "gold_donor", name: "黄金血脉", badge: "🪙吞噬+30G", color: "#ffd86b", desc: "被吞噬、合星消耗或出售时，额外爆出 +30 金币！" },
-    swift_soul: { id: "swift_soul", name: "疾风之魂", badge: "⚡攻速+16%", color: "#5ce1ff", desc: "天生迅捷，自身攻击速度永久 +16%。" },
-    iron_skin: { id: "iron_skin", name: "秘银之躯", badge: "🛡️血+22%", color: "#4fd1a5", desc: "天生铁骨，最大生命 +22% 且开局自带 +25 护盾。" },
-    fierce_blade: { id: "fierce_blade", name: "嗜血锋芒", badge: "⚔️攻+18%", color: "#ff7a6b", desc: "天生战狂，自身攻击力永久 +18%。" },
-    lucky_eye: { id: "lucky_eye", name: "鹰眼致命", badge: "🎯暴击+14%", color: "#f7cf6d", desc: "精准致命，自身暴击率永久 +14%。" },
-    vampiric: { id: "vampiric", name: "血族契约", badge: "🩸吸血15%", color: "#ff5c8a", desc: "普攻自带 15% 生命偷取，续航极强。" },
-    xp_seed: { id: "xp_seed", name: "传承火种", badge: "🔥吞噬强育", color: "#b78bfa", desc: "被吞噬时，为主体额外提供 +2 经验、+20 生命、+5 攻击！" }
+    gem_donor:    { id: "gem_donor",    name: "源晶矿脉", min: 1,  max: 5,  color: "#7be7ff", badge: v => `💎吞噬+${v}晶`, desc: v => `被吞噬消耗时，额外爆出 +${v} 颗命运水晶！` },
+    gold_donor:   { id: "gold_donor",   name: "黄金血脉", min: 18, max: 45, color: "#ffd86b", badge: v => `🪙吞噬+${v}G`, desc: v => `被吞噬或出售时，额外爆出 +${v} 金币！` },
+    swift_soul:   { id: "swift_soul",   name: "疾风之魂", min: 10, max: 24, color: "#5ce1ff", badge: v => `⚡攻速+${v}%`, desc: v => `天生迅捷，自身攻速与移速永久 +${v}%。` },
+    iron_skin:    { id: "iron_skin",    name: "秘银之躯", min: 14, max: 32, color: "#4fd1a5", badge: v => `🛡️血+${v}%`,   desc: v => `天生铁骨，最大生命 +${v}% 且开局自带 +${v + 8} 护盾。` },
+    fierce_blade: { id: "fierce_blade", name: "嗜血锋芒", min: 12, max: 26, color: "#ff7a6b", badge: v => `⚔️攻+${v}%`,   desc: v => `天生战狂，自身攻击力永久 +${v}%。` },
+    lucky_eye:    { id: "lucky_eye",    name: "鹰眼致命", min: 8,  max: 20, color: "#f7cf6d", badge: v => `🎯暴击+${v}%`, desc: v => `精准致命，自身暴击率永久 +${v}%。` },
+    vampiric:     { id: "vampiric",     name: "血族契约", min: 10, max: 24, color: "#ff5c8a", badge: v => `🩸吸血${v}%`,  desc: v => `普攻自带 ${v}% 生命偷取，续航极强。` },
+    xp_seed:      { id: "xp_seed",      name: "传承火种", min: 1,  max: 3,  color: "#b78bfa", badge: v => `🔥吞噬+${v}级`, desc: v => `被吞噬时，为主体额外再升 +${v} 级并 +${v * 12} 血/+${v * 3} 攻！` }
   };
   const UNIT_TRAIT_IDS = Object.keys(UNIT_TRAITS);
 
@@ -1750,22 +1771,44 @@
     return UNIT_TRAIT_IDS[Math.floor(Math.random() * UNIT_TRAIT_IDS.length)];
   }
 
+  function rollUnitTraitVal(traitId) {
+    const t = UNIT_TRAITS[traitId];
+    if (!t) return 0;
+    return t.min + Math.floor(Math.random() * (t.max - t.min + 1));
+  }
+
+  function getUnitTraitDisplay(unit) {
+    if (!unit?.trait || !UNIT_TRAITS[unit.trait]) return null;
+    const t = UNIT_TRAITS[unit.trait];
+    const v = Number.isFinite(unit.traitVal) ? unit.traitVal : Math.round((t.min + t.max) / 2);
+    return {
+      id: t.id,
+      name: t.name,
+      color: t.color,
+      val: v,
+      badge: typeof t.badge === "function" ? t.badge(v) : t.badge,
+      desc: typeof t.desc === "function" ? t.desc(v) : t.desc
+    };
+  }
+
   function triggerConsumedTrait(run, unit, target) {
     if (!unit?.trait) return "";
+    const disp = getUnitTraitDisplay(unit);
+    const val = disp ? disp.val : 1;
     if (unit.trait === "gem_donor") {
-      const gems = 1 + Math.floor(Math.random() * 5);
-      run.crystals = (run.crystals || 0) + gems;
-      return `源晶矿脉爆出 +${gems} 颗水晶！`;
+      run.crystals = (run.crystals || 0) + val;
+      return `源晶矿脉爆出 +${val} 颗水晶！`;
     }
     if (unit.trait === "gold_donor") {
-      run.gold += 30;
-      return "黄金血脉爆出 +30 金币！";
+      run.gold += val;
+      return `黄金血脉爆出 +${val} 金币！`;
     }
     if (unit.trait === "xp_seed" && target) {
-      target.xp = (target.xp || 0) + 2;
-      target.bonusHp = (target.bonusHp || 0) + 20;
-      target.bonusAtk = (target.bonusAtk || 0) + 5;
-      return "传承火种：+2 经验/+20 血/+5 攻！";
+      target.heroLv = (target.heroLv || 1) + val;
+      target.xp = (target.xp || 0) + val;
+      target.bonusHp = (target.bonusHp || 0) + val * 12;
+      target.bonusAtk = (target.bonusAtk || 0) + val * 3;
+      return `传承火种触发：额外 +${val} 级/+${val * 12} 血/+${val * 3} 攻！`;
     }
     return "";
   }
@@ -1785,6 +1828,9 @@
       unit.skills = [{ id: innate.id, level: 1 }];
     }
     unit.evolution3 ??= null;
+    if (unit.trait && !Number.isFinite(unit.traitVal)) {
+      unit.traitVal = rollUnitTraitVal(unit.trait);
+    }
     unit.stars = calcUnitStars(unit, unit.heroLv);
     return unit;
   }
@@ -1793,6 +1839,7 @@
     const innate = getInnateSkill(type);
     const rarity = opts.rarity && UNIT_RARITIES[opts.rarity] ? opts.rarity : (UNIT_RARITY_MAP[type] || "white");
     const startLv = Math.max(1, opts.heroLv || (1 + Math.floor((opts.xp || 0) / 2)));
+    const trait = opts.trait === undefined ? rollUnitTrait() : opts.trait;
     return {
       id,
       type,
@@ -1801,7 +1848,8 @@
       stars: calcUnitStars({ type, rarity }, startLv),
       xp: opts.xp || 0,
       skills: opts.skills ? opts.skills.map(s => ({ ...s })) : [{ id: innate.id, level: 1 }],
-      trait: opts.trait === undefined ? rollUnitTrait() : opts.trait,
+      trait,
+      traitVal: opts.traitVal ?? (trait ? rollUnitTraitVal(trait) : 0),
       evolution: opts.evolution || null,
       evolution3: opts.evolution3 || null,
       lucky: !!opts.lucky,
@@ -1906,12 +1954,24 @@
       crit += [0.10, 0.18, 0.26, 0.35, 0.45][Math.min(5, shadowSkill.level) - 1] || 0;
     }
 
-    // Apply Level 30/60 Master Awakening Buffs
+    // Apply Level 30/60/90 Master Awakening Buffs
     const masteries = unit.masteryBuffs || [];
     if (masteries.includes("titan_body")) hp *= 1.45;
     if (masteries.includes("overdrive_shot")) { range += 65; atkCd *= 0.77; }
     if (masteries.includes("arcane_overload")) atk *= 1.45;
     if (masteries.includes("holy_resonance")) crit += 0.22;
+    if (masteries.includes("blood_rush")) { moveSpd *= 1.4; atkCd *= 0.78; crit += 0.18; }
+    if (masteries.includes("venom_blade")) atk *= 1.35;
+    if (masteries.includes("shadow_shield")) hp *= 1.25;
+    if (masteries.includes("bounty_killer")) atk *= 1.32;
+    if (masteries.includes("war_berserk")) atk *= 1.35;
+    if (masteries.includes("shock_slam")) { atk *= 1.28; hp *= 1.3; moveSpd *= 1.25; }
+    if (masteries.includes("vanguard_fury")) { atkCd *= 0.77; crit += 0.2; }
+    if (masteries.includes("piercing_eye")) { crit += 0.3; atk *= 1.28; range += 45; }
+    if (masteries.includes("mana_barrier")) hp *= 1.3;
+    if (masteries.includes("rapid_chant")) { atkCd *= 0.72; moveSpd *= 1.2; }
+    if (masteries.includes("giant_slayer")) atk *= 1.22;
+    if (masteries.includes("golden_blessing")) { hp *= 1.28; atk *= 1.28; crit += 0.15; }
 
     // Skill Resonator core & Void Omnipotent evo
     if (run && coreLevel(run, "skill_resonator") > 0) {
@@ -1939,10 +1999,11 @@
       else if (fMap.elves >= 2) atkCd *= 0.85;
     }
 
-    if (unit.trait === "swift_soul") { atkCd *= 0.84; moveSpd *= 1.15; }
-    if (unit.trait === "iron_skin") hp *= 1.22;
-    if (unit.trait === "fierce_blade") atk *= 1.18;
-    if (unit.trait === "lucky_eye") crit += 0.14;
+    const tVal = Number.isFinite(unit.traitVal) ? unit.traitVal : 15;
+    if (unit.trait === "swift_soul") { atkCd *= (1 - tVal / 100); moveSpd *= (1 + tVal / 100); }
+    if (unit.trait === "iron_skin") hp *= (1 + tVal / 100);
+    if (unit.trait === "fierce_blade") atk *= (1 + tVal / 100);
+    if (unit.trait === "lucky_eye") crit += (tVal / 100);
 
     if (unit.lucky) {
       hp *= 1.12;
@@ -2011,17 +2072,18 @@
   }
 
   function getActiveSynergies(run) {
-    const counts = {};
-    for (const u of run.field) {
-      if (!u) continue;
-      counts[u.type] = (counts[u.type] || 0) + 1;
-    }
-    return Object.entries(SYNERGIES).map(([type, info]) => ({
-      type,
-      ...info,
-      count: counts[type] || 0,
-      active: (counts[type] || 0) >= info.req
-    }));
+    // Count UNIQUE hero types per class family so duplicate heroes NEVER stack!
+    const uniqueTypes = new Set(run.field.filter(Boolean).map(u => u.type));
+    return Object.entries(SYNERGIES).map(([type, info]) => {
+      const members = info.types || [type];
+      const count = members.filter(t => uniqueTypes.has(t)).length;
+      return {
+        type,
+        ...info,
+        count,
+        active: count >= info.req
+      };
+    });
   }
 
   function createRun(opts = {}) {
@@ -2067,6 +2129,9 @@
       unlockedFieldSlots: startUnlockedField,
       field,
       bench: Array(BENCH_SLOTS).fill(null),
+      overflowUnits: [],
+      freeCoreRerolls: Math.min(3, 1 + (meta?.upgrades?.coreReroll || 0)),
+      paidCoreRerolls: 0,
       board: ["knight", "archer", "mage", "priest", "assassin", "valkyrie", "archer", "mage", "priest"],
       locked: [],
       lastLines: [],
@@ -2216,19 +2281,10 @@
         return { placed: "bench", index: i };
       }
     }
-    const allUnits = [...run.field, ...run.bench].filter(Boolean);
-    const same = allUnits.find(u => u.type === unit.type);
-    if (same) {
-      const before = unitLevel(same);
-      same.xp += 1;
-      if (before < 2 && unitLevel(same) >= 2 && !same.evolution && !run.pendingEvolutions.includes(same.id)) {
-        run.pendingEvolutions.push(same.id);
-      }
-      run.gold += 15;
-      return { placed: "overflow_xp", target: same.id, gold: 15 };
-    }
-    run.gold += 25;
-    return { placed: "overflow_gold", gold: 25 };
+    // Never delete overflow units! Place them in overflowUnits queue; player must absorb/sell before next spin or fight!
+    run.overflowUnits ??= [];
+    run.overflowUnits.push(unit);
+    return { placed: "overflow", index: run.overflowUnits.length - 1 };
   }
 
   function awardHits(run, hits, isFever, summary) {
@@ -2346,7 +2402,17 @@
     }
   }
 
+  const MAX_SPINS_PER_WAVE = 5;
+
+  function getMaxSpinsPerWave(run) {
+    const tier = getReelTier(run);
+    const gearLv = coreLevel(run, "free_spin_gear");
+    return MAX_SPINS_PER_WAVE + (tier.bonusSpins || 0) + (gearLv ? gearLv : 0);
+  }
+
   function executeSpin(run) {
+    if ((run.overflowUnits?.length || 0) > 0) return null;
+    if ((run.spinsThisWave || 0) >= getMaxSpinsPerWave(run)) return null;
     const cost = getTotalSpinCost(run);
     if (run.gold < cost) return null;
 
@@ -2377,8 +2443,13 @@
       retained.includes(i) ? run.board[i] : rollSymbol(run)
     );
 
-    if ((isFever || (run.spinsThisWave === 1 && hasCore(run, "black_note"))) && !run.locked.includes(4)) {
-      nextBoard[4] = "joker";
+    // Fever / Black Note places a guaranteed Wild at a RANDOM unlocked cell (no longer hardcoded to center cell 4!)
+    if (isFever || (run.spinsThisWave === 1 && hasCore(run, "black_note"))) {
+      const openCells = Array.from({ length: 9 }, (_, i) => i).filter(i => !run.locked.includes(i));
+      if (openCells.length > 0) {
+        const randCell = openCells[Math.floor(Math.random() * openCells.length)];
+        nextBoard[randCell] = "joker";
+      }
     }
 
     run.board = nextBoard;
@@ -2524,6 +2595,8 @@
     if (fIdx !== -1) return { area: "field", index: fIdx, unit: run.field[fIdx] };
     const bIdx = run.bench.findIndex(u => u && u.id === unitId);
     if (bIdx !== -1) return { area: "bench", index: bIdx, unit: run.bench[bIdx] };
+    const oIdx = (run.overflowUnits || []).findIndex(u => u && u.id === unitId);
+    if (oIdx !== -1) return { area: "overflow", index: oIdx, unit: run.overflowUnits[oIdx] };
     return null;
   }
 
@@ -2597,13 +2670,19 @@
 
     const beforeHeroLv = target.heroLv || 1;
     const tomeBonus = coreLevel(run, "mastery_tome") > 0 ? 1 : 0;
-    target.heroLv = beforeHeroLv + lvGain + (mode === "feed" ? tomeBonus : 0);
-    target.xp = (target.xp || 0) + lvGain;
+    const extraFeedLv = mode === "feed" ? tomeBonus : 0;
+    target.heroLv = beforeHeroLv + lvGain + extraFeedLv;
+    target.xp = (target.xp || 0) + lvGain + extraFeedLv;
     if (donor.lucky) target.lucky = true;
+
+    // Trigger consumed donor trait BEFORE recalculating stars & Lv.30 mastery so xp_seed bonus levels immediately count!
+    const traitBonus = triggerConsumedTrait(run, donor, target);
+    const totalLvGain = (target.heroLv || 1) - beforeHeroLv;
+
     // Rarity NEVER changes from absorbing! Only level & stars progress within the hero's own rarity!
     target.stars = calcUnitStars(target, target.heroLv);
 
-    // Every 30 levels (Lv.30, Lv.60...), trigger a 3-choice Master Awakening Buff!
+    // Every 30 levels (Lv.30, Lv.60, Lv.90...), sample 3 random unowned buffs from the expanded 8-buff role pool!
     const beforeMasteryTier = Math.floor(beforeHeroLv / 30);
     const afterMasteryTier = Math.floor(target.heroLv / 30);
     if (afterMasteryTier > beforeMasteryTier) {
@@ -2614,16 +2693,16 @@
         run.pendingMastery.push({
           unitId: target.id,
           level: afterMasteryTier * 30,
-          options: pool.slice(0, 3)
+          options: sample(pool, 3)
         });
       }
     }
 
-    const traitBonus = triggerConsumedTrait(run, donor, target);
     const inherited = [skillSummary, traitBonus].filter(Boolean).join(" · ");
 
     if (dLoc.area === "field") run.field[dLoc.index] = null;
-    else run.bench[dLoc.index] = null;
+    else if (dLoc.area === "bench") run.bench[dLoc.index] = null;
+    else if (dLoc.area === "overflow") run.overflowUnits.splice(dLoc.index, 1);
     run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== donor.id);
 
     run.totalAbsorbs += 1;
@@ -2639,8 +2718,8 @@
 
     return {
       target,
-      xpGain: lvGain,
-      lvGain,
+      xpGain: totalLvGain,
+      lvGain: totalLvGain,
       beforeStars,
       afterStars,
       sameClass: target.type === donor.type,
@@ -2653,13 +2732,15 @@
     const loc = findUnitLocation(run, unitId);
     if (!loc) return 0;
     const deployedCount = run.field.filter(Boolean).length;
-    if (loc.area === "field" && deployedCount <= 1 && run.bench.every(u => !u)) {
+    if (loc.area === "field" && deployedCount <= 1 && run.bench.every(u => !u) && (run.overflowUnits?.length || 0) === 0) {
       return 0; // Keep at least 1 unit alive
     }
-    const value = 15 + loc.unit.xp * 10 + (loc.unit.trait === "gold_donor" ? 30 : 0);
+    const goldTraitVal = loc.unit.trait === "gold_donor" ? (getUnitTraitDisplay(loc.unit)?.val || 25) : 0;
+    const value = 15 + (loc.unit.xp || 0) * 10 + goldTraitVal;
     run.gold += value;
     if (loc.area === "field") run.field[loc.index] = null;
-    else run.bench[loc.index] = null;
+    else if (loc.area === "bench") run.bench[loc.index] = null;
+    else if (loc.area === "overflow") run.overflowUnits.splice(loc.index, 1);
     run.pendingEvolutions = run.pendingEvolutions.filter(id => id !== unitId);
     return value;
   }
@@ -2828,6 +2909,29 @@
     return true;
   }
 
+  function getCoreRerollCost(run) {
+    if ((run.freeCoreRerolls || 0) > 0) return 0;
+    return 2 * ((run.paidCoreRerolls || 0) + 1);
+  }
+
+  function rerollCoreChoices(run) {
+    if (!run.pendingCoreChoices || run.pendingCoreChoices.length === 0) return false;
+    const cost = getCoreRerollCost(run);
+    if (cost > 0) {
+      if ((run.crystals || 0) < cost) return false;
+      run.crystals -= cost;
+      run.paidCoreRerolls = (run.paidCoreRerolls || 0) + 1;
+    } else {
+      run.freeCoreRerolls = Math.max(0, (run.freeCoreRerolls || 0) - 1);
+    }
+    const prev = new Set(run.pendingCoreChoices);
+    let next = draftCoreChoices(run);
+    // Try once more to avoid identical set
+    if (next.every(id => prev.has(id))) next = draftCoreChoices(run);
+    run.pendingCoreChoices = next;
+    return true;
+  }
+
   const ENCOUNTERS = {
     cede: { name: "赌命祭坛", desc: "牺牲 1 点城防，获得一枚未持有的传说核心和 100 金币。核心槽满时替换一枚较低稀有度核心。" },
     safe: { name: "祭坛赠礼", desc: "领取 35 金币。" },
@@ -2890,9 +2994,12 @@
     } else if (id === "mirror") {
       const index = run.bench.slice(0, run.unlockedBenchSlots).indexOf(null);
       const strongest = run.field.filter(Boolean).sort((a, b) => unitPower(b, run) - unitPower(a, run))[0];
-      const copy = { ...strongest, id: run.nextId++ };
+      // Deep clone so skills, masteryBuffs, and pos are 100% independent!
+      const copy = JSON.parse(JSON.stringify(strongest));
+      copy.id = run.nextId++;
+      delete copy.pos;
       run.bench[index] = copy;
-      if (unitLevel(copy) >= 2 && !copy.evolution) run.pendingEvolutions.push(copy.id);
+      if (getEvolutionChoices(copy)) run.pendingEvolutions.push(copy.id);
     } else if (id === "runes") {
       const empty = run.cellEnchants.flatMap((enchant, index) => !enchant ? [index] : []);
       const existing = run.cellEnchants.flatMap((enchant, index) => enchant && enchant !== "double" ? [index] : []);
@@ -2924,9 +3031,11 @@
     const endless = run.mode === "endless";
     let reward = (won ? waveDef.reward : Math.round(waveDef.reward * 0.65)) + (battle.gold ?? 0);
     let interest = 0;
-    const ledgerLv = coreLevel(run, "interest_ledger");
-    if (won && ledgerLv) {
-      interest = Math.min(45 + (ledgerLv - 1) * 25, Math.floor(run.gold / 20) * 5);
+    const MetaForBank = globalThis.SlotboundMeta;
+    const bankLv = MetaForBank ? (MetaForBank.loadMeta()?.upgrades?.interestBank || 0) : 0;
+    if (won && bankLv > 0) {
+      const cap = [0, 15, 25, 35, 50][bankLv] || 15;
+      interest = Math.min(cap, Math.floor(run.gold / 20) * (1 + bankLv));
       reward += interest;
     }
     run.gold += reward;
@@ -3079,6 +3188,11 @@
     nextStarLevel,
     ensureUnitSkillState,
     UNIT_TRAITS,
+    getUnitTraitDisplay,
+    MAX_SPINS_PER_WAVE,
+    getMaxSpinsPerWave,
+    getCoreRerollCost,
+    rerollCoreChoices,
     createUnit,
     unitLevel,
     nextStarXp,

@@ -2085,3 +2085,18 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ===== OVERFLOW QUEUE (超编暂存区) ===== */
+.overflow-box {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: rgba(58, 38, 14, 0.45);
+  border: 2px dashed #ffd86b;
+  border-radius: 3px;
+}
+.overflow-box[hidden] { display: none !important; }
+.overflow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.42rem;
+}

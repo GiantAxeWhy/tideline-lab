@@ -223,9 +223,12 @@
     $("enemy-warning").hidden = !waveDef.enemies.some(enemy => enemy.tactic === "backline_diver");
     if (!busy) renderReinforcements(0, waveDef.phases.length, 0, waveDef.phases.at(-1).delay, 0);
 
-    const canFight = !busy && !run.outcome && run.field.some(Boolean);
+    const hasOverflow = (run.overflowUnits?.length || 0) > 0;
+    const canFight = !busy && !run.outcome && run.field.some(Boolean) && !hasOverflow;
     $("btn-fight").disabled = !canFight;
-    $("btn-fight").lastElementChild.textContent = arena.mode === "fighting" ? "激战中…" : "开战迎敌";
+    $("btn-fight").lastElementChild.textContent = arena.mode === "fighting"
+      ? "激战中…"
+      : hasOverflow ? "超编待清理" : "开战迎敌";
   }
 
   function renderReinforcements(count, total, time, lastDelay, nextDelay) {
@@ -308,28 +311,32 @@
       </button>`;
     }).join("");
 
-    // Top incoming symbol preview + bottom Nudge buttons (with glowing "可连线！" highlight!)
+    // Top incoming symbol preview & winning-nudge hint ONLY unlocked via Core 【透视魔眼 (reel_oracle)】!
+    const hasOracle = G.hasCore(run, "reel_oracle");
     const preview = run.nudgePreview || ["knight", "archer", "mage"];
     const nudgeCost = G.getNudgeCost ? G.getNudgeCost(run) : ((run.nudgesLeft || 0) > 0 ? 0 : 10);
     const canNudge = !busy && !run.outcome && nudgeCost !== null && (nudgeCost === 0 || run.gold >= nudgeCost);
-    const winCols = (canNudge && G.getWinningNudgeCols) ? G.getWinningNudgeCols(run) : [];
+    const winCols = (hasOracle && canNudge && G.getWinningNudgeCols) ? G.getWinningNudgeCols(run) : [];
 
-    $("nudge-preview-row").innerHTML = [0, 1, 2].map(col => {
-      const inc = preview[col] || "knight";
-      const sym = G.SYMBOLS[inc] || G.SYMBOLS.knight;
-      const isHot = winCols.includes(col);
-      return `<div class="preview-chip${isHot ? " hot" : ""}" style="--sym-color:${sym.color}" title="下调第 ${col + 1} 列将从顶部顶入【${sym.name}】">
-        <span>↓</span>
-        ${Art.renderPortraitImg(inc, sym.short, "")}
-        <span>${sym.short}</span>
-      </div>`;
-    }).join("");
+    $("nudge-preview-row").hidden = !hasOracle;
+    if (hasOracle) {
+      $("nudge-preview-row").innerHTML = [0, 1, 2].map(col => {
+        const inc = preview[col] || "knight";
+        const sym = G.SYMBOLS[inc] || G.SYMBOLS.knight;
+        const isHot = winCols.includes(col);
+        return `<div class="preview-chip${isHot ? " hot" : ""}" style="--sym-color:${sym.color}" title="透视魔眼：下调第 ${col + 1} 列将顶入【${sym.name}】">
+          <span>↓</span>
+          ${Art.renderPortraitImg(inc, sym.short, "")}
+          <span>${sym.short}</span>
+        </div>`;
+      }).join("");
+    }
 
     $("nudge-row").innerHTML = [0, 1, 2].map(col => {
       const inc = preview[col] || "knight";
-      const isHot = winCols.includes(col);
+      const isHot = hasOracle && winCols.includes(col);
       const costTag = nudgeCost === null ? "本转已满" : nudgeCost === 0 ? "免费" : `${nudgeCost}G`;
-      return `<button type="button" class="nudge-btn${isHot ? " hot" : ""}" data-nudge="${col}" title="将第 ${col + 1} 列往下调 1 格，顶入【${G.SYMBOLS[inc].name}】（${nudgeCost === null ? "本转付费微调已达上限，请重新转动轮盘" : nudgeCost === 0 ? `免费剩余 ${run.nudgesLeft} 次` : `花费 ${nudgeCost} 金币`}）"${canNudge ? "" : " disabled"}>
+      return `<button type="button" class="nudge-btn${isHot ? " hot" : ""}" data-nudge="${col}" title="将第 ${col + 1} 列往下调 1 格${hasOracle ? `（顶入【${G.SYMBOLS[inc].name}】）` : ""}（${nudgeCost === null ? "本转付费微调已达上限" : nudgeCost === 0 ? `免费剩余 ${run.nudgesLeft} 次` : `花费 ${nudgeCost} 金币`}）"${canNudge ? "" : " disabled"}>
         <span>${isHot ? "↓ 可连线!" : `↓ 下调(${costTag})`}</span>
       </button>`;
     }).join("");
@@ -350,11 +357,19 @@
     const totalCost = G.getTotalSpinCost(run);
     const lockCost = G.getLockCost(run);
     const maxLocks = G.getMaxLocks(run);
-    const disabledSpin = busy || !!run.outcome || run.gold < totalCost;
+    const maxSpinsWave = G.getMaxSpinsPerWave ? G.getMaxSpinsPerWave(run) : 5;
+    const spinsUsed = run.spinsThisWave || 0;
+    const spinCapped = spinsUsed >= maxSpinsWave;
+    const hasOverflow = (run.overflowUnits?.length || 0) > 0;
+    const disabledSpin = busy || !!run.outcome || run.gold < totalCost || spinCapped || hasOverflow;
     $("btn-spin").disabled = disabledSpin;
     $("mech-lever").disabled = disabledSpin;
 
-    if (run.feverActive) {
+    if (hasOverflow) {
+      $("spin-cost-label").textContent = "超编待清理";
+    } else if (spinCapped) {
+      $("spin-cost-label").textContent = `本波已满 (${spinsUsed}/${maxSpinsWave})`;
+    } else if (run.feverActive) {
       $("spin-cost-label").textContent = totalCost > 0 ? `狂热 + 锁 ${totalCost}G` : "狂热免费！";
     } else if (run.freeSpins > 0 && run.locked.length === 0) {
       $("spin-cost-label").textContent = `免费 ×${run.freeSpins}`;
@@ -363,7 +378,7 @@
     } else {
       $("spin-cost-label").textContent = `${totalCost} 金币`;
     }
-    $("lock-status").textContent = `锁格 ${run.locked.length} / ${maxLocks}（${lockCost}G/格） · 微调 ${run.nudgesLeft || 0}/1`;
+    $("lock-status").textContent = `本波摇杆 ${spinsUsed}/${maxSpinsWave} · 锁格 ${run.locked.length}/${maxLocks}(${lockCost}G) · 微调 ${run.nudgesLeft || 0}`;
     $("btn-rig").disabled = busy || !!run.outcome;
   }
 
@@ -420,7 +435,7 @@
       : null;
     const isAbsorbCandidate = armyMode === "absorb" && selectedUnit && unit && unit.id !== selectedUnit.id;
 
-    if (!G.isSlotOpen(run, area, index)) {
+    if (area !== "overflow" && !G.isSlotOpen(run, area, index)) {
       const cost = G.slotCost(run, area);
       return `<button type="button" class="unit-slot sealed" data-unlock="${area}" data-index="${index}"
         ${busy || run.outcome || run.crystals < cost ? "disabled" : ""}>
@@ -455,7 +470,7 @@
         : `<span class="u-tag" style="opacity:.52" title="升至 2★ 觉醒【${f.name}】阵营">${f.short}·2★</span>`
     ).join("");
 
-    const trait = unit.trait && G.UNIT_TRAITS ? G.UNIT_TRAITS[unit.trait] : null;
+    const trait = G.getUnitTraitDisplay ? G.getUnitTraitDisplay(unit) : null;
     const traitBadge = trait
       ? `<span class="u-tag" style="border:1px solid ${trait.color};color:${trait.color};background:rgba(12,16,28,0.85)" title="${trait.name}：${trait.desc}">${trait.badge}</span>`
       : "";
@@ -506,13 +521,28 @@
     const benchUsed = run.bench.filter(Boolean).length;
     $("bench-count").textContent = `${benchUsed} / ${run.unlockedBenchSlots}`;
 
+    // Render Overflow Queue (when roster is full, rolled units stay here until absorbed or sold!)
+    const overflow = run.overflowUnits || [];
+    const ob = $("overflow-box");
+    if (ob) {
+      ob.hidden = overflow.length === 0;
+      if (overflow.length > 0) {
+        $("overflow-count").textContent = `${overflow.length} 名待处理`;
+        $("overflow-grid").innerHTML = overflow.map((u, idx) =>
+          renderUnitCard(u, "overflow", idx, "")
+        ).join("");
+      }
+    }
+
     $("btn-mode-absorb").classList.toggle("active", armyMode === "absorb");
     $("army-tip").textContent = armyMode === "absorb"
-      ? "吞噬模式已开启：先点【主体】，再点任意【素材】弹出抉择（或直接将一个兵拖动叠放到另一个兵上）！"
-      : "直接拖拽：上方战场左半区拖动摆位；下方任意两个兵拖动叠在一起即可直接触发吞噬！";
+      ? "吞噬模式已开启：点选或将一个英雄拖动叠放到另一个英雄身上，立即弹出【吞噬融合抉择】！"
+      : "正常模式：上方战场左半区拖动摆位，下方卡片拖动可自由换位/上下阵；需吞噬请点右侧【吞噬模式】！";
 
     const selUnit = selectedSlot
-      ? (selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index])
+      ? (selectedSlot.area === "field" ? run.field[selectedSlot.index]
+        : selectedSlot.area === "bench" ? run.bench[selectedSlot.index]
+        : (run.overflowUnits || [])[selectedSlot.index])
       : null;
     arena.setSelectedUnit(selectedSlot?.area === "field" && selUnit ? selUnit.id : null);
 
@@ -525,7 +555,9 @@
       el.innerHTML = '<div class="inspector-empty">点选任意军团单位查看详细属性、技能与吞噬强化选项。</div>';
       return;
     }
-    const unit = selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index];
+    const unit = selectedSlot.area === "field" ? run.field[selectedSlot.index]
+      : selectedSlot.area === "bench" ? run.bench[selectedSlot.index]
+      : (run.overflowUnits || [])[selectedSlot.index];
     if (!unit) {
       el.innerHTML = '<div class="inspector-empty">已选中空位，再点击任意单位即可将其调动到此位置。</div>';
       return;
@@ -784,7 +816,8 @@
 
   function handleSlotClick(area, index) {
     if (busy || run.outcome) return;
-    const clickedUnit = area === "field" ? run.field[index] : run.bench[index];
+    const getSlotUnit = (a, i) => a === "field" ? run.field[i] : a === "bench" ? run.bench[i] : (run.overflowUnits || [])[i];
+    const clickedUnit = getSlotUnit(area, index);
 
     if (!selectedSlot) {
       if (!clickedUnit) return;
@@ -799,7 +832,7 @@
       return;
     }
 
-    const srcUnit = selectedSlot.area === "field" ? run.field[selectedSlot.index] : run.bench[selectedSlot.index];
+    const srcUnit = getSlotUnit(selectedSlot.area, selectedSlot.index);
 
     if (armyMode === "absorb" && srcUnit && clickedUnit) {
       openAbsorbDialog(srcUnit, clickedUnit);
@@ -1125,6 +1158,26 @@
         checkPendingModals();
       };
     });
+
+    const rerollBtn = $("btn-core-reroll");
+    const rerollInfo = $("core-reroll-info");
+    if (rerollBtn && G.getCoreRerollCost) {
+      const rCost = G.getCoreRerollCost(run);
+      const canReroll = rCost === 0 || (run.crystals || 0) >= rCost;
+      rerollBtn.disabled = !canReroll;
+      rerollBtn.textContent = rCost === 0
+        ? `🔄 刷新核心（免费剩余 ${run.freeCoreRerolls} 次）`
+        : `🔄 刷新核心（消耗 ${rCost} 💎）`;
+      if (rerollInfo) rerollInfo.textContent = `当前水晶：${run.crystals || 0} 💎`;
+      rerollBtn.onclick = () => {
+        if (G.rerollCoreChoices(run)) {
+          SFX.nudge();
+          save();
+          renderTopbar();
+          openCoreDialog();
+        }
+      };
+    }
 
     if (!$("core-dialog").open) $("core-dialog").showModal();
   }
@@ -1507,13 +1560,22 @@
         const toArea = target.dataset.area;
         const toIdx = Number(target.dataset.index);
         if (dragSrc.area === toArea && dragSrc.index === toIdx) return;
-        const donor = dragSrc.area === "field" ? run.field[dragSrc.index] : run.bench[dragSrc.index];
-        const receiver = toArea === "field" ? run.field[toIdx] : run.bench[toIdx];
+        const getU = (a, i) => a === "field" ? run.field[i] : a === "bench" ? run.bench[i] : (run.overflowUnits || [])[i];
+        const donor = getU(dragSrc.area, dragSrc.index);
+        const receiver = getU(toArea, toIdx);
         if (donor && receiver && donor.id !== receiver.id) {
-          // Dragged one hero onto another -> trigger Absorb Choice modal (receiver absorbs donor)!
-          openAbsorbDialog(receiver, donor);
-        } else if (donor && !receiver) {
-          // Dragged hero onto an empty slot -> deploy/bench move
+          if (armyMode === "absorb" || dragSrc.area === "overflow") {
+            // ONLY trigger Absorb Choice modal when Absorb Mode is ON (or dragging an overflow unit onto a hero)!
+            openAbsorbDialog(receiver, donor);
+          } else if (dragSrc.area !== "overflow" && toArea !== "overflow") {
+            // Normal mode: dragging one hero onto another cleanly swaps their slots!
+            if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
+              SFX.lock();
+              save();
+              renderAll();
+            }
+          }
+        } else if (donor && !receiver && dragSrc.area !== "overflow" && toArea !== "overflow") {
           if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
             SFX.lock();
             save();
@@ -1524,6 +1586,10 @@
     };
     bindDragZone($("formation-grid"));
     bindDragZone($("bench-grid"));
+    if ($("overflow-grid")) {
+      bindDragZone($("overflow-grid"));
+      $("overflow-grid").addEventListener("click", onRosterClick);
+    }
 
     function openMasteryDialog() {
       const item = run.pendingMastery?.[0];
