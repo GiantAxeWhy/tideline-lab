@@ -595,12 +595,12 @@
   ];
 
   const SYNERGIES = {
-    knight: { name: "钢铁防线", req: 2, types: ["knight", "frost_warden", "iron_inquisitor", "sun_templar", "dread_knight_lord", "titan_warlord"], desc: "2+ 不同重装坦克：全军开局获得 +35 护盾（同兵种不叠加）" },
-    archer: { name: "箭雨齐发", req: 2, types: ["archer", "engineer", "star_ranger", "dragon_cannoneer", "celestial_artemis"], desc: "2+ 不同远程射手：全军攻击速度 +18%（同兵种不叠加）" },
-    mage: { name: "奥术共鸣", req: 2, types: ["mage", "plague_alchemist", "necromancer", "chrono_mage", "void_emperor"], desc: "2+ 不同法系单位：全军技能与法术伤害 +25%（同兵种不叠加）" },
-    priest: { name: "圣光庇护", req: 2, types: ["priest", "moon_druid", "bard", "thunder_shaman", "celestial_seraph"], desc: "2+ 不同辅助支援：全军每 2 秒回复 4% 最大生命（同兵种不叠加）" },
-    assassin: { name: "致命突袭", req: 2, types: ["assassin", "shadow_blade", "blood_empress"], desc: "2+ 不同刺客单位：全军暴击率 +18%（同兵种不叠加）" },
-    valkyrie: { name: "铁骑冲锋", req: 2, types: ["valkyrie", "berserker", "royal_halberd", "sylvan_archon", "astral_valkyrie"], desc: "2+ 不同冲锋狂战：全军移速 +18%，破盾 +40%（同兵种不叠加）" }
+    knight:   { name: "钢铁防线", req: 2, reqMax: 4, types: ["knight", "frost_warden", "iron_inquisitor", "sun_templar", "dread_knight_lord", "titan_warlord"], desc: "2不同：开局+35护盾｜4不同(需含低中费)：全军+30%最大生命护盾且全军减伤18%！" },
+    archer:   { name: "箭雨齐发", req: 2, reqMax: 4, types: ["archer", "engineer", "star_ranger", "dragon_cannoneer", "celestial_artemis"], desc: "2不同：全军攻速+18%｜4不同(需含低中费)：全军攻速+45%且攻击+25%！" },
+    mage:     { name: "奥术共鸣", req: 2, reqMax: 4, types: ["mage", "plague_alchemist", "necromancer", "chrono_mage", "void_emperor"], desc: "2不同：全军技能伤+25%｜4不同(需含低中费)：技能伤+65%且全军攻击+22%！" },
+    priest:   { name: "圣光庇护", req: 2, reqMax: 4, types: ["priest", "moon_druid", "bard", "thunder_shaman", "celestial_seraph"], desc: "2不同：每2秒回血4%｜4不同(需含低中费)：每2秒回血9%且全军攻击+25%！" },
+    assassin: { name: "致命突袭", req: 2, reqMax: 3, types: ["assassin", "shadow_blade", "blood_empress"], desc: "2不同：全军暴击+18%｜3不同(全刺客齐聚)：全军暴击+35%且暴伤+45%！" },
+    valkyrie: { name: "铁骑冲锋", req: 2, reqMax: 4, types: ["valkyrie", "berserker", "royal_halberd", "sylvan_archon", "astral_valkyrie"], desc: "2不同：移速+18%/破盾+40%｜4不同(需含低中费)：移速+30%、破盾+80%、全军吸血18%！" }
   };
 
   const FACTION_SYNERGIES = {
@@ -608,29 +608,29 @@
       name: "圣辉联盟", short: "联盟",
       types: ["knight", "priest", "valkyrie", "royal_halberd", "iron_inquisitor", "sun_templar", "astral_valkyrie", "celestial_seraph"],
       color: "#f8e296",
-      desc: "2名不同 2★+：护盾 +35% 且破盾反弹圣伤（同兵种不叠加）",
-      enhanced: "3名不同 2★+：护盾 +60%、开局全军 25% 护盾、全军攻击 +18%"
+      desc: "2不同 2★+：护盾 +35% 且破盾反弹圣伤",
+      enhanced: "3不同 2★+：护盾 +60%、开局 25% 护盾、攻击 +18%｜5不同 2★+(终极)：开局 45% 护盾、护盾 +90%、全军攻击 +38%！"
     },
     elves: {
       name: "银月精灵", short: "精灵",
       types: ["archer", "mage", "moon_druid", "bard", "star_ranger", "chrono_mage", "sylvan_archon", "celestial_artemis"],
       color: "#7be7ff",
-      desc: "2名不同 2★+：全军攻速 +18%，每 4 击触发星落爆裂（同兵种不叠加）",
-      enhanced: "3名不同 2★+：全军攻速 +38%，每 3 击星落爆裂，击杀 +5 金币"
+      desc: "2不同 2★+：全军攻速 +18%，每 4 击星落爆裂",
+      enhanced: "3不同 2★+：攻速 +38%，每 3 击星落｜5不同 2★+(终极)：全军攻速 +62%，每 2 击星落爆裂，击杀 +8G！"
     },
     horde: {
       name: "赤血部落", short: "部落",
       types: ["assassin", "berserker", "engineer", "frost_warden", "thunder_shaman", "dragon_cannoneer", "titan_warlord"],
       color: "#ff7a6b",
-      desc: "2名不同 2★+：全军暴击吸血 22%，暴击率 +12%（同兵种不叠加）",
-      enhanced: "3名不同 2★+：全军暴击吸血 38%，全军攻击 +25%"
+      desc: "2不同 2★+：全军暴击吸血 22%，暴击率 +12%",
+      enhanced: "3不同 2★+：暴击吸血 38%，攻击 +25%｜5不同 2★+(终极)：暴击吸血 55%，暴击 +25%，全军攻击 +48%！"
     },
     undead: {
       name: "幽冥议会", short: "幽冥",
       types: ["plague_alchemist", "necromancer", "shadow_blade", "dread_knight_lord", "blood_empress", "void_emperor"],
       color: "#a8ffcf",
-      desc: "2名不同 2★+：全军技能伤害 +20%，受击反伤 +15%（同兵种不叠加）",
-      enhanced: "3名不同 2★+：技能伤害 +40%，每击杀敌军全军回血 8%"
+      desc: "2不同 2★+：技能伤害 +20%，受击反伤 +15%",
+      enhanced: "3不同 2★+：技能伤害 +40%，击杀全军回血 8%｜5不同 2★+(终极)：技能伤害 +75%，击杀全军回血 14%，反伤 30%！"
     }
   };
 
@@ -897,12 +897,12 @@
   }
 
   function getFactionSynergies(run) {
-    // ONLY 2-star+ heroes awaken their Faction Crest and count toward Faction Synergies!
+    // ONLY 2-star+ heroes awaken their Faction Crest and count toward Faction Synergies (2 / 3 / 5)!
     const awakened = run.field.filter(u => u && unitLevel(u) >= 2).map(u => u.type);
     const uniqueAwakened = new Set(awakened);
     return Object.entries(FACTION_SYNERGIES).map(([id, info]) => {
       const count = info.types.filter(t => uniqueAwakened.has(t)).length;
-      const tier = count >= 3 ? 3 : count >= 2 ? 2 : 0;
+      const tier = count >= 5 ? 5 : count >= 3 ? 3 : count >= 2 ? 2 : 0;
       return { id, ...info, count, tier };
     });
   }
@@ -1268,8 +1268,8 @@
     };
   }
 
-  const CHAPTER_HP_MULT = [0.72, 2.2, 4.8, 9.0, 16.0];
-  const CHAPTER_ATK_MULT = [0.75, 1.75, 3.2, 5.2, 8.2];
+  const CHAPTER_HP_MULT = [0.72, 1.85, 3.6, 6.2, 10.2];
+  const CHAPTER_ATK_MULT = [0.75, 1.50, 2.55, 3.9, 5.8];
 
   function chapterWaves(chapter, enemies, encounters, boss) {
     const firstWave = (chapter.id - 1) * (encounters.length + 1) + 1;
@@ -1497,9 +1497,9 @@
         ...unit,
         lv: 5 + number,
         hp: Math.round(unit.hp / CHAPTER_HP_MULT[origin - 1] * CHAPTER_HP_MULT.at(-1)
-          * Math.pow(1.22, number) * extraHp),
+          * Math.pow(1.11, number) * extraHp),
         atk: Math.round(unit.atk / CHAPTER_ATK_MULT[origin - 1] * CHAPTER_ATK_MULT.at(-1)
-          * Math.pow(1.15, number))
+          * Math.pow(1.07, number))
       }))
     });
   }
@@ -1853,8 +1853,8 @@
         run.freeSpins += 3;
         break;
       case "gold_dice":
-        run.goldRateBonus = (run.goldRateBonus || 0) + 0.008;
-        run.purpleRateBonus = (run.purpleRateBonus || 0) + 0.03;
+        run.goldRateBonus = (run.goldRateBonus || 0) + 0.0025;
+        run.purpleRateBonus = (run.purpleRateBonus || 0) + 0.012;
         break;
       case "elite_ticket":
         run.eliteWheelTokens = (run.eliteWheelTokens || 0) + 1;
@@ -1877,70 +1877,70 @@
     {
       level: 1,
       name: "铁制初机",
-      upgradeCost: 55,
+      upgradeCost: 70,
       maxLocks: 1,
       jokerBonus: 0,
       statBonus: 0,
       bonusSpins: 0,
       bonusXp: 0,
-      rarityOdds: { white: 0.94, green: 0.06, blue: 0, purple: 0, gold: 0 },
+      rarityOdds: { white: 0.96, green: 0.04, blue: 0, purple: 0, gold: 0 },
       unlocked: CORE_SIX_POOL,
-      desc: "白 94% · 绿 6%（1~2费卡池）· 1 锁格位"
+      desc: "白 96% · 绿 4%（1~2费打工卡）· 1 锁格位"
     },
     {
       level: 2,
       name: "秘银轮盘",
-      upgradeCost: 105,
+      upgradeCost: 135,
       maxLocks: 2,
-      jokerBonus: 2,
-      statBonus: 0.08,
+      jokerBonus: 1,
+      statBonus: 0.06,
       bonusSpins: 0,
       bonusXp: 0,
-      rarityOdds: { white: 0.76, green: 0.21, blue: 0.03, purple: 0, gold: 0 },
+      rarityOdds: { white: 0.85, green: 0.135, blue: 0.015, purple: 0, gold: 0 },
       unlocked: CORE_SIX_POOL,
-      desc: "白 76% · 绿 21% · 蓝 3% · 锁格 +1 · 全军属性 +8%"
+      desc: "白 85% · 绿 13.5% · 蓝 1.5% · 锁格 +1 · 属性 +6%"
     },
     {
       level: 3,
       name: "符文机台",
-      upgradeCost: 170,
+      upgradeCost: 220,
       maxLocks: 2,
-      jokerBonus: 4,
-      statBonus: 0.16,
+      jokerBonus: 2,
+      statBonus: 0.12,
       bonusSpins: 1,
       bonusXp: 0,
-      rarityOdds: { white: 0.58, green: 0.28, blue: 0.12, purple: 0.02, gold: 0 },
+      rarityOdds: { white: 0.73, green: 0.20, blue: 0.062, purple: 0.008, gold: 0 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double" },
-      desc: "白 58% · 绿 28% · 蓝 12% · 紫 2% · 中心【×2 双倍格】"
+      desc: "白 73% · 绿 20% · 蓝 6.2% · 紫 0.8% · 中心【×2】"
     },
     {
       level: 4,
       name: "鎏金圣轮",
-      upgradeCost: 260,
+      upgradeCost: 340,
       maxLocks: 3,
-      jokerBonus: 6,
-      statBonus: 0.26,
+      jokerBonus: 3,
+      statBonus: 0.20,
       bonusSpins: 1,
       bonusXp: 1,
-      rarityOdds: { white: 0.42, green: 0.32, blue: 0.18, purple: 0.075, gold: 0.005 },
+      rarityOdds: { white: 0.60, green: 0.25, blue: 0.12, purple: 0.028, gold: 0.002 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold" },
-      desc: "白 42% · 绿 32% · 蓝 18% · 紫 7.5% · 金 0.5% · 对角【+25G】"
+      desc: "白 60% · 绿 25% · 蓝 12% · 紫 2.8% · 金 0.2%"
     },
     {
       level: 5,
       name: "命运神机",
       upgradeCost: null,
       maxLocks: 3,
-      jokerBonus: 9,
-      statBonus: 0.38,
+      jokerBonus: 4,
+      statBonus: 0.30,
       bonusSpins: 2,
-      bonusXp: 2,
-      rarityOdds: { white: 0.30, green: 0.32, blue: 0.23, purple: 0.14, gold: 0.01 },
+      bonusXp: 1,
+      rarityOdds: { white: 0.48, green: 0.28, blue: 0.18, purple: 0.055, gold: 0.005 },
       unlocked: CORE_SIX_POOL,
       enchantCells: { 4: "double", 0: "gold", 8: "gold", 2: "lucky", 6: "lucky" },
-      desc: "白 30% · 绿 32% · 蓝 23% · 紫 14% · 金 1.0%（核心/商店可再提金率！）"
+      desc: "白 48% · 绿 28% · 蓝 18% · 紫 5.5% · 金 0.5%（需靠核心/商店/星盘堆高！）"
     }
   ];
 
@@ -1949,34 +1949,32 @@
     const base = { ...(tier.rarityOdds || { white: 1, green: 0, blue: 0, purple: 0, gold: 0 }) };
     const Meta = globalThis.SlotboundMeta;
     const meta = Meta ? Meta.loadMeta() : null;
-    const maxTier = Meta && meta ? Meta.getMaxUnlockedRarityTier(meta) : 5;
 
     let goldBonus = (run?.goldRateBonus || 0);
     let purpleBonus = (run?.purpleRateBonus || 0);
     if (run) {
       const compLv = coreLevel(run, "gold_compass");
-      if (compLv) { goldBonus += 0.012 * compLv; purpleBonus += 0.04 * compLv; }
+      if (compLv) { goldBonus += 0.0035 * compLv; purpleBonus += 0.015 * compLv; }
       const altarLv = coreLevel(run, "astral_altar");
-      if (altarLv) { goldBonus += 0.018 * altarLv; purpleBonus += 0.06 * altarLv; }
+      if (altarLv) { goldBonus += 0.0055 * altarLv; purpleBonus += 0.022 * altarLv; }
       const rollerLv = coreLevel(run, "high_roller");
       if (rollerLv) {
         const stacks = Math.floor((run.totalGoldSpentOnSpins || 0) / 100);
-        goldBonus += stacks * 0.004 * rollerLv;
-        purpleBonus += stacks * 0.02 * rollerLv;
+        goldBonus += stacks * 0.0015 * rollerLv;
+        purpleBonus += stacks * 0.008 * rollerLv;
       }
     }
     const archiveLv = meta?.upgrades?.heroArchive || 0;
     if (archiveLv > 0) {
-      goldBonus += archiveLv * 0.0025;
-      purpleBonus += archiveLv * 0.015;
+      goldBonus += archiveLv * 0.0015;
+      purpleBonus += archiveLv * 0.009;
     }
 
-    base.gold = Math.min(0.18, (base.gold || 0) + (base.gold > 0 || (run?.reelLevel || 1) >= 4 ? goldBonus : 0));
-    base.purple = Math.min(0.42, (base.purple || 0) + (base.purple > 0 || (run?.reelLevel || 1) >= 3 ? purpleBonus : 0));
+    base.gold = Math.min(0.08, (base.gold || 0) + (base.gold > 0 || (run?.reelLevel || 1) >= 4 ? goldBonus : 0));
+    base.purple = Math.min(0.24, (base.purple || 0) + (base.purple > 0 || (run?.reelLevel || 1) >= 3 ? purpleBonus : 0));
 
-    // Rebalance white down so total sums to 1.0 cleanly
     const highSum = base.green + base.blue + base.purple + base.gold;
-    base.white = Math.max(0.05, 1 - highSum);
+    base.white = Math.max(0.10, 1 - highSum);
     const total = base.white + base.green + base.blue + base.purple + base.gold;
     for (const k of Object.keys(base)) base[k] = Number((base[k] / total).toFixed(4));
     return base;
@@ -2009,9 +2007,9 @@
   function executeEliteWheel(run) {
     if (!run || (run.eliteWheelTokens || 0) <= 0) return null;
     run.eliteWheelTokens -= 1;
-    // Independent High-Tier Wheel: 40% Blue / 45% Purple / 15% Gold!
+    // Independent High-Tier Wheel: 62% Blue / 33% Purple / 5% Gold!
     const r = Math.random();
-    const rarity = r < 0.15 ? "gold" : r < 0.60 ? "purple" : "blue";
+    const rarity = r < 0.05 ? "gold" : r < 0.38 ? "purple" : "blue";
     const pool = HERO_POOL_BY_RARITY[rarity];
     const heroType = pool[Math.floor(Math.random() * pool.length)];
     const unit = createUnit(run.nextId++, heroType, { rarity, heroLv: 2, lucky: true });
@@ -2278,12 +2276,39 @@
     }
 
     if (run) {
-      const fMap = Object.fromEntries(getFactionSynergies(run).map(f => [f.id, f.tier]));
-      if (fMap.alliance >= 3) atk *= 1.18;
-      if (fMap.horde >= 2) crit += 0.12;
-      if (fMap.horde >= 3) atk *= 1.25;
-      if (fMap.elves >= 3) atkCd *= 0.72;
+      const Meta = globalThis.SlotboundMeta;
+      const meta = Meta ? Meta.loadMeta() : null;
+      const starCoreLv = meta?.upgrades?.star_core || 0;
+      if (starCoreLv > 0) {
+        hp *= (1 + starCoreLv * 0.05);
+        atk *= (1 + starCoreLv * 0.05);
+      }
+
+      const fSyns = getFactionSynergies(run);
+      const fMap = Object.fromEntries(fSyns.map(f => [f.id, f.tier]));
+      if (fMap.alliance >= 5) atk *= 1.38;
+      else if (fMap.alliance >= 3) atk *= 1.18;
+      if (fMap.horde >= 5) { crit += 0.25; atk *= 1.48; }
+      else if (fMap.horde >= 3) { crit += 0.12; atk *= 1.25; }
+      else if (fMap.horde >= 2) crit += 0.12;
+      if (fMap.elves >= 5) atkCd *= 0.62;
+      else if (fMap.elves >= 3) atkCd *= 0.72;
       else if (fMap.elves >= 2) atkCd *= 0.85;
+
+      const cSyns = getActiveSynergies(run);
+      const cMap = Object.fromEntries(cSyns.map(s => [s.type, s.tier]));
+      if (cMap.archer >= 4) { atkCd *= 0.70; atk *= 1.25; }
+      if (cMap.mage >= 4) atk *= 1.22;
+      if (cMap.priest >= 4) atk *= 1.25;
+      if (cMap.assassin >= 3) crit += 0.35;
+      if (cMap.valkyrie >= 4) moveSpd *= 1.30;
+      else if (cMap.valkyrie >= 2) moveSpd *= 1.18;
+
+      const synMasterLv = meta?.upgrades?.synergyMaster || 0;
+      if (synMasterLv > 0) {
+        const activeCount = cSyns.filter(s => s.active).length + fSyns.filter(f => f.tier > 0).length;
+        if (activeCount > 0) atk *= (1 + activeCount * synMasterLv * 0.04);
+      }
     }
 
     const tVal = Number.isFinite(unit.traitVal) ? unit.traitVal : 15;
@@ -2360,14 +2385,18 @@
 
   function getActiveSynergies(run) {
     // Count UNIQUE hero types per class family so duplicate heroes NEVER stack!
+    // Max tier (3 or 4) requires mixing low/mid/high cost units!
     const uniqueTypes = new Set(run.field.filter(Boolean).map(u => u.type));
     return Object.entries(SYNERGIES).map(([type, info]) => {
       const members = info.types || [type];
       const count = members.filter(t => uniqueTypes.has(t)).length;
+      const reqMax = info.reqMax || 4;
+      const tier = count >= reqMax ? reqMax : count >= info.req ? info.req : 0;
       return {
         type,
         ...info,
         count,
+        tier,
         active: count >= info.req
       };
     });
@@ -2378,6 +2407,8 @@
     const meta = Meta ? Meta.loadMeta() : null;
     const startGoldLv = meta?.upgrades?.startGold || 0;
     const startPopLv = meta?.upgrades?.popCap || 0;
+    const startBenchLv = meta?.upgrades?.vanguardReserve || 0;
+    const startCoreSlotLv = meta?.upgrades?.coreSlotMeta || 0;
     const startGold = Math.min(150, 100 + startGoldLv * 10);
     const startUnlockedField = Array.from({ length: Math.min(FIELD_SLOTS, 6 + startPopLv) }, (_, i) => i);
 
@@ -2414,6 +2445,8 @@
       nudgesLeft: 2,
       nudgePreview: ["knight", "archer", "mage"],
       unlockedFieldSlots: startUnlockedField,
+      unlockedBenchSlots: Math.min(BENCH_SLOTS, 2 + startBenchLv),
+      unlockedCoreSlots: Math.min(6, 4 + startCoreSlotLv),
       field,
       bench: Array(BENCH_SLOTS).fill(null),
       overflowUnits: [],
@@ -2505,12 +2538,20 @@
     return getSpinCost(run) + run.locked.length * getLockCost(run);
   }
 
-  function upgradeReelTier(run) {
+  function getReelUpgradeCost(run) {
     const cur = getReelTier(run);
-    if (!cur.upgradeCost || run.gold < cur.upgradeCost || run.reelLevel >= REEL_TIERS.length) {
+    if (!cur.upgradeCost) return null;
+    const Meta = globalThis.SlotboundMeta;
+    const techLv = Meta ? (Meta.loadMeta()?.upgrades?.reelTech || 0) : 0;
+    return Math.max(25, Math.round(cur.upgradeCost * (1 - techLv * 0.07)));
+  }
+
+  function upgradeReelTier(run) {
+    const cost = getReelUpgradeCost(run);
+    if (!cost || run.gold < cost || run.reelLevel >= REEL_TIERS.length) {
       return null;
     }
-    run.gold -= cur.upgradeCost;
+    run.gold -= cost;
     run.reelLevel += 1;
     const next = getReelTier(run);
     run.cellEnchants = Array(9).fill(null);
@@ -3055,7 +3096,14 @@
       return 0; // Keep at least 1 unit alive
     }
     const goldTraitVal = loc.unit.trait === "gold_donor" ? (getUnitTraitDisplay(loc.unit)?.val || 25) : 0;
-    const value = 15 + (loc.unit.xp || 0) * 10 + goldTraitVal;
+    const rarId = getUnitRarity(loc.unit).id;
+    const isEcoUnit = rarId === "white" || rarId === "green";
+    const Meta = globalThis.SlotboundMeta;
+    const refLv = Meta ? (Meta.loadMeta()?.upgrades?.mercenaryRefund || 0) : 0;
+    const baseVal = isEcoUnit
+      ? Math.round((20 + (loc.unit.heroLv || 1) * 10) * (1 + refLv * 0.10))
+      : (15 + (loc.unit.xp || 0) * 8);
+    const value = baseVal + goldTraitVal;
     run.gold += value;
     if (loc.area === "field") run.field[loc.index] = null;
     else if (loc.area === "bench") run.bench[loc.index] = null;
@@ -3351,22 +3399,30 @@
     let reward = (won ? waveDef.reward : Math.round(waveDef.reward * 0.65)) + (battle.gold ?? 0);
     let interest = 0;
     const MetaForBank = globalThis.SlotboundMeta;
-    const bankLv = MetaForBank ? (MetaForBank.loadMeta()?.upgrades?.interestBank || 0) : 0;
+    const metaSnap = MetaForBank ? MetaForBank.loadMeta() : null;
+    const bankLv = metaSnap?.upgrades?.interestBank || 0;
     if (won && bankLv > 0) {
       const cap = [0, 15, 25, 35, 50][bankLv] || 15;
       interest = Math.min(cap, Math.floor(run.gold / 20) * (1 + bankLv));
       reward += interest;
     }
+    // Early-game White/Green eco-farming militia stipend (up to 3 deployed 1-2 cost units!)
+    if (won) {
+      const ecoUnits = run.field.filter(u => u && (getUnitRarity(u).id === "white" || getUnitRarity(u).id === "green")).length;
+      const refLv = metaSnap?.upgrades?.mercenaryRefund || 0;
+      const stipend = Math.min(3, ecoUnits) * (3 + refLv * 2);
+      reward += stipend;
+    }
     run.gold += reward;
     const prismLv = coreLevel(run, "crystal_prism");
-    const crystalBonus = won ? (waveDef.boss ? 5 : 2) + Number(!!battle.flawless) + prismLv : 0;
+    const crystalBonus = won ? (waveDef.boss ? 4 : 2) + Number(!!battle.flawless) + prismLv : 0;
     const crystalsGained = crystalBonus + (battle.crystals ?? 0);
     run.crystals += crystalsGained;
-    // Sync earned crystals into permanent Meta War-Hall treasury!
+    // Sync earned crystals into permanent Meta War-Hall treasury (paced for long-term star tech tree lifespan!)
     const Meta = globalThis.SlotboundMeta;
     if (Meta && crystalsGained > 0) {
       const meta = Meta.loadMeta();
-      meta.crystals = (meta.crystals || 0) + Math.max(1, Math.round(crystalsGained * 0.7));
+      meta.crystals = (meta.crystals || 0) + Math.max(1, Math.round(crystalsGained * 0.45));
       Meta.saveMeta(meta);
     }
 
@@ -3521,6 +3577,7 @@
     addLog,
     ensureShop,
     getReelTier,
+    getReelUpgradeCost,
     upgradeReelTier,
     getUnitStats,
     getActiveSynergies,

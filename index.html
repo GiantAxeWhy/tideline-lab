@@ -2,12 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0b0c12">
   <meta name="description" content="转运军团 — 融合 3×3 机械老虎机、概率调校、吞噬转职与实时自走棋防守的暗黑奇幻 Roguelike 策略游戏。">
   <title>星陨像素 · 命运军团 SLOTBOUND</title>
   <link rel="icon" type="image/svg+xml" href="assets/items/crystal-fate.svg">
   <link rel="stylesheet" href="styles.css">
+  <script defer src="native-bridge.js"></script>
   <script defer src="meta.js"></script>
   <script defer src="sfx.js"></script>
   <script defer src="art.js"></script>
@@ -62,15 +63,16 @@
         </div>
 
         <div class="hub-panel">
-          <h2 class="hub-sec-title">③ 永久军团科技（切换关卡与难度永久带入）</h2>
-          <div class="hub-upgrades-grid" id="hub-upgrades-grid"></div>
+          <h2 class="hub-sec-title">③ 星陨辐射科技树（需解锁前置节点 · 换关卡与难度永久带入）</h2>
+          <div class="star-tree-wrap" id="hub-upgrades-grid"></div>
+          <div class="star-tree-inspector" id="star-tree-inspector"></div>
         </div>
       </div>
     </div>
   </section>
 
   <div id="game-view">
-    <!-- SLIM SINGLE-ROW HUD TOPBAR (SLOTBOUND CLEAN PARTITION) -->
+    <!-- SLIM SLOTBOUND TOP HUD: WAVE + CORE RESOURCES + SHOP / SPEED / MENU -->
     <header class="topbar">
       <div class="top-left">
         <div class="brand">
@@ -91,39 +93,29 @@
       </div>
 
       <div class="top-stats">
-        <div class="stat-pill gold" title="金币：用于转动轮盘、锁格、升阶与刷新商店">
+        <div class="stat-pill gold" title="金币">
           <span class="stat-ico" id="ico-gold"></span>
           <strong id="hud-gold">120</strong>
         </div>
-        <div class="stat-pill crystal" title="命运水晶：用于秘宝商店、扩充编制与改命调校">
+        <div class="stat-pill crystal" title="命运水晶">
           <img src="assets/items/crystal-fate.svg" class="ui-ico" alt="命运水晶">
           <strong id="hud-crystals">0</strong>
         </div>
-        <div class="stat-pill hp" title="城防耐久：战败扣除 1 点，Boss 战败扣除 2 点">
+        <div class="stat-pill hp" title="城防耐久">
           <span class="stat-ico" id="ico-hp"></span>
           <strong id="hud-hp">5/5</strong>
         </div>
+        <div class="stat-pill power-pill" title="军团综合战力">
+          <span class="stat-ico" id="ico-power"></span>
+          <strong id="hud-power">0</strong>
+        </div>
 
         <div class="top-controls">
-          <button id="btn-open-hub" class="icon-btn hall-btn" type="button" title="返回战备大厅：选关、选难度、升级永久科技">▲大厅</button>
-          <button id="btn-open-codex" class="icon-btn codex-btn" type="button" title="英雄与怪物像素图鉴">▣图鉴</button>
-          <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="打开命运秘宝商店">
-            <img class="ui-ico" src="assets/items/crystal-fate.svg" alt="">商店
+          <button id="btn-open-shop" class="icon-btn shop-wake-btn" type="button" title="命运秘宝商店">
+            <img class="ui-ico" src="assets/items/crystal-fate.svg" alt=""><span>商店</span>
           </button>
           <button id="btn-speed" class="icon-btn" type="button" title="切换战斗倍速">1×</button>
-          <button id="btn-mute" class="icon-btn square-btn" type="button" title="开关音效" aria-label="开关音效"></button>
-
-          <details class="top-more-menu" id="top-more-menu">
-            <summary class="icon-btn square-btn" title="更多系统功能">⋯</summary>
-            <div class="more-dropdown">
-              <button id="btn-endless" class="more-item" type="button" title="通关五章后解锁" disabled>
-                <img class="ui-ico" src="assets/items/endless-crown.svg" alt=""><span>无尽轮回</span>
-              </button>
-              <button id="btn-open-logs" class="more-item" type="button"><span>📜 行动日志</span></button>
-              <button id="btn-records" class="more-item" type="button"><span>🏆 历史战绩</span></button>
-              <button id="btn-restart" class="more-item danger" type="button"><span>↺ 重新开始</span></button>
-            </div>
-          </details>
+          <button id="btn-open-menu" class="icon-btn square-btn menu-btn" type="button" title="系统菜单" aria-label="系统菜单">☰</button>
         </div>
       </div>
     </header>
@@ -139,7 +131,7 @@
             <div class="cabinet-head">
               <div class="cabinet-title-row">
                 <h2>命运轮盘</h2>
-                <span class="tier-badge" id="tier-badge">Lv.1 铁制初机</span>
+                <button type="button" class="tier-badge tier-odds-trigger" id="tier-badge" title="点击查看当前品质爆率">Lv.1 铁制初机</button>
                 <p class="cabinet-sub" id="tier-sub" hidden></p>
               </div>
               <div class="cabinet-head-btns">
@@ -153,7 +145,7 @@
                 <div class="fever-track"><div class="fever-fill" id="fever-fill"></div></div>
                 <span class="fever-text" id="fever-text">狂热充能 0%</span>
               </div>
-              <div class="rarity-odds-strip" id="rarity-odds-strip"></div>
+              <div class="rarity-odds-strip" id="rarity-odds-strip" hidden></div>
             </div>
 
             <div class="nudge-preview-row" id="nudge-preview-row" aria-label="即将顶入符号预览" hidden></div>
@@ -269,38 +261,70 @@
         <div class="army-card">
           <div class="army-head">
             <div class="army-title-group">
-              <h3>军团编成</h3>
-              <span class="power-badge" title="当前出战军团综合战力">
-                <span class="stat-ico" id="ico-power"></span>
-                <strong id="hud-power">0</strong>
-              </span>
-              <span class="army-tip" id="army-tip">拖拽换位 · 点击查看技能</span>
+              <span class="army-tip" id="army-tip">拖放换位 · 悬停吞噬 · 轻点详情</span>
             </div>
             <div class="army-mode-btns">
-              <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬模式</button>
+              <button id="btn-mode-absorb" class="mode-pill" type="button"><span id="ico-absorb"></span>吞噬</button>
             </div>
           </div>
 
           <div class="roster-layout">
             <div class="formation-box">
-              <div class="sub-label"><span>出战阵容</span><span id="field-count">0/6</span></div>
+              <div class="sub-label"><span>出战</span><span id="field-count">0/6</span></div>
               <div class="formation-grid" id="formation-grid"></div>
             </div>
             <div class="bench-box">
-              <div class="sub-label"><span>备战席</span><span id="bench-count">0/2</span></div>
+              <div class="sub-label"><span>备战</span><span id="bench-count">0/2</span></div>
               <div class="bench-grid" id="bench-grid"></div>
             </div>
           </div>
 
           <div class="overflow-box" id="overflow-box" hidden>
-            <div class="sub-label"><span style="color:#ffd86b">⚠️ 超编暂存（请先吞噬或出售后再摇杆/开战）</span><span id="overflow-count">0</span></div>
+            <div class="sub-label"><span style="color:#ffd86b">⚠️ 超编暂存（拖至空位或悬停吞噬）</span><span id="overflow-count">0</span></div>
             <div class="overflow-grid" id="overflow-grid"></div>
           </div>
 
-          <div class="inspector" id="inspector" hidden></div>
+          <div class="inspector floating-inspector" id="inspector" hidden></div>
         </div>
       </section>
     </main>
+
+    <!-- MODAL: CLEAN SYSTEM MENU (CONSOLIDATES SECONDARY ACTIONS OUT OF MAIN HUD) -->
+    <dialog id="menu-dialog" class="game-dialog menu-dialog" aria-labelledby="menu-title">
+      <div class="dialog-inner">
+        <div class="dialog-head-row">
+          <div>
+            <div class="dialog-tag">SLOTBOUND · 系统</div>
+            <h2 id="menu-title">战术菜单</h2>
+          </div>
+          <button class="close-btn" data-close="menu-dialog" aria-label="关闭">×</button>
+        </div>
+
+        <div class="menu-toggles">
+          <button id="btn-mute" class="menu-toggle-btn" type="button" title="开关音效" aria-label="开关音效"></button>
+          <button id="btn-bgm" class="menu-toggle-btn" type="button">🎵 音乐：开</button>
+          <button id="btn-haptics" class="menu-toggle-btn" type="button">📳 震动：开</button>
+        </div>
+
+        <div class="menu-grid">
+          <button id="btn-open-hub" class="menu-action-btn" type="button">▲ 战备大厅<small>选关 · 难度 · 永久科技</small></button>
+          <button id="btn-open-codex" class="menu-action-btn" type="button">▣ 英雄与怪物图鉴<small>收集进度与水晶奖励</small></button>
+          <button id="btn-records" class="menu-action-btn" type="button">🏆 历史战绩<small>最高波次与通关阵容</small></button>
+          <button id="btn-open-logs" class="menu-action-btn" type="button">📜 行动日志<small>查看与导出本局记录</small></button>
+          <button id="btn-endless" class="menu-action-btn" type="button" title="通关五章后解锁" disabled>
+            <img class="ui-ico" src="assets/items/endless-crown.svg" alt=""> 无尽轮回<small>通关五章解锁</small>
+          </button>
+          <button id="btn-restart" class="menu-action-btn danger" type="button">↺ 重新开始<small>重置当前战局</small></button>
+        </div>
+
+        <div class="dialog-footer" style="margin-top:0.65rem">
+          <button class="spin-btn compact-btn" data-close="menu-dialog" type="button" style="width:100%">继续战斗</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- MOBILE 1:1 FOLLOW-FINGER DRAG GHOST -->
+    <div id="touch-drag-ghost" class="touch-drag-ghost" hidden aria-hidden="true"></div>
 
     <!-- MODAL: CORE DRAFT -->
     <dialog id="core-dialog" class="game-dialog">

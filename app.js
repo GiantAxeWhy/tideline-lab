@@ -35,6 +35,7 @@
   let armyMode = "swap";
   let speedMult = 1;
   let toastTimer = null;
+  let selectedMetaNode = "star_core";
 
   const arena = new globalThis.BattleArena($("battle-canvas"));
   arena.onUnitSelect = unitId => {
@@ -265,9 +266,10 @@
         + `<span style="color:#ffd86b">金 ${pct(o.gold)}</span>`;
     }
     const tierBtn = $("btn-tier-up");
-    if (tier.upgradeCost) {
-      tierBtn.textContent = `↑ 升阶 ${tier.upgradeCost}G`;
-      tierBtn.disabled = busy || !!run.outcome || run.gold < tier.upgradeCost;
+    const upCost = G.getReelUpgradeCost ? G.getReelUpgradeCost(run) : tier.upgradeCost;
+    if (upCost) {
+      tierBtn.textContent = `↑ 升阶 ${upCost}G`;
+      tierBtn.disabled = busy || !!run.outcome || run.gold < upCost;
       const nextTier = G.REEL_TIERS[tier.level];
       tierBtn.title = nextTier ? `升至 Lv.${nextTier.level} ${nextTier.name}：${nextTier.desc}` : "";
     } else {
@@ -420,17 +422,25 @@
     const syns = G.getActiveSynergies(run);
     $("synergy-bar").innerHTML = syns.map(s => {
       const sym = G.SYMBOLS[s.type];
-      return `<div class="syn-pill${s.active ? " active" : ""}" style="--syn-color:${sym.color}" title="${s.desc}">
+      const reqMax = s.reqMax || 4;
+      const isMax = s.tier >= reqMax;
+      const denom = s.count >= s.req ? reqMax : s.req;
+      const badge = isMax ? "★★" : s.active ? "★" : "";
+      const members = (s.types || [s.type]).map(t => G.SYMBOLS[t]?.short || t).join(" / ");
+      return `<div class="syn-pill${s.active ? " active" : ""}${isMax ? " max-tier" : ""}" style="--syn-color:${sym.color}" title="【${s.name}】成员（同名不叠加）：${members}\n${s.desc}">
         ${Art.renderPortraitImg(s.type, sym.short, "syn-thumb")}
         <span>${s.name}</span>
-        <span class="syn-cnt">${s.count}/${s.req}</span>
+        <span class="syn-cnt">${s.count}/${denom}${badge}</span>
       </div>`;
     }).join("");
     $("faction-bar").innerHTML = G.getFactionSynergies(run).map(flow => {
-      const members = flow.types.map(type => G.SYMBOLS[type].short).join(" / ");
-      const title = `【2★及以上英雄觉醒阵营】成员：${members}\n2人：${flow.desc}\n3人：${flow.enhanced}`;
-      return `<div class="syn-pill faction-pill${flow.tier ? " active" : ""}" style="--syn-color:${flow.color}" title="${title}">
-        <span>${flow.short}</span><span class="syn-cnt">${flow.count}/3${flow.tier ? `★` : ""}</span>
+      const members = flow.types.map(type => G.SYMBOLS[type]?.short || type).join(" / ");
+      const isMax = flow.tier >= 5;
+      const denom = flow.count >= 3 ? 5 : 3;
+      const badge = flow.tier ? `★${flow.tier}` : "";
+      const title = `【2★及以上英雄觉醒阵营·同名不叠加】成员：${members}\n2人：${flow.desc}\n3人/5人：${flow.enhanced}`;
+      return `<div class="syn-pill faction-pill${flow.tier ? " active" : ""}${isMax ? " max-tier" : ""}" style="--syn-color:${flow.color}" title="${title}">
+        <span>${flow.short}</span><span class="syn-cnt">${flow.count}/${denom}${badge}</span>
       </div>`;
     }).join("");
   }
@@ -487,7 +497,7 @@
 
     const skills = unit.skills || [];
     const artKey = sym.artKey || unit.type;
-    return `<button type="button" class="${cls}" draggable="true" data-area="${area}" data-index="${index}" data-uid="${unit.id}" title="${cardTooltip}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
+    return `<button type="button" class="${cls}" data-area="${area}" data-index="${index}" data-uid="${unit.id}" title="${cardTooltip}" style="--u-color:${rarity.color}"${busy || run.outcome ? " disabled" : ""}>
       <div class="u-portrait">
         ${Art.renderPortraitImg(artKey, displayName, "unit-sprite")}
         <span class="u-lvl-badge">${"★".repeat(st.level)}</span>
@@ -610,18 +620,25 @@
       </div>
     </div>
     <div class="ins-actions">
-      <button type="button" class="secondary-btn" id="btn-ins-absorb">${armyMode === "absorb" ? "点选任意素材吞噬" : "吞噬融合"}</button>
+      <button type="button" class="secondary-btn" id="btn-ins-absorb">${armyMode === "absorb" ? "点选素材吞噬" : "吞噬融合"}</button>
       <button type="button" class="danger-btn" id="btn-ins-sell">出售 +${sellVal}G</button>
+      <button type="button" class="close-btn ins-close-btn" id="btn-ins-close" aria-label="关闭详情">×</button>
     </div>`;
 
+    $("btn-ins-close").onclick = () => {
+      selectedSlot = null;
+      renderArmy();
+    };
     $("btn-ins-absorb").onclick = () => {
       armyMode = "absorb";
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("button_tap", 0.7);
       renderArmy();
     };
     $("btn-ins-sell").onclick = () => {
       const gained = G.sellUnit(run, unit.id);
       if (gained > 0) {
         SFX.coin();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("button_tap", 0.75);
         selectedSlot = null;
         save();
         renderAll();
@@ -667,6 +684,7 @@
     setTimeout(() => lever.classList.remove("pulled"), 420);
 
     SFX.lever();
+    if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("reel_lever", 0.9);
     spinningCols = [true, true, true];
     anticipationCol = -1;
     setTicker(result.isFever ? "狂热转盘全速爆发中！" : "轮盘高速运转中…", "祈祷连线与百搭降临！");
@@ -689,6 +707,7 @@
             displayBoard[r * 3 + c] = result.board[r * 3 + c];
           }
           SFX.reelStop(c);
+          if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("reel_stop", 0.8 + c * 0.1);
           if (c === 1 && result.nearMiss && spinningCols[2]) {
             anticipationCol = 2;
             setTicker("听牌悬念！第 3 列加速中…", "前两列已凑成 2 连，期待绝杀大奖！", "jackpot");
@@ -706,8 +725,12 @@
           }
         }
         if (spinningCols.some(Boolean)) {
-          if (anticipationCol === 2) SFX.anticipation(anticStep++);
-          else SFX.tick();
+          if (anticipationCol === 2) {
+            SFX.anticipation(anticStep++);
+            if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("reel_tick", 0.7);
+          } else {
+            SFX.tick();
+          }
         }
         renderReels();
       }
@@ -722,6 +745,7 @@
 
     if (result.triggeredFever) {
       SFX.feverReady();
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("fever_ready", 1.05);
       showToast("狂热槽蓄满！下一转免费 + 百搭 + 2× 收益！");
     }
 
@@ -737,6 +761,7 @@
       const isBig = result.isFever || result.hits.length >= 2 || result.hits.some(h => h.superJackpot);
       if (isBig) {
         SFX.jackpot();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("jackpot", 1.05);
         showToast(
           result.hits.some(h => h.superJackpot)
             ? "三王大满贯 SUPER JACKPOT!"
@@ -746,9 +771,11 @@
         );
       } else if (result.hits.every(h => h.symbol === "gold")) {
         SFX.coin();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("match", 0.8);
         showToast("命运金币连线！+55 金币 & +1 免费转");
       } else {
         SFX.match();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("match", 0.85);
       }
 
       const summonNames = result.summoned.map(u => `${G.SYMBOLS[u.type].short}${u.lucky ? "(幸运)" : ""}`);
@@ -936,6 +963,9 @@
         $("absorb-dialog").close();
         G.addLog(run, "军团", `${G.SYMBOLS[res.target.type].name} 吞噬 +${res.lvGain}级 → Lv.${res.target.heroLv}（${res.inherited}）`);
         SFX.absorb();
+        if (globalThis.NativeBridge) {
+          globalThis.NativeBridge.haptic(res.afterStars > res.beforeStars ? "jackpot" : "absorb_evolve", 1.05);
+        }
         if (res.afterStars > res.beforeStars) {
           SFX.jackpot();
           showToast(`升星突破！${G.SYMBOLS[res.target.type].name} → ${"★".repeat(res.afterStars)}！`);
@@ -1534,67 +1564,210 @@
       renderArmy();
     });
 
-    // Drag-and-drop stacking between hero cards in formation & bench -> triggers Absorb Choice modal!
-    let dragSrc = null;
-    const bindDragZone = el => {
-      el.addEventListener("dragstart", e => {
-        const card = e.target.closest("[data-area][data-uid]");
-        if (!card || busy || run.outcome) { e.preventDefault(); return; }
-        dragSrc = { area: card.dataset.area, index: Number(card.dataset.index), uid: Number(card.dataset.uid) };
-        card.classList.add("dragging");
-        e.dataTransfer.effectAllowed = "move";
+    // Mobile-first 1:1 Pointer/Touch drag system:
+    // - Quick drag & release onto another unit or empty slot -> smooth swap/deploy
+    // - Hover over an absorbable target for 320ms (or in Absorb Mode) -> glowing amber ring + haptic -> release to Absorb Fusion!
+    const ghostEl = $("touch-drag-ghost");
+    let pointerDrag = null;
+    let suppressNextRosterClick = false;
+
+    const getUnitAt = (area, idx) => (
+      area === "field" ? run.field[idx] : area === "bench" ? run.bench[idx] : (run.overflowUnits || [])[idx]
+    );
+
+    function clearDragHighlights() {
+      document.querySelectorAll(".unit-slot.dragging, .unit-slot.drag-over-absorb, .unit-slot.drag-over-swap").forEach(n => {
+        n.classList.remove("dragging", "drag-over-absorb", "drag-over-swap");
       });
-      el.addEventListener("dragend", () => {
-        dragSrc = null;
-        document.querySelectorAll(".unit-slot.dragging, .unit-slot.drag-over-absorb").forEach(n => {
-          n.classList.remove("dragging", "drag-over-absorb");
-        });
-      });
-      el.addEventListener("dragover", e => {
-        if (!dragSrc) return;
-        const target = e.target.closest("[data-area]");
-        if (!target) return;
-        e.preventDefault();
-        target.classList.add("drag-over-absorb");
-      });
-      el.addEventListener("dragleave", e => {
-        const target = e.target.closest("[data-area]");
-        if (target) target.classList.remove("drag-over-absorb");
-      });
-      el.addEventListener("drop", e => {
-        if (!dragSrc) return;
-        const target = e.target.closest("[data-area]");
-        if (!target) return;
-        e.preventDefault();
-        target.classList.remove("drag-over-absorb");
-        const toArea = target.dataset.area;
-        const toIdx = Number(target.dataset.index);
-        if (dragSrc.area === toArea && dragSrc.index === toIdx) return;
-        const getU = (a, i) => a === "field" ? run.field[i] : a === "bench" ? run.bench[i] : (run.overflowUnits || [])[i];
-        const donor = getU(dragSrc.area, dragSrc.index);
-        const receiver = getU(toArea, toIdx);
-        if (donor && receiver && donor.id !== receiver.id) {
-          if (armyMode === "absorb") {
-            openAbsorbDialog(receiver, donor);
-          } else if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
-            SFX.lock();
-            save();
-            renderAll();
-          }
-        } else if (donor && !receiver && toArea !== "overflow") {
-          if (G.swapSlots(run, dragSrc.area, dragSrc.index, toArea, toIdx)) {
-            SFX.lock();
-            save();
-            renderAll();
-          }
+    }
+
+    function updateGhostBadge(text, mode = "swap") {
+      if (!ghostEl) return;
+      const badge = ghostEl.querySelector(".ghost-action-badge");
+      if (badge) {
+        badge.textContent = text;
+        badge.dataset.mode = mode;
+      }
+    }
+
+    function cancelPointerDrag() {
+      if (!pointerDrag) return;
+      if (pointerDrag.hoverTimer) clearTimeout(pointerDrag.hoverTimer);
+      pointerDrag = null;
+      clearDragHighlights();
+      if (ghostEl) {
+        ghostEl.hidden = true;
+        ghostEl.innerHTML = "";
+      }
+    }
+
+    function startTouchDragVisual(state, ev) {
+      state.active = true;
+      state.sourceCard.classList.add("dragging");
+      if (globalThis.SFX?.dragPick) globalThis.SFX.dragPick();
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("drag_pick", 0.75);
+      if (ghostEl) {
+        const donor = getUnitAt(state.area, state.index);
+        const sym = donor ? G.SYMBOLS[donor.type] : null;
+        const rarity = donor ? G.getUnitRarity(donor) : null;
+        const st = donor ? G.getUnitStats(donor, run) : null;
+        ghostEl.innerHTML = `
+          <div class="ghost-card" style="--u-color:${rarity?.color || "#f5c451"}">
+            ${sym ? Art.renderPortraitImg(sym.artKey || donor.type, sym.name, "ghost-sprite") : ""}
+            <span class="ghost-name">${sym ? sym.short : ""} Lv.${st?.heroLv || 1}</span>
+          </div>
+          <div class="ghost-action-badge" data-mode="swap">拖放换位</div>
+        `;
+        ghostEl.hidden = false;
+        const liftY = ev.pointerType === "touch" ? 42 : 18;
+        ghostEl.style.transform = `translate3d(${ev.clientX}px, ${ev.clientY - liftY}px, 0)`;
+      }
+    }
+
+    function setHoverTarget(state, targetEl) {
+      if (state.hoverEl === targetEl) return;
+      if (state.hoverTimer) {
+        clearTimeout(state.hoverTimer);
+        state.hoverTimer = null;
+      }
+      if (state.hoverEl) {
+        state.hoverEl.classList.remove("drag-over-swap", "drag-over-absorb");
+      }
+      state.hoverEl = targetEl;
+      state.hoverAbsorbReady = false;
+
+      if (!targetEl) {
+        updateGhostBadge("松手取消", "neutral");
+        return;
+      }
+
+      const toArea = targetEl.dataset.area;
+      const toIdx = Number(targetEl.dataset.index);
+      if (toArea === state.area && toIdx === state.index) {
+        updateGhostBadge("原位", "neutral");
+        return;
+      }
+
+      const donor = getUnitAt(state.area, state.index);
+      const receiver = getUnitAt(toArea, toIdx);
+      if (!receiver) {
+        if (toArea === "overflow") {
+          updateGhostBadge("不可放回超编区", "neutral");
+          return;
         }
+        targetEl.classList.add("drag-over-swap");
+        updateGhostBadge("松手部署 / 换位", "swap");
+        return;
+      }
+
+      if (donor && receiver && donor.id !== receiver.id) {
+        if (armyMode === "absorb") {
+          state.hoverAbsorbReady = true;
+          targetEl.classList.add("drag-over-absorb");
+          updateGhostBadge("🔥 松手吞噬融合", "absorb");
+        } else {
+          targetEl.classList.add("drag-over-swap");
+          updateGhostBadge("松手换位 · 停住吞噬", "swap");
+          state.hoverTimer = setTimeout(() => {
+            if (!pointerDrag || pointerDrag.hoverEl !== targetEl) return;
+            pointerDrag.hoverAbsorbReady = true;
+            targetEl.classList.remove("drag-over-swap");
+            targetEl.classList.add("drag-over-absorb");
+            updateGhostBadge("🔥 松手吞噬融合!", "absorb");
+            if (globalThis.SFX?.dragHover) globalThis.SFX.dragHover();
+            if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("drag_hover_absorb", 1.0);
+          }, 320);
+        }
+      }
+    }
+
+    const bindTouchDragZone = el => {
+      if (!el) return;
+      el.addEventListener("pointerdown", e => {
+        if (e.button !== 0 && e.pointerType === "mouse") return;
+        const card = e.target.closest("[data-area][data-uid]");
+        if (!card || busy || run.outcome) return;
+        pointerDrag = {
+          pointerId: e.pointerId,
+          area: card.dataset.area,
+          index: Number(card.dataset.index),
+          uid: Number(card.dataset.uid),
+          sourceCard: card,
+          startX: e.clientX,
+          startY: e.clientY,
+          active: false,
+          hoverEl: null,
+          hoverTimer: null,
+          hoverAbsorbReady: false
+        };
       });
     };
-    bindDragZone($("formation-grid"));
-    bindDragZone($("bench-grid"));
-    if ($("overflow-grid")) {
-      bindDragZone($("overflow-grid"));
-    }
+
+    window.addEventListener("pointermove", e => {
+      if (!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+      const dist = Math.hypot(e.clientX - pointerDrag.startX, e.clientY - pointerDrag.startY);
+      if (!pointerDrag.active) {
+        if (dist < 8) return;
+        startTouchDragVisual(pointerDrag, e);
+      }
+      e.preventDefault();
+      if (ghostEl) {
+        const liftY = e.pointerType === "touch" ? 42 : 18;
+        ghostEl.style.transform = `translate3d(${e.clientX}px, ${e.clientY - liftY}px, 0)`;
+      }
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const targetSlot = under ? under.closest("[data-area]") : null;
+      setHoverTarget(pointerDrag, targetSlot);
+    }, { passive: false });
+
+    const finishPointerDrag = e => {
+      if (!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+      const state = pointerDrag;
+      if (!state.active) {
+        cancelPointerDrag();
+        return;
+      }
+      suppressNextRosterClick = true;
+      setTimeout(() => { suppressNextRosterClick = false; }, 120);
+
+      const targetEl = state.hoverEl;
+      const wantAbsorb = state.hoverAbsorbReady;
+      cancelPointerDrag();
+
+      if (!targetEl) return;
+      const toArea = targetEl.dataset.area;
+      const toIdx = Number(targetEl.dataset.index);
+      if (state.area === toArea && state.index === toIdx) return;
+
+      const donor = getUnitAt(state.area, state.index);
+      const receiver = getUnitAt(toArea, toIdx);
+      if (donor && receiver && donor.id !== receiver.id) {
+        if (wantAbsorb || armyMode === "absorb") {
+          openAbsorbDialog(receiver, donor);
+        } else if (G.swapSlots(run, state.area, state.index, toArea, toIdx)) {
+          if (globalThis.SFX?.dragSnap) globalThis.SFX.dragSnap();
+          else SFX.lock();
+          if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("swap", 0.8);
+          save();
+          renderAll();
+        }
+      } else if (donor && !receiver && toArea !== "overflow") {
+        if (G.swapSlots(run, state.area, state.index, toArea, toIdx)) {
+          if (globalThis.SFX?.dragSnap) globalThis.SFX.dragSnap();
+          else SFX.lock();
+          if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("drag_snap", 0.8);
+          save();
+          renderAll();
+        }
+      }
+    };
+
+    window.addEventListener("pointerup", finishPointerDrag);
+    window.addEventListener("pointercancel", cancelPointerDrag);
+
+    bindTouchDragZone($("formation-grid"));
+    bindTouchDragZone($("bench-grid"));
+    bindTouchDragZone($("overflow-grid"));
 
     function openMasteryDialog() {
       const item = run.pendingMastery?.[0];
@@ -1664,21 +1837,68 @@
         </button>`;
       }).join("");
 
-      // 3. Permanent Meta Upgrades
-      $("hub-upgrades-grid").innerHTML = Object.values(Meta.META_UPGRADES).map(up => {
+      // 3. Interactive Star / Radial Tech Tree (SVG constellation lines + positioned nodes!)
+      const nodes = Object.values(Meta.META_UPGRADES);
+      if (!selectedMetaNode || !Meta.META_UPGRADES[selectedMetaNode]) selectedMetaNode = "star_core";
+
+      const linesSvg = nodes.flatMap(n =>
+        (n.requires || []).map(req => {
+          const parent = Meta.META_UPGRADES[req.id];
+          if (!parent) return "";
+          const met = (meta.upgrades[req.id] || 0) >= req.lv;
+          const childBought = (meta.upgrades[n.id] || 0) > 0;
+          const stroke = childBought ? "#ffd86b" : met ? "#5cc8ff" : "#34415e";
+          const dash = met ? "" : ' stroke-dasharray="3 3"';
+          return `<line x1="${parent.x}" y1="${parent.y}" x2="${n.x}" y2="${n.y}" stroke="${stroke}" stroke-width="${childBought ? 1.4 : 0.9}"${dash} />`;
+        })
+      ).join("");
+
+      const branchLabels = `
+        <span class="star-arm-lbl" style="left:50%;top:2%">北·经济</span>
+        <span class="star-arm-lbl" style="left:94%;top:50%">东·编制</span>
+        <span class="star-arm-lbl" style="left:50%;top:97%">南·轮盘</span>
+        <span class="star-arm-lbl" style="left:6%;top:50%">西·核心</span>`;
+
+      const nodeBtns = nodes.map(up => {
         const lv = meta.upgrades[up.id] || 0;
-        const cost = Meta.getUpgradeCost(meta, up.id);
-        const canBuy = cost !== null && meta.crystals >= cost;
-        return `<div class="hub-up-card">
-          <div class="hub-up-info">
-            <strong>${up.icon} ${up.name} <span class="gold-txt">Lv.${lv}/${up.maxLevel}</span></strong>
-            <p>${up.desc(lv)}</p>
-          </div>
-          <button type="button" class="secondary-btn" data-hub-up="${up.id}"${canBuy ? "" : " disabled"}>
-            ${cost === null ? "已满级" : `升级 · ${cost}💎`}
-          </button>
-        </div>`;
+        const unlocked = Meta.isUpgradeUnlocked(meta, up.id);
+        const maxed = lv >= up.maxLevel;
+        const active = selectedMetaNode === up.id;
+        const cls = [
+          "star-node",
+          up.branch === "center" ? "center-node" : "",
+          active ? "selected" : "",
+          maxed ? "maxed" : lv > 0 ? "invested" : unlocked ? "unlockable" : "locked"
+        ].filter(Boolean).join(" ");
+        return `<button type="button" class="${cls}" data-star-node="${up.id}" style="left:${up.x}%;top:${up.y}%" title="${up.name} Lv.${lv}/${up.maxLevel}">
+          <span class="sn-ico">${unlocked ? up.icon : "🔒"}</span>
+          <span class="sn-lv">${lv}/${up.maxLevel}</span>
+        </button>`;
       }).join("");
+
+      $("hub-upgrades-grid").innerHTML = `
+        <svg class="star-tree-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${linesSvg}</svg>
+        ${branchLabels}
+        ${nodeBtns}`;
+
+      // Render selected node inspector & upgrade button
+      const cur = Meta.META_UPGRADES[selectedMetaNode];
+      const curLv = meta.upgrades[cur.id] || 0;
+      const curUnlocked = Meta.isUpgradeUnlocked(meta, cur.id);
+      const curCost = Meta.getUpgradeCost(meta, cur.id);
+      const reqText = Meta.getUpgradeReqText(meta, cur.id);
+      const canBuy = curUnlocked && curCost !== null && meta.crystals >= curCost;
+      if ($("star-tree-inspector")) {
+        $("star-tree-inspector").innerHTML = `
+          <div class="sti-info">
+            <strong>${cur.icon} ${cur.name} <span class="gold-txt">Lv.${curLv}/${cur.maxLevel}</span></strong>
+            <p>${cur.desc(curLv)}</p>
+            ${reqText ? `<p class="sti-req">🔒 ${reqText}</p>` : ""}
+          </div>
+          <button type="button" class="secondary-btn" data-hub-up="${cur.id}"${canBuy ? "" : " disabled"}>
+            ${!curUnlocked ? "前置未满" : curCost === null ? "已满级" : `升级 · ${curCost}💎`}
+          </button>`;
+      }
     }
 
     function openHub() {
@@ -1686,11 +1906,13 @@
       renderHub();
       $("hub-view").hidden = false;
       $("game-view").hidden = true;
+      if (SFX.setBgmMood) SFX.setBgmMood("hub");
     }
 
     function closeHub() {
       $("hub-view").hidden = true;
       $("game-view").hidden = false;
+      if (SFX.setBgmMood) SFX.setBgmMood("prep");
       arena.resize();
       renderAll();
     }
@@ -1715,26 +1937,98 @@
       renderHub();
     });
     $("hub-upgrades-grid").addEventListener("click", e => {
-      const btn = e.target.closest("[data-hub-up]");
-      if (!btn || btn.disabled) return;
-      const meta = Meta.loadMeta();
-      if (Meta.buyMetaUpgrade(meta, btn.dataset.hubUp)) {
-        SFX.tierUp();
+      const nodeBtn = e.target.closest("[data-star-node]");
+      if (nodeBtn) {
+        selectedMetaNode = nodeBtn.dataset.starNode;
+        SFX.lock();
         renderHub();
       }
     });
+    if ($("star-tree-inspector")) {
+      $("star-tree-inspector").addEventListener("click", e => {
+        const btn = e.target.closest("[data-hub-up]");
+        if (!btn || btn.disabled) return;
+        const meta = Meta.loadMeta();
+        if (Meta.buyMetaUpgrade(meta, btn.dataset.hubUp)) {
+          SFX.tierUp();
+          renderHub();
+        }
+      });
+    }
 
   $("btn-speed").addEventListener("click", () => {
     speedMult = speedMult === 1 ? 2 : 1;
     arena.setSpeed(speedMult);
     $("btn-speed").textContent = `${speedMult}×`;
     $("btn-speed").classList.toggle("active", speedMult === 2);
+    if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("button_tap", 0.65);
   });
 
+  function syncMenuAudioToggles() {
+    const muteBtn = $("btn-mute");
+    if (muteBtn) {
+      const m = SFX.isMuted();
+      muteBtn.innerHTML = `${m ? Art.UI_ICONS.soundOff : Art.UI_ICONS.soundOn}<span>${m ? "音效：关" : "音效：开"}</span>`;
+      muteBtn.classList.toggle("off", m);
+    }
+    const bgmBtn = $("btn-bgm");
+    if (bgmBtn && SFX.isBgmMuted) {
+      const bm = SFX.isBgmMuted();
+      bgmBtn.textContent = bm ? "🔇 音乐：关" : "🎵 音乐：开";
+      bgmBtn.classList.toggle("off", bm);
+    }
+    const hapBtn = $("btn-haptics");
+    if (hapBtn && globalThis.NativeBridge) {
+      const on = globalThis.NativeBridge.isHapticsEnabled();
+      hapBtn.textContent = on ? "📳 震动：开" : "📴 震动：关";
+      hapBtn.classList.toggle("off", !on);
+    }
+  }
+  syncMenuAudioToggles();
+
   $("btn-mute").addEventListener("click", () => {
-    const m = SFX.toggleMute();
-    $("btn-mute").innerHTML = m ? Art.UI_ICONS.soundOff : Art.UI_ICONS.soundOn;
+    SFX.toggleMute();
+    syncMenuAudioToggles();
   });
+
+  if ($("btn-bgm")) {
+    $("btn-bgm").addEventListener("click", () => {
+      if (SFX.toggleBgm) SFX.toggleBgm();
+      syncMenuAudioToggles();
+    });
+  }
+
+  if ($("btn-haptics")) {
+    $("btn-haptics").addEventListener("click", () => {
+      if (globalThis.NativeBridge) globalThis.NativeBridge.toggleHaptics();
+      syncMenuAudioToggles();
+    });
+  }
+
+  if ($("btn-open-menu") && $("menu-dialog")) {
+    $("btn-open-menu").addEventListener("click", () => {
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("button_tap", 0.65);
+      syncMenuAudioToggles();
+      if (!$("menu-dialog").open) $("menu-dialog").showModal();
+    });
+    $("menu-dialog").addEventListener("click", e => {
+      if (e.target === $("menu-dialog")) {
+        $("menu-dialog").close();
+        return;
+      }
+      if (e.target.closest(".menu-action-btn")) {
+        $("menu-dialog").close();
+      }
+    });
+  }
+
+  if ($("tier-badge") && $("rarity-odds-strip")) {
+    $("tier-badge").addEventListener("click", () => {
+      const strip = $("rarity-odds-strip");
+      strip.hidden = !strip.hidden;
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("button_tap", 0.55);
+    });
+  }
 
   if ($("top-more-menu")) {
     $("top-more-menu").addEventListener("click", e => {
@@ -1752,9 +2046,11 @@
   });
 
   const onRosterClick = e => {
+    if (suppressNextRosterClick) return;
     const sealed = e.target.closest("[data-unlock]");
     if (sealed && !sealed.disabled && !busy && !run.outcome) {
       if (G.unlockSlot(run, sealed.dataset.unlock, Number(sealed.dataset.index))) {
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("absorb_evolve", 0.85);
         save();
         renderAll();
         setTicker("阵位解锁", "新席位已可部署单位。", "win");

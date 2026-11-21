@@ -10,8 +10,8 @@
       wavesPerChapter: 6,
       stunChance: 0.05,
       stunDur: 0.35,
-      hpMult: 0.82,
-      atkMult: 0.80,
+      hpMult: 0.80,
+      atkMult: 0.78,
       rewardMult: 1.0,
       desc: "每章 6 波 · 敌军眩晕 5% (0.35s) · 适合熟悉流派"
     },
@@ -21,8 +21,8 @@
       wavesPerChapter: 10,
       stunChance: 0.10,
       stunDur: 0.45,
-      hpMult: 1.0,
-      atkMult: 0.96,
+      hpMult: 0.96,
+      atkMult: 0.92,
       rewardMult: 1.35,
       desc: "每章 10 波 · 敌军眩晕 10% (0.45s) · 标准进阶挑战"
     },
@@ -32,8 +32,8 @@
       wavesPerChapter: 15,
       stunChance: 0.16,
       stunDur: 0.55,
-      hpMult: 1.22,
-      atkMult: 1.15,
+      hpMult: 1.16,
+      atkMult: 1.10,
       rewardMult: 1.75,
       desc: "每章 15 波 · 敌军眩晕 16% (0.55s) · 高压构筑考验"
     },
@@ -43,86 +43,104 @@
       wavesPerChapter: 20,
       stunChance: 0.22,
       stunDur: 0.65,
-      hpMult: 1.48,
-      atkMult: 1.38,
-      rewardMult: 2.4,
-      desc: "每章 20 波 · 敌军眩晕 22% (0.65s) · 当前满强度噩梦人机"
+      hpMult: 1.38,
+      atkMult: 1.28,
+      rewardMult: 2.35,
+      desc: "每章 20 波 · 敌军眩晕 22% (0.65s) · 满强度噩梦人机"
     }
   ];
 
+  // 13-node Star / Radial Tech Tree with prerequisites (x, y in 0..100 percentage coordinates)
   const META_UPGRADES = {
+    star_core: {
+      id: "star_core", branch: "center", name: "星陨指挥中枢", icon: "⭐",
+      x: 50, y: 50, requires: [],
+      maxLevel: 4, costs: [4, 10, 20, 36],
+      desc: lv => `所有分支的星盘核心 · 全军基础生命与攻击 +${lv * 5}%（Lv.1 解锁四方星臂）`
+    },
+    // NORTH ARM: Economy & Interest
     startGold: {
-      id: "startGold",
-      name: "初始军费金库",
-      icon: "🪙",
-      maxLevel: 5,
-      costs: [4, 6, 9, 12, 16],
+      id: "startGold", branch: "econ", name: "初始军费金库", icon: "🪙",
+      x: 50, y: 28, requires: [{ id: "star_core", lv: 1 }],
+      maxLevel: 5, costs: [6, 11, 18, 28, 42],
       desc: lv => `开局初始金币 ${100 + lv * 10}G（每级 +10G，150G 封顶）`
     },
-    popCap: {
-      id: "popCap",
-      name: "军团统帅编制",
-      icon: "🚩",
-      maxLevel: 3,
-      costs: [6, 11, 18],
-      desc: lv => `开局默认出战人数上限 ${6 + lv} 人（最高 9 人）`
-    },
-    coreWorkshop: {
-      id: "coreWorkshop",
-      name: "转运核心工坊",
-      icon: "🎲",
-      maxLevel: 4,
-      costs: [5, 9, 14, 20],
-      desc: lv => `解锁更多高阶核心 · 稀有/传说率 +${lv * 12}%${lv >= 2 ? " · 核心 4 选 1" : ""}`
-    },
-    reelTech: {
-      id: "reelTech",
-      name: "星陨轮盘锻造",
-      icon: "⚙️",
-      maxLevel: 4,
-      costs: [5, 10, 15, 22],
-      desc: lv => `解锁轮盘最高阶至 Lv.${Math.min(5, 2 + lv)} · 升阶费用 -${lv * 8}%`
-    },
-    shopVault: {
-      id: "shopVault",
-      name: "秘宝商会特许",
-      icon: "🏪",
-      maxLevel: 3,
-      costs: [5, 10, 16],
-      desc: lv => `解锁高级商店货品（含神铸金骰、星界卷轴等）· 商店等级 Lv.${lv + 1}`
-    },
     interestBank: {
-      id: "interestBank",
-      name: "星陨复利银行",
-      icon: "🏦",
-      maxLevel: 4,
-      costs: [4, 7, 11, 16],
+      id: "interestBank", branch: "econ", name: "星陨复利银行", icon: "🏦",
+      x: 35, y: 12, requires: [{ id: "startGold", lv: 2 }],
+      maxLevel: 4, costs: [10, 18, 30, 48],
       desc: lv => lv === 0
         ? "未解锁：升级后每波胜利按存款产生金币利息"
         : `每存 20G 产 +${1 + lv}G 利息（单波上限 +${[0, 15, 25, 35, 50][lv]}G）`
     },
-    coreReroll: {
-      id: "coreReroll",
-      name: "核心重铸许可",
-      icon: "🔄",
-      maxLevel: 2,
-      costs: [5, 10],
-      desc: lv => `单局转运核心免费刷新次数：${1 + lv} 次（最多 3 次，之后消耗递增水晶）`
+    mercenaryRefund: {
+      id: "mercenaryRefund", branch: "econ", name: "民兵退役补贴", icon: "💼",
+      x: 65, y: 12, requires: [{ id: "startGold", lv: 1 }],
+      maxLevel: 3, costs: [8, 16, 28],
+      desc: lv => `1~2 费打工卡战后补贴 +${lv * 2}G/人，出售返现比例额外 +${lv * 10}%`
+    },
+    // EAST ARM: Army & Synergies
+    popCap: {
+      id: "popCap", branch: "army", name: "军团统帅编制", icon: "🚩",
+      x: 74, y: 50, requires: [{ id: "star_core", lv: 1 }],
+      maxLevel: 3, costs: [10, 22, 40],
+      desc: lv => `开局默认出战人数上限 ${6 + lv} 人（最高 9 人）`
+    },
+    synergyMaster: {
+      id: "synergyMaster", branch: "army", name: "羁绊共鸣徽章", icon: "🎖️",
+      x: 89, y: 34, requires: [{ id: "popCap", lv: 1 }],
+      maxLevel: 4, costs: [10, 20, 34, 52],
+      desc: lv => `每激活 1 条职业或阵营羁绊，全军伤害与护盾额外 +${lv * 4}%`
+    },
+    vanguardReserve: {
+      id: "vanguardReserve", branch: "army", name: "备战扩编营地", icon: "⛺",
+      x: 89, y: 66, requires: [{ id: "popCap", lv: 1 }],
+      maxLevel: 2, costs: [12, 26],
+      desc: lv => `开局默认备战席位 ${2 + lv} 格（最高 4 格，方便留打工与羁绊卡）`
+    },
+    // SOUTH ARM: Slot Machine & High-Tier Odds
+    reelTech: {
+      id: "reelTech", branch: "reel", name: "星陨轮盘锻造", icon: "⚙️",
+      x: 50, y: 72, requires: [{ id: "star_core", lv: 1 }],
+      maxLevel: 4, costs: [8, 16, 28, 44],
+      desc: lv => `轮盘升阶金币消耗 -${lv * 7}% · 狂热充能速度 +${lv * 8}%`
     },
     heroArchive: {
-      id: "heroArchive",
-      name: "高阶英灵祝福",
-      icon: "⚔️",
-      maxLevel: 4,
-      costs: [5, 9, 14, 20],
-      desc: lv => `全卡池已开放 · 额外提升紫率 +${(lv * 1.5).toFixed(1)}% · 金率 +${(lv * 0.25).toFixed(2)}%`
+      id: "heroArchive", branch: "reel", name: "高阶英灵祝福", icon: "⚔️",
+      x: 35, y: 88, requires: [{ id: "reelTech", lv: 1 }],
+      maxLevel: 4, costs: [12, 22, 38, 60],
+      desc: lv => `额外提升 4 费紫率 +${(lv * 0.9).toFixed(1)}% · 5 费金率 +${(lv * 0.15).toFixed(2)}%`
+    },
+    shopVault: {
+      id: "shopVault", branch: "reel", name: "秘宝商会特许", icon: "🏪",
+      x: 65, y: 88, requires: [{ id: "reelTech", lv: 2 }],
+      maxLevel: 3, costs: [12, 24, 42],
+      desc: lv => `解锁高级商店货品（神铸金骰/高级轮盘券）· 商店等级 Lv.${lv + 1}`
+    },
+    // WEST ARM: Cores & Rerolls
+    coreWorkshop: {
+      id: "coreWorkshop", branch: "core", name: "转运核心工坊", icon: "🎲",
+      x: 26, y: 50, requires: [{ id: "star_core", lv: 1 }],
+      maxLevel: 4, costs: [8, 16, 28, 46],
+      desc: lv => `稀有/传说核心爆率 +${lv * 10}%${lv >= 2 ? " · 核心 4 选 1 已开启" : "（Lv.2 开启核心 4 选 1）"}`
+    },
+    coreReroll: {
+      id: "coreReroll", branch: "core", name: "核心重铸许可", icon: "🔄",
+      x: 11, y: 34, requires: [{ id: "coreWorkshop", lv: 1 }],
+      maxLevel: 2, costs: [10, 24],
+      desc: lv => `单局转运核心免费刷新次数：${1 + lv} 次（最多 3 次，之后消耗递增水晶）`
+    },
+    coreSlotMeta: {
+      id: "coreSlotMeta", branch: "core", name: "遗物核心扩槽", icon: "💎",
+      x: 11, y: 66, requires: [{ id: "coreWorkshop", lv: 2 }],
+      maxLevel: 2, costs: [16, 34],
+      desc: lv => `开局默认转运核心槽位 ${4 + lv} 格（最高 6 格）`
     }
   };
 
   function createDefaultMeta() {
     return {
-      crystals: 12, // Starting war-hall crystals so new players can try an upgrade right away
-      // Unlocked chapters per difficulty (chapter 1..5). Start with Ch1 unlocked on Easy!
+      crystals: 10,
       unlockedChapters: {
         easy: 1,
         normal: 0,
@@ -138,14 +156,19 @@
         enemies: []
       },
       upgrades: {
+        star_core: 0,
         startGold: 0,
-        popCap: 0,
-        coreWorkshop: 0,
-        reelTech: 0,
-        shopVault: 0,
         interestBank: 0,
+        mercenaryRefund: 0,
+        popCap: 0,
+        synergyMaster: 0,
+        vanguardReserve: 0,
+        reelTech: 0,
+        heroArchive: 0,
+        shopVault: 0,
+        coreWorkshop: 0,
         coreReroll: 0,
-        heroArchive: 0
+        coreSlotMeta: 0
       }
     };
   }
@@ -156,6 +179,10 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         const base = createDefaultMeta();
+        const upgrades = { ...base.upgrades, ...(parsed.upgrades || {}) };
+        // If returning player already had child upgrades before the tree existed, auto-grant star_core Lv.1!
+        const hasChild = Object.entries(upgrades).some(([k, v]) => k !== "star_core" && v > 0);
+        if (hasChild && (upgrades.star_core || 0) < 1) upgrades.star_core = 1;
         return {
           ...base,
           ...parsed,
@@ -165,7 +192,7 @@
             enemies: parsed.codex?.enemies || []
           },
           unlockedChapters: { ...base.unlockedChapters, ...(parsed.unlockedChapters || {}) },
-          upgrades: { ...base.upgrades, ...(parsed.upgrades || {}) }
+          upgrades
         };
       }
     } catch {}
@@ -197,7 +224,6 @@
     if (chapterId >= cur && chapterId < 5) {
       meta.unlockedChapters[diffId] = chapterId + 1;
     }
-    // Clearing Chapter 1 (or any chapter >= 1) on a difficulty unlocks the next difficulty's Chapter 1!
     const diffIdx = DIFFICULTIES.findIndex(d => d.id === diffId);
     if (diffIdx >= 0 && diffIdx < DIFFICULTIES.length - 1) {
       const nextDiff = DIFFICULTIES[diffIdx + 1].id;
@@ -211,6 +237,20 @@
     saveMeta(meta);
   }
 
+  function isUpgradeUnlocked(meta, key) {
+    const def = META_UPGRADES[key];
+    if (!def) return false;
+    return (def.requires || []).every(req => (meta.upgrades?.[req.id] || 0) >= req.lv);
+  }
+
+  function getUpgradeReqText(meta, key) {
+    const def = META_UPGRADES[key];
+    if (!def || !def.requires?.length) return "";
+    const missing = def.requires.filter(req => (meta.upgrades?.[req.id] || 0) < req.lv);
+    if (!missing.length) return "";
+    return "需前置：" + missing.map(r => `【${META_UPGRADES[r.id]?.name || r.id} Lv.${r.lv}】`).join(" + ");
+  }
+
   function getUpgradeCost(meta, key) {
     const def = META_UPGRADES[key];
     if (!def) return null;
@@ -220,6 +260,7 @@
   }
 
   function buyMetaUpgrade(meta, key) {
+    if (!isUpgradeUnlocked(meta, key)) return false;
     const cost = getUpgradeCost(meta, key);
     if (cost === null || meta.crystals < cost) return false;
     meta.crystals -= cost;
@@ -229,7 +270,6 @@
   }
 
   function getMaxUnlockedRarityTier() {
-    // All 1~5 cost pools are naturally gated by Reel Tier Lv.1~Lv.5; heroArchive boosts high-tier drop odds!
     return 5;
   }
 
@@ -272,6 +312,8 @@
     isDifficultyUnlocked,
     isChapterUnlocked,
     recordChapterClear,
+    isUpgradeUnlocked,
+    getUpgradeReqText,
     getUpgradeCost,
     buyMetaUpgrade,
     getMaxUnlockedRarityTier,

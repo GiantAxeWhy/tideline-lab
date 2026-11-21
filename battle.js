@@ -23,6 +23,9 @@
       this.rings = [];
       this.particles = [];
       this.texts = [];
+      this.pillars = [];
+      this.ultFlash = null;
+      this.hitstop = 0;
       this.shake = 0;
       this.time = 0;
       this.healTick = 0;
@@ -43,6 +46,10 @@
       this.resize();
       this._bindPointerEvents();
       window.addEventListener("resize", () => this.resize());
+      if (typeof ResizeObserver !== "undefined" && this.canvas.parentElement) {
+        this._ro = new ResizeObserver(() => this.resize());
+        this._ro.observe(this.canvas.parentElement);
+      }
       this._loop = this._loop.bind(this);
       this._raf = requestAnimationFrame(this._loop);
     }
@@ -69,7 +76,7 @@
       for (const a of this.allies) {
         if (!a.alive || a.summonKind) continue;
         const d = Math.hypot(a.x - px, a.y - py);
-        if (d <= (a.radius || 20) + 16 && d < bestDist) {
+        if (d <= (a.radius || 20) + 24 && d < bestDist) {
           best = a;
           bestDist = d;
         }
@@ -85,9 +92,13 @@
         if (!hit) return;
         this.draggingAlly = hit;
         this.selectedUnitId = hit.uid;
-        this.dragOffset = { x: hit.x - p.x, y: hit.y - p.y };
+        // On touchscreens, gently offset upward so the fingertip never hides the hero
+        const touchLift = ev.pointerType === "touch" ? -18 : 0;
+        this.dragOffset = { x: hit.x - p.x, y: (hit.y - p.y) + touchLift };
         this.canvas.setPointerCapture?.(ev.pointerId);
         this.canvas.style.cursor = "grabbing";
+        if (globalThis.SFX?.dragPick) globalThis.SFX.dragPick();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("drag_pick", 0.75);
         if (this.onUnitSelect) this.onUnitSelect(hit.uid);
       });
 
@@ -133,6 +144,8 @@
         this.draggingAlly = null;
         this.canvas.style.cursor = "grab";
         try { this.canvas.releasePointerCapture?.(ev.pointerId); } catch {}
+        if (globalThis.SFX?.dragSnap) globalThis.SFX.dragSnap();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("drag_snap", 0.75);
         if (this.run) {
           for (const a of this.allies) {
             if (!a.summonKind) G.setUnitPos(this.run, a.uid, a.x / this.w, a.y / this.h);
@@ -147,9 +160,13 @@
 
     resize() {
       const rect = this.canvas.parentElement.getBoundingClientRect();
+      if (rect.width < 40 || rect.height < 40) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.w = Math.max(320, Math.floor(rect.width));
-      this.h = Math.max(220, Math.floor(rect.height));
+      const nw = Math.max(240, Math.floor(rect.width));
+      const nh = Math.max(140, Math.floor(rect.height));
+      if (nw === this.w && nh === this.h && this.canvas.width === Math.floor(nw * dpr)) return;
+      this.w = nw;
+      this.h = nh;
       this.canvas.width = Math.floor(this.w * dpr);
       this.canvas.height = Math.floor(this.h * dpr);
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -238,7 +255,8 @@
       this.texts = [];
 
       const syns = G.getActiveSynergies(run);
-      const knightSyn = syns.find(s => s.type === "knight")?.active;
+      const knightTier = syns.find(s => s.type === "knight")?.tier || 0;
+      this.classTiers = Object.fromEntries(syns.map(s => [s.type, s.tier || 0]));
       this.factions = Object.fromEntries(G.getFactionSynergies(run).map(f => [f.id, f.tier]));
       const scale = this._canvasScale();
 
@@ -261,10 +279,12 @@
         if (masteries.includes("iron_will")) shield += Math.round(st.hp * 0.50);
         if (masteries.includes("mana_barrier")) shield += Math.round(st.hp * 0.45);
         if (u.trait === "iron_skin") shield += (Number.isFinite(u.traitVal) ? u.traitVal + 8 : 25);
-        if (knightSyn) shield += 22;
+        if (knightTier >= 4) shield += Math.round(st.hp * 0.30);
+        else if (knightTier >= 2) shield += 35;
         if (inFrontZone && G.hasCore(run, "vanguard_oath")) shield += 24;
         if (u.evolution === "fortress") shield += Math.round(st.hp * 0.28);
-        if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
+        if (this.factions.alliance >= 5) shield += Math.round(st.hp * 0.45);
+        else if (this.factions.alliance >= 3) shield += Math.round(st.hp * 0.25);
 
         const turretLv = (u.skills || []).find(s => s.id === "auto_turret")?.level || 0;
         const evoInfo = G.getUnitEvoInfo ? G.getUnitEvoInfo(u) : null;
@@ -412,7 +432,14 @@
       this.phaseIndex = 0;
       this.nextEnemyId = 0;
       this.blasts = [];
+      this.pillars = [];
+      this.ultFlash = null;
+      this.hitstop = 0;
       this.enemies = [];
+      const hasBossWave = (this.phases || []).some(p => (p.enemies || []).some(e => e.kind === "boss"));
+      if (globalThis.SFX?.setBgmMood) {
+        globalThis.SFX.setBgmMood(hasBossWave ? "boss" : "battle");
+      }
       this.healTick = 0;
       this.battleTime = 0;
       this.flawless = true;
@@ -441,7 +468,7 @@
     }
 
     _holyShieldMultiplier() {
-      return this.factions?.alliance >= 3 ? 1.6 : this.factions?.alliance >= 2 ? 1.35 : 1;
+      return this.factions?.alliance >= 5 ? 1.9 : this.factions?.alliance >= 3 ? 1.6 : this.factions?.alliance >= 2 ? 1.35 : 1;
     }
 
     _grantShield(unit, amount) {
@@ -518,8 +545,11 @@
           this.battleGold += 4 * dropMultiplier;
           this.battleCrystals += dropMultiplier;
         }
-        if (this.factions.elves >= 3) this.battleGold += 5;
-        if (this.factions.undead >= 3) {
+        if (this.factions.elves >= 5) this.battleGold += 8;
+        else if (this.factions.elves >= 3) this.battleGold += 5;
+        if (this.factions.undead >= 5) {
+          this.allies.filter(a => a.alive).forEach(a => this._heal(a, a.maxHp * 0.14));
+        } else if (this.factions.undead >= 3) {
           this.allies.filter(a => a.alive).forEach(a => this._heal(a, a.maxHp * 0.08));
         }
       }
@@ -558,6 +588,10 @@
       if (globalThis.SFX) {
         if (won) globalThis.SFX.victory();
         else globalThis.SFX.defeat();
+        globalThis.SFX.setBgmMood?.("prep");
+      }
+      if (globalThis.NativeBridge) {
+        globalThis.NativeBridge.haptic(won ? "victory" : "defeat", 1.0);
       }
       setTimeout(() => {
         if (this.onFinish) {
@@ -628,6 +662,9 @@
       if (target.side === "ally" && target.dmgReduceTimer > 0) {
         dmg = Math.max(1, Math.round(dmg * 0.55));
       }
+      if (target.side === "ally" && this.classTiers?.knight >= 4) {
+        dmg = Math.max(1, Math.round(dmg * 0.82));
+      }
       if (target.side === "ally" && target.masteryBuffs?.includes("iron_will")) {
         dmg = Math.max(1, Math.round(dmg * 0.80));
       }
@@ -666,6 +703,7 @@
         }
         if (attacker.masteryBuffs?.includes("phantom_cloak")) this._heal(attacker, dealt * 0.28);
         if (attacker.masteryBuffs?.includes("war_berserk")) this._heal(attacker, dealt * 0.22);
+        if (this.classTiers?.valkyrie >= 4) this._heal(attacker, dealt * 0.18);
         const bloodLv = this._skillLv(attacker, "blood_frenzy");
         if (bloodLv > 0) {
           this._heal(attacker, dealt * ([0.12, 0.18, 0.25, 0.32, 0.42][bloodLv - 1] || 0.12));
@@ -673,11 +711,12 @@
       }
 
       if (isCrit) {
-        this.shake = Math.max(this.shake, 4);
+        this.shake = Math.max(this.shake, 4.5);
         if (globalThis.SFX) globalThis.SFX.crit();
+        if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("crit_hit", 0.8);
         if (attacker?.alive && attacker.side === "ally") {
           const horde = this.factions.horde;
-          if (horde >= 2) this._heal(attacker, dealt * (horde >= 3 ? .38 : .22));
+          if (horde >= 2) this._heal(attacker, dealt * (horde >= 5 ? .55 : horde >= 3 ? .38 : .22));
           if (this.goldPoet) this.battleGold += 2;
         }
       } else if (globalThis.SFX) {
@@ -687,7 +726,10 @@
       if (target.hp <= 0) {
         target.alive = false;
         this._spawnParticles(target.x, target.y, target.color, target.isBoss ? 26 : 14);
-        if (target.isBoss) this.shake = 10;
+        if (target.isBoss) {
+          this.shake = 12;
+          if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("ultimate_cast", 1.1);
+        }
         this._onDeath(attacker, target);
       }
 
@@ -791,6 +833,25 @@
       }
     }
 
+    _triggerUltimateFX(actor, color = "#ffd86b", label = "", intensity = 1.0, x = null, y = null) {
+      if (actor && (actor.ultFxCd || 0) > 0) return;
+      if (actor) actor.ultFxCd = 2.6;
+      const fx = x ?? actor?.x ?? this.w * 0.5;
+      const fy = y ?? actor?.y ?? this.h * 0.5;
+      this.hitstop = Math.max(this.hitstop || 0, 0.032 * Math.min(1.2, intensity));
+      this.shake = Math.max(this.shake, 11.5 * intensity);
+      this.ultFlash = { color, life: 0.34, maxLife: 0.34, intensity };
+      this.pillars.push({ x: fx, y: fy, color, width: 34 * intensity, life: 0.42, maxLife: 0.42 });
+      this.rings.push({ x: fx, y: fy, r: 12, maxR: 135 * intensity, color, life: 0.44 });
+      this.rings.push({ x: fx, y: fy, r: 6, maxR: 85 * intensity, color: "#ffffff", life: 0.28 });
+      this._spawnParticles(fx, fy, color, Math.round(18 * intensity));
+      if (label) {
+        this._spawnText(fx, fy - 28, label, color, 16);
+      }
+      if (globalThis.SFX?.ultimate) globalThis.SFX.ultimate();
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("ultimate_cast", intensity);
+    }
+
     _resolveCollisions() {
       const actors = [...this.allies, ...this.enemies].filter(u => u.alive && !(u.spawnGrace > 0));
       const minX = 24;
@@ -811,7 +872,7 @@
             const d2 = dx * dx + dy * dy;
             if (d2 >= minDist * minDist) continue;
             const dist = Math.sqrt(d2) || 0.01;
-            const overlap = (minDist - dist) * 0.55;
+            const overlap = (minDist - dist) * 0.38;
             const nx = dx / dist;
             const ny = dy / dist;
             const mb = b.mass || 1;
@@ -1177,6 +1238,7 @@
           this._applyDamage(u, e, dmg * 0.85, { color: "#ffd86b", shieldMultiplier: shM });
         }
         this.allies.filter(a => a.alive).forEach(a => this._grantShield(a, u.atk * 0.22));
+        this._triggerUltimateFX(u, "#ffd86b", "天穹圣枪!", 1.0, target.x, target.y);
       }
       const voidLv = this._skillLv(u, "void_singularity");
       if (voidLv > 0) {
@@ -1184,6 +1246,7 @@
         this.rings.push({ x: target.x, y: target.y, r: 12, maxR: 112, color: "#ff75b5", life: 0.36 });
         this.enemies.filter(e => e.alive && Math.hypot(e.x - target.x, e.y - target.y) <= 115)
           .forEach(e => this._applyDamage(u, e, u.atk * mult, { color: "#ff75b5", isCrit }));
+        this._triggerUltimateFX(u, "#d975ff", "虚空奇点!", 1.08, target.x, target.y);
       }
 
       // Expanded 13 New Green / Blue / Purple / Gold Hero Skills (Lv.1~Lv.5)
@@ -1317,6 +1380,7 @@
           e.stunTimer = Math.max(e.stunTimer || 0, 0.75);
           this._applyDamage(u, e, u.atk * mult, { color: "#ffb838", shieldMultiplier: 2.5, isCrit });
         });
+        this._triggerUltimateFX(u, "#ff8b38", "裂地天灾!", 1.12, u.x, u.y);
       }
 
       const graceLv = this._skillLv(u, "divine_grace");
@@ -1331,6 +1395,7 @@
           this.beams.push({ x1: target.x, y1: 12, x2: target.x, y2: target.y, color: "#fff3b0", life: 0.28, jagged: false });
           this._applyDamage(u, target, u.atk * 1.15, { color: "#ffe894", isCrit });
         }
+        this._triggerUltimateFX(u, "#fff3b0", "神圣裁决!", 0.96, target.x, target.y);
       }
 
       const galaxyLv = this._skillLv(u, "galaxy_barrage");
@@ -1346,6 +1411,7 @@
             onHit: () => this._applyDamage(u, t, u.atk * mult, { color: "#ffe894", isCrit, shieldMultiplier: 2 })
           });
         }
+        this._triggerUltimateFX(u, "#7ce8ff", "星河齐射!", 0.98, u.x, u.y);
       }
 
       // Level 30 Mastery procs
@@ -1449,7 +1515,9 @@
       const livingAllies = this.allies.filter(a => a.alive);
       if (livingAllies.length === 0) return;
       if (globalThis.SFX) globalThis.SFX.bossSkill();
-      this.shake = 8;
+      if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("boss_skill", 1.0);
+      this.shake = Math.max(this.shake, 10);
+      this.ultFlash = { color: "#ff3355", life: 0.24, maxLife: 0.24, intensity: 0.75 };
 
       if (boss.bossId === "grom") {
         // Ch1 Exam: Basic Frontline & Sustain
@@ -1532,6 +1600,18 @@
     _update(dt) {
       this.time += dt;
       if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 28);
+      if (this.ultFlash) {
+        this.ultFlash.life -= dt;
+        if (this.ultFlash.life <= 0) this.ultFlash = null;
+      }
+      for (let i = this.pillars.length - 1; i >= 0; i -= 1) {
+        this.pillars[i].life -= dt;
+        if (this.pillars[i].life <= 0) this.pillars.splice(i, 1);
+      }
+      if (this.hitstop > 0) {
+        this.hitstop = Math.max(0, this.hitstop - dt);
+        return;
+      }
 
       // Update FX even after result
       for (let i = this.projectiles.length - 1; i >= 0; i -= 1) {
@@ -1656,6 +1736,7 @@
       for (const u of [...this.allies]) {
         if (!u.alive) continue;
         if (u.hitFlash > 0) u.hitFlash -= dt;
+        if (u.ultFxCd > 0) u.ultFxCd = Math.max(0, u.ultFxCd - dt);
         if (u.lunge > 0) u.lunge = Math.max(0, u.lunge - dt * 5);
         u.slowTimer = Math.max(0, u.slowTimer - dt);
         u.invulnerable = Math.max(0, u.invulnerable - dt);
@@ -1713,9 +1794,11 @@
           spdMult *= 1 + 0.45 + (bannerLv - 1) * 0.22;
         }
 
-        // Move toward target if outside attack range!
+        // Smooth velocity-interpolated movement toward target!
         const target = this._pickTarget(u, this.enemies);
         let inRange = false;
+        let desiredVx = 0;
+        let desiredVy = 0;
         if (target) {
           const dx = target.x - u.x;
           const dy = target.y - u.y;
@@ -1723,13 +1806,36 @@
           const reach = (u.range || 55) + (target.radius || 17);
           if (dist <= reach) {
             inRange = true;
-          } else if (u.moveSpd > 0) {
-            const step = Math.min(dist - reach + 4, u.moveSpd * (u.slowTimer > 0 ? 0.65 : 1) * dt);
-            if (step > 0 && dist > 0.01) {
-              u.x += (dx / dist) * step;
-              u.y += (dy / dist) * step;
-            }
+          } else if (u.moveSpd > 0 && dist > 0.01) {
+            const spd = u.moveSpd * (u.slowTimer > 0 ? 0.65 : 1);
+            const slowDown = Math.min(1, Math.max(0.28, (dist - reach + 6) / 28));
+            desiredVx = (dx / dist) * spd * slowDown;
+            desiredVy = (dy / dist) * spd * slowDown;
           }
+        }
+        const accel = Math.min(1, dt * 13);
+        u.vx = (u.vx || 0) + (desiredVx - (u.vx || 0)) * accel;
+        u.vy = (u.vy || 0) + (desiredVy - (u.vy || 0)) * accel;
+        const speedNow = Math.hypot(u.vx, u.vy);
+        if (speedNow > 4) {
+          u.x += u.vx * dt;
+          u.y += u.vy * dt;
+          u.walkPhase = (u.walkPhase || 0) + dt * Math.max(6, speedNow * 0.11);
+          u.isMoving = true;
+          if (Math.random() < dt * 5) {
+            this.particles.push({
+              x: u.x - (u.vx / speedNow) * 8,
+              y: u.y + 14 + (Math.random() - 0.5) * 4,
+              vx: -u.vx * 0.12 + (Math.random() - 0.5) * 14,
+              vy: -6 - Math.random() * 10,
+              r: 1.8 + Math.random() * 1.4,
+              color: "rgba(215, 200, 175, 0.45)",
+              life: 0.24,
+              maxLife: 0.24
+            });
+          }
+        } else {
+          u.isMoving = false;
         }
 
         if (inRange) {
@@ -1759,9 +1865,14 @@
           e.skillTimer = Math.min(e.skillTimer, 0.6);
           e.stunTimer = 0;
           this.shake = Math.max(this.shake, 16);
+          this.hitstop = Math.max(this.hitstop || 0, 0.045);
+          this.ultFlash = { color: "#ff2a55", life: 0.42, maxLife: 0.42, intensity: 1.15 };
+          this.pillars.push({ x: e.x, y: e.y, color: "#ff2a55", width: 46, life: 0.48, maxLife: 0.48 });
           this.rings.push({ x: e.x, y: e.y, r: 22, maxR: 220, color: "#ff2a55", life: 0.6 });
           this._spawnText(e.x, e.y - 34, "🔥 二阶段狂暴觉醒！+护盾", "#ff4d6d", 17);
-          if (globalThis.SFX) globalThis.SFX.bossSkill();
+          if (globalThis.SFX?.bossPhase2) globalThis.SFX.bossPhase2();
+          else if (globalThis.SFX) globalThis.SFX.bossSkill();
+          if (globalThis.NativeBridge) globalThis.NativeBridge.haptic("boss_phase2", 1.15);
           e.rageBubbleUntil = this.time + 2.4;
         }
         if (e.hitFlash > 0) e.hitFlash -= dt;
@@ -1772,9 +1883,11 @@
 
         this._enemyTactic(e, dt);
 
-        // Every enemy uses explicit Move Speed + Attack Range to engage its target!
+        // Smooth velocity-interpolated enemy movement
         const target = this._pickTarget(e, this.allies);
         let inRange = false;
+        let desiredVx = 0;
+        let desiredVy = 0;
         if (target) {
           const dx = target.x - e.x;
           const dy = target.y - e.y;
@@ -1782,14 +1895,24 @@
           const reach = (e.range || 52) + (target.radius || 17);
           if (dist <= reach) {
             inRange = true;
-          } else {
+          } else if (dist > 0.01) {
             const moveSpd = (e.moveSpd || 100) * (e.slowTimer > 0 ? 0.65 : 1) * e.enrage;
-            const step = Math.min(dist - reach + 4, moveSpd * dt);
-            if (step > 0 && dist > 0.01) {
-              e.x += (dx / dist) * step;
-              e.y += (dy / dist) * step;
-            }
+            const slowDown = Math.min(1, Math.max(0.28, (dist - reach + 6) / 28));
+            desiredVx = (dx / dist) * moveSpd * slowDown;
+            desiredVy = (dy / dist) * moveSpd * slowDown;
           }
+        }
+        const eAccel = Math.min(1, dt * 11);
+        e.vx = (e.vx || 0) + (desiredVx - (e.vx || 0)) * eAccel;
+        e.vy = (e.vy || 0) + (desiredVy - (e.vy || 0)) * eAccel;
+        const eSpeed = Math.hypot(e.vx, e.vy);
+        if (eSpeed > 4) {
+          e.x += e.vx * dt;
+          e.y += e.vy * dt;
+          e.walkPhase = (e.walkPhase || 0) + dt * Math.max(5.5, eSpeed * 0.10);
+          e.isMoving = true;
+        } else {
+          e.isMoving = false;
         }
 
         const affixSpeed = this.run.endlessAffixes?.includes("blood_tide") ? 1.25 : 1;
@@ -1833,7 +1956,9 @@
       const breath = 1 + Math.sin(phase) * 0.025;
       const x = u.x + u.lunge * 18;
       const y = u.y + bob;
-      const size = u.isBoss ? 116 : (isAlly ? 52 + (u.level - 1) * 5.5 : 56);
+      const hScale = Math.max(0.72, Math.min(1, this.h / 245));
+      const baseSize = u.isBoss ? 116 : (isAlly ? 52 + (u.level - 1) * 5.5 : 56);
+      const size = Math.round(baseSize * hScale);
       const footY = y + size * 0.42;
 
       // Ground contact shadow on flagstones
@@ -1916,9 +2041,28 @@
         ctx.restore();
       }
 
+      // Show live attack range ring when dragging an ally on mobile/desktop
+      if (isAlly && this.draggingAlly === u && this.mode === "preview") {
+        ctx.save();
+        ctx.strokeStyle = "rgba(245, 200, 105, 0.55)";
+        ctx.fillStyle = "rgba(245, 200, 105, 0.08)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(x, footY, Math.max(46, u.range || 55), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const walkBob = u.isMoving ? Math.abs(Math.sin(u.walkPhase || 0)) * (u.isBoss ? 3.5 : 4.5) : 0;
+      const walkTilt = u.isMoving ? Math.sin(u.walkPhase || 0) * 0.065 : 0;
+      const dragLift = (isAlly && this.draggingAlly === u) ? 7 : 0;
+
       ctx.save();
       ctx.imageSmoothingEnabled = false;
-      ctx.translate(x, footY);
+      ctx.translate(x, footY - walkBob - dragLift);
+      if (walkTilt) ctx.rotate(walkTilt);
       ctx.scale(1 / breath, breath);
       if (u.hitFlash > 0) {
         ctx.filter = "brightness(2.4) saturate(0.4)";
@@ -2225,6 +2369,36 @@
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
+      }
+
+      // Ultimate vertical light pillars
+      for (const p of this.pillars) {
+        const ratio = Math.max(0, p.life / p.maxLife);
+        ctx.save();
+        ctx.globalAlpha = ratio * 0.65;
+        const grad = ctx.createLinearGradient(p.x - p.width, 0, p.x + p.width, 0);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(0.5, p.color);
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(p.x - p.width * ratio, 0, p.width * 2 * ratio, p.y + 18);
+        ctx.restore();
+      }
+
+      // Dramatic ultimate vignette flash
+      if (this.ultFlash && this.ultFlash.life > 0) {
+        const ratio = this.ultFlash.life / this.ultFlash.maxLife;
+        ctx.save();
+        const flashGrad = ctx.createRadialGradient(
+          this.w * 0.5, this.h * 0.5, this.w * 0.16,
+          this.w * 0.5, this.h * 0.5, this.w * 0.68
+        );
+        flashGrad.addColorStop(0, "rgba(0,0,0,0)");
+        flashGrad.addColorStop(1, this.ultFlash.color);
+        ctx.globalAlpha = Math.min(0.32, ratio * 0.32 * (this.ultFlash.intensity || 1));
+        ctx.fillStyle = flashGrad;
+        ctx.fillRect(0, 0, this.w, this.h);
         ctx.restore();
       }
 

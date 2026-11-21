@@ -1843,6 +1843,130 @@ h1, h2, h3, p { margin: 0; }
 .hub-up-info strong { font-size: 0.8rem; display: block; }
 .hub-up-info p { font-size: 0.7rem; color: var(--muted); margin-top: 0.14rem; }
 
+/* Star / Radial Constellation Tech Tree */
+.star-tree-wrap {
+  position: relative;
+  width: 100%;
+  height: 336px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(92, 200, 255, 0.1) 0%, rgba(16, 22, 38, 0.96) 62%, #0a0e1a 100%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(255, 255, 255, 0.025) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(255, 255, 255, 0.025) 23px 24px);
+  border: 2px solid #2c3a5e;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px #090c16;
+  overflow: hidden;
+  user-select: none;
+}
+.star-tree-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.star-arm-lbl {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(180, 198, 232, 0.68);
+  background: rgba(10, 14, 26, 0.75);
+  padding: 1px 5px;
+  border-radius: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.star-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  background: #141c30;
+  border: 2px solid #3c4d75;
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 3px 0 #070a13;
+  transition: transform 0.1s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.star-node:hover {
+  transform: translate(-50%, -54%);
+  border-color: #82d8ff;
+}
+.star-node.center-node {
+  width: 54px;
+  height: 54px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2b2448 0%, #17152e 100%);
+  border-color: var(--gold);
+}
+.star-node.locked {
+  background: #0e1322;
+  border-color: #25304a;
+  color: #697899;
+  opacity: 0.76;
+}
+.star-node.unlockable {
+  background: #17233d;
+  border-color: #5cc8ff;
+  box-shadow: 0 0 0 1px rgba(92, 200, 255, 0.3), 0 3px 0 #070a13;
+}
+.star-node.invested {
+  background: #1b2844;
+  border-color: #f3c458;
+  box-shadow: 0 0 0 1px rgba(243, 196, 88, 0.35), 0 3px 0 #070a13;
+}
+.star-node.maxed {
+  background: linear-gradient(180deg, #3c2e12 0%, #231a0b 100%);
+  border-color: #ffe285;
+  box-shadow: 0 0 8px rgba(255, 216, 107, 0.38), 0 3px 0 #070a13;
+}
+.star-node.selected {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  z-index: 4;
+}
+.star-node .sn-ico { font-size: 1.02rem; line-height: 1; }
+.star-node.center-node .sn-ico { font-size: 1.25rem; }
+.star-node .sn-lv {
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #dce6fa;
+  font-variant-numeric: tabular-nums;
+}
+.star-node.maxed .sn-lv { color: #ffe285; }
+.star-node.locked .sn-lv { color: #697899; }
+
+.star-tree-inspector {
+  margin-top: 0.55rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.62rem 0.78rem;
+  background: #151c30;
+  border: 2px solid #35466f;
+  border-radius: 3px;
+}
+.sti-info { min-width: 0; flex: 1; }
+.sti-info strong { font-size: 0.84rem; display: block; color: var(--text); }
+.sti-info p { font-size: 0.72rem; color: var(--muted); margin-top: 0.16rem; line-height: 1.38; }
+.sti-info .sti-req { color: #ff9f87; font-weight: 700; }
+
+.syn-pill.max-tier {
+  border-color: #ffd86b !important;
+  box-shadow: 0 0 8px rgba(255, 216, 107, 0.32);
+}
+
 /* ==========================================================================
    MODALS & DIALOGS (ZERO GPU BLUR!)
    ========================================================================== */
@@ -2339,4 +2463,732 @@ h1, h2, h3, p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+
+/* ==========================================================================
+   SLOTBOUND iOS / MOBILE-CLEAN LANDSCAPE UI & TOUCH DRAG UX
+   ========================================================================== */
+
+html, body {
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#battle-canvas,
+.unit-slot,
+.reel-cell,
+.mech-lever,
+.spin-btn,
+.fight-btn {
+  touch-action: none;
+}
+
+.ios-native body,
+.ios-native #game-view {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#game-view {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Clickable Lv.X tier pill to toggle rarity odds on demand */
+.tier-odds-trigger {
+  cursor: pointer;
+  border: 1px solid rgba(245, 200, 105, 0.45);
+  background: rgba(245, 200, 105, 0.12);
+  color: #ffd86b;
+  font: inherit;
+  padding: 2px 7px;
+  border-radius: 4px;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.tier-odds-trigger:active {
+  transform: scale(0.95);
+}
+
+/* Topbar slim power pill & menu button */
+.stat-pill.power-pill {
+  border-color: rgba(255, 196, 86, 0.45);
+}
+.menu-btn {
+  font-size: 16px;
+  font-weight: 900;
+  min-width: 36px;
+  min-height: 34px;
+}
+
+/* System Menu Modal */
+.menu-dialog {
+  max-width: 460px;
+  width: min(92vw, 460px);
+}
+.menu-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+.menu-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  min-height: 40px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 200, 105, 0.35);
+  background: rgba(26, 31, 48, 0.92);
+  color: #f3f6ff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.menu-toggle-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.menu-toggle-btn.off {
+  opacity: 0.58;
+  border-color: rgba(130, 145, 175, 0.25);
+}
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+.menu-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 52px;
+  padding: 0.55rem 0.72rem;
+  border-radius: 8px;
+  border: 1px solid rgba(155, 175, 220, 0.24);
+  background: rgba(20, 25, 40, 0.92);
+  color: #eef4ff;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-action-btn small {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(205, 218, 240, 0.72);
+}
+.menu-action-btn.danger {
+  border-color: rgba(255, 95, 109, 0.42);
+  color: #ff9aa3;
+}
+.menu-action-btn:disabled {
+  opacity: 0.42;
+}
+
+/* Floating Inspector Card (never pushes main battlefield layout) */
+.army-card {
+  position: relative;
+}
+.floating-inspector {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 12px));
+  bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  width: min(520px, calc(100vw - 24px));
+  z-index: 90;
+  background: rgba(15, 18, 30, 0.96);
+  border: 2px solid rgba(245, 200, 105, 0.58);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+  border-radius: 10px;
+  padding: 0.6rem 0.72rem;
+}
+.ins-close-btn {
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 1:1 Follow-Finger Touch Drag Ghost & Swap/Absorb Highlights */
+.touch-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  pointer-events: none;
+  margin-left: -46px;
+  margin-top: -36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  will-change: transform;
+}
+.touch-drag-ghost .ghost-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(16, 20, 34, 0.96);
+  border: 2px solid var(--u-color, #f5c451);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.72);
+  transform: scale(1.06);
+}
+.touch-drag-ghost .ghost-sprite {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+.touch-drag-ghost .ghost-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f6f9ff;
+  white-space: nowrap;
+}
+.touch-drag-ghost .ghost-action-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(20, 26, 42, 0.95);
+  color: #8eeeff;
+  border: 1px solid rgba(110, 232, 255, 0.65);
+  white-space: nowrap;
+}
+.touch-drag-ghost .ghost-action-badge[data-mode="absorb"] {
+  background: linear-gradient(90deg, #ff6d24, #ff2a55);
+  color: #fff8e7;
+  border-color: #ffd86b;
+  box-shadow: 0 0 14px rgba(255, 109, 36, 0.65);
+}
+.touch-drag-ghost .ghost-action-badge[data-mode="neutral"] {
+  color: #aeb8cc;
+  border-color: rgba(174, 184, 204, 0.35);
+}
+
+.unit-slot.drag-over-swap {
+  outline: 2px dashed #5ce8ff !important;
+  outline-offset: 2px;
+  background: rgba(92, 232, 255, 0.14) !important;
+  transform: scale(1.03);
+}
+.unit-slot.drag-over-absorb {
+  outline: 2.5px solid #ff922b !important;
+  outline-offset: 2px;
+  background: rgba(255, 109, 36, 0.24) !important;
+  box-shadow: 0 0 16px rgba(255, 130, 40, 0.55) !important;
+  transform: scale(1.06);
+}
+
+/* Hide desktop keyboard hints on touch devices / iOS */
+@media (pointer: coarse) {
+  .kbd-hint { display: none !important; }
+}
+.ios-native .kbd-hint {
+  display: none !important;
+}
+
+/* Compact iPhone / Mobile Landscape One-Screen Fit (390px–520px viewport height) */
+@media (max-height: 520px) and (orientation: landscape) {
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  #game-view {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+  .topbar {
+    padding: 0.16rem 0.5rem;
+    min-height: 32px;
+    max-height: 34px;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .brand .crest {
+    width: 24px;
+    height: 24px;
+  }
+  .brand-text h1 {
+    font-size: 12px;
+  }
+  .brand-sub,
+  .wave-dots,
+  #wave-name {
+    display: none !important;
+  }
+  .wave-bar {
+    padding: 0.12rem 0.42rem;
+  }
+  .wave-label span {
+    font-size: 11px;
+  }
+  .stat-pill {
+    padding: 0.1rem 0.36rem;
+    font-size: 11.5px;
+    min-height: 24px;
+  }
+  .top-controls {
+    gap: 0.24rem;
+  }
+  .icon-btn {
+    min-height: 26px;
+    padding: 0.14rem 0.42rem;
+    font-size: 11.5px;
+  }
+  .menu-btn {
+    min-width: 30px;
+    min-height: 26px;
+    font-size: 14px;
+  }
+
+  /* Main 2-column landscape grid: Left 3x3 Slot Cabinet + Right Panoramic Battlefield & Single-Row Dock */
+  .workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: calc(100dvh - 34px);
+    padding: 0.22rem 0.45rem 0.24rem;
+    gap: 0.42rem;
+    grid-template-columns: minmax(228px, 31%) minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  /* LEFT COLUMN: FOCUSED 3x3 SLOT MACHINE + ULTRA-SLIM CORE STRIP */
+  .slot-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    gap: 0.22rem;
+    overflow: hidden;
+  }
+  .cabinet-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+  }
+  .mech-lever {
+    display: none !important;
+  }
+  .cabinet {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    padding: 0.24rem 0.34rem;
+    gap: 0.18rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .cabinet-head {
+    flex-shrink: 0;
+    gap: 0.25rem;
+    align-items: center;
+  }
+  .cabinet-head h2 {
+    display: none;
+  }
+  .cabinet-title-row {
+    flex-shrink: 0;
+  }
+  .tier-odds-trigger {
+    font-size: 10.5px;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  .tier-btn,
+  .rig-btn {
+    font-size: 10.5px;
+    padding: 2px 6px;
+    min-height: 22px;
+    white-space: nowrap;
+  }
+  .machine-gauges {
+    flex-shrink: 0;
+    gap: 0.16rem;
+  }
+  .fever-bar {
+    height: 14px;
+    padding: 0;
+  }
+  .fever-text {
+    font-size: 9.5px;
+  }
+
+  /* 3x3 Reel Grid takes ALL remaining height cleanly! */
+  .reel-frame {
+    flex: 1 1 auto;
+    min-height: 148px;
+    padding: 0.22rem;
+    display: flex;
+    align-items: stretch;
+  }
+  .reel-grid {
+    flex: 1 1 auto;
+    height: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .reel-cell {
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 1px 2px !important;
+    gap: 0 !important;
+  }
+  .cell-art {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .reel-cell .cell-name {
+    font-size: 8.5px !important;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Compact single-line nudge row */
+  .nudge-row {
+    flex-shrink: 0;
+    gap: 3px;
+  }
+  .nudge-btn {
+    height: 20px !important;
+    min-height: 20px !important;
+    padding: 0 3px !important;
+    font-size: 9.5px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .spin-ticker,
+  .spin-meta {
+    display: none !important;
+  }
+  .spin-actions {
+    flex-shrink: 0;
+    gap: 0;
+  }
+  .spin-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 0.55rem !important;
+    font-size: 12px !important;
+  }
+  .spin-btn-cost {
+    font-size: 10.5px !important;
+    padding: 1px 6px !important;
+  }
+
+  /* Ultra-slim bottom Core Strip */
+  .cores-panel {
+    flex-shrink: 0;
+    padding: 0.2rem 0.34rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .cores-panel .panel-head {
+    margin-bottom: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    flex-shrink: 0;
+  }
+  .cores-panel h3 {
+    font-size: 9.5px;
+    white-space: nowrap;
+  }
+  .cores-panel .panel-badges {
+    gap: 2px;
+  }
+  .cores-panel .badge-count {
+    font-size: 8.5px;
+    padding: 0 3px;
+  }
+  #core-milestone-pill {
+    display: none;
+  }
+  .cores-grid {
+    flex: 1 1 auto;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .core-slot {
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 1px !important;
+  }
+
+  /* RIGHT COLUMN: WIDE PANORAMIC BATTLEFIELD (76% HEIGHT) + SINGLE-ROW COMPACT DOCK (24% HEIGHT) */
+  .tactics-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    gap: 0.22rem;
+    overflow: hidden;
+  }
+  .arena-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.2rem 0.34rem;
+    gap: 0.16rem;
+    overflow: hidden;
+  }
+  .arena-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.3rem;
+    padding: 0;
+    min-height: 28px;
+    flex-wrap: nowrap;
+  }
+  .arena-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    overflow: hidden;
+  }
+  .enemy-intel {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .reinforcement {
+    display: none;
+  }
+  .arena-cta-group {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.26rem;
+  }
+  .side-quest-bar {
+    padding: 2px 6px;
+    font-size: 10px;
+    max-width: 155px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fight-btn {
+    flex-shrink: 0;
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 0.72rem !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+  .arena-stage {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 155px !important;
+    width: 100%;
+    overflow: hidden;
+  }
+  .bonds-strip {
+    flex-shrink: 0;
+    padding: 0.1rem 0.25rem;
+    min-height: 20px;
+    font-size: 10px;
+  }
+
+  /* SINGLE-ROW COMPACT LEGION DOCK (NEVER STACKS INTO 3 ROWS!) */
+  .army-card {
+    flex-shrink: 0;
+    padding: 0.16rem 0.34rem !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.32rem;
+  }
+  .army-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0 !important;
+    min-height: 0;
+    order: 2;
+    flex-shrink: 0;
+  }
+  .army-title-group {
+    display: none !important;
+  }
+  .mode-pill {
+    min-height: 44px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .roster-layout {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch;
+    gap: 0.32rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .roster-layout::-webkit-scrollbar {
+    display: none;
+  }
+  .formation-box,
+  .bench-box {
+    display: flex;
+    align-items: center;
+    gap: 0.24rem;
+    flex-shrink: 0;
+  }
+  .sub-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    margin-bottom: 0 !important;
+    padding: 3px 2px !important;
+    font-size: 9px !important;
+    line-height: 1;
+    height: 50px;
+    justify-content: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .formation-grid,
+  .bench-grid,
+  .overflow-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+  .unit-slot {
+    width: 52px !important;
+    min-width: 52px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    padding: 2px !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 1px !important;
+    text-align: center !important;
+    flex-shrink: 0;
+  }
+  .unit-slot .u-portrait {
+    width: 30px !important;
+    height: 30px !important;
+    flex-shrink: 0;
+  }
+  .unit-slot .u-lvl-badge {
+    font-size: 8px !important;
+    padding: 0 2px !important;
+  }
+  .unit-slot .u-body {
+    width: 100%;
+    min-width: 0;
+  }
+  .unit-slot .u-top {
+    justify-content: center;
+    gap: 2px;
+  }
+  .unit-slot .u-name {
+    font-size: 9px !important;
+    max-width: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .unit-slot .u-lv-pill {
+    font-size: 8.5px !important;
+  }
+  .unit-slot .u-stats,
+  .unit-slot .u-faction-tag,
+  .unit-slot .u-xp-bar {
+    display: none !important;
+  }
+  .unit-slot.empty,
+  .unit-slot.sealed {
+    font-size: 9.5px !important;
+    line-height: 1.15;
+  }
+  .overflow-box {
+    margin-top: 0.18rem;
+  }
+  .game-dialog .dialog-inner {
+    max-height: 88dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Compact 3-column System Menu Modal so bottom CTA never clips on 393px height */
+  .menu-dialog {
+    max-width: 560px;
+    width: min(92vw, 560px);
+  }
+  .menu-dialog .dialog-inner {
+    padding: 0.6rem 0.78rem !important;
+  }
+  .menu-dialog h2 {
+    font-size: 16px;
+    margin: 0.1rem 0 0.35rem;
+  }
+  .menu-toggles {
+    gap: 0.35rem;
+    margin-bottom: 0.45rem;
+  }
+  .menu-toggle-btn {
+    min-height: 32px;
+    padding: 0.25rem 0.4rem;
+    font-size: 11.5px;
+  }
+  .menu-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.38rem;
+  }
+  .menu-action-btn {
+    min-height: 44px;
+    padding: 0.35rem 0.5rem;
+    font-size: 11.5px;
+  }
+  .menu-action-btn small {
+    font-size: 9.5px;
+  }
+  .hub-view {
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.5rem max(0.75rem, env(safe-area-inset-right, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-left, 0px));
+  }
+  .hub-grid {
+    grid-template-columns: 1.1fr 1fr;
+    gap: 0.6rem;
+  }
 }
